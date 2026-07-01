@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>พนักงาน – ระบบออเดอร์</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+    --text:#f0f2f8;--muted:#8b90a8;
+    --accent:#4f8ef7;--accent-dim:rgba(79,142,247,0.12);
+    --green:#2dd4a0;--green-dim:rgba(45,212,160,0.12);
+    --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.12);
+    --red:#f87171;--red-dim:rgba(248,113,113,0.12);
+    --r:10px;--rlg:16px;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;min-height:100vh}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .brand{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .counters{display:flex;gap:10px}
+  .pill{font-size:12px;padding:3px 10px;border-radius:999px;font-weight:500}
+  .p-w{background:var(--amber-dim);color:var(--amber)}
+  .p-c{background:var(--accent-dim);color:var(--accent)}
+  .p-d{background:var(--green-dim);color:var(--green)}
+  .ws-status{font-size:12px;color:var(--muted)}
+  .ws-status.ok{color:var(--green)}
+
+  .layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 52px)}
+
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .sb-section{padding:14px;border-bottom:1px solid var(--border)}
+  .slabel{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .table-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+  .tbl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 4px;font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer;transition:all .15s;text-align:center}
+  .tbl-btn:hover{border-color:var(--border2);color:var(--text)}
+  .tbl-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+
+  .menu-scroll{flex:1;overflow-y:auto;padding:10px}
+  .menu-scroll::-webkit-scrollbar{width:3px}
+  .menu-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  .cat-label{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;padding:8px 4px 5px}
+  .menu-item{display:flex;align-items:center;padding:9px 8px;border-radius:8px;cursor:pointer;gap:8px;transition:background .1s}
+  .menu-item:hover{background:var(--surface2)}
+  .mdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+  .mname{flex:1;font-size:14px}
+  .mprice{font-size:13px;color:var(--muted);white-space:nowrap;margin-right:6px}
+  .add-btn{width:25px;height:25px;background:var(--accent-dim);border:1px solid rgba(79,142,247,.25);border-radius:6px;color:var(--accent);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+  .add-btn:hover{background:var(--accent);color:#fff}
+
+  .main{display:flex;flex-direction:column;overflow:hidden}
+  .order-panel{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px}
+  .order-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .order-title{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
+  .order-list{display:flex;flex-direction:column;gap:5px;max-height:110px;overflow-y:auto}
+  .order-list::-webkit-scrollbar{width:3px}
+  .order-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  .order-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+  .oname{flex:1;font-size:14px}
+  .qty-ctrl{display:flex;align-items:center;gap:7px}
+  .qty-btn{width:21px;height:21px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .1s}
+  .qty-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .qty-num{font-size:14px;font-weight:500;min-width:16px;text-align:center}
+  .del-btn{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;transition:color .1s;padding:2px}
+  .del-btn:hover{color:var(--red)}
+  textarea{resize:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;padding:7px 10px;width:100%;margin-top:8px;outline:none;transition:border-color .15s;height:38px}
+  textarea:focus{border-color:var(--accent)}
+  textarea::placeholder{color:var(--muted)}
+  .order-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px}
+  .total-label{font-size:13px;color:var(--muted)}
+  .total-num{font-family:'Kanit',sans-serif;font-size:18px;font-weight:500}
+  .send-btn{background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:9px 18px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .send-btn:hover{background:#3a7de8}
+  .send-btn:disabled{opacity:.3;cursor:not-allowed}
+  .empty-text{font-size:13px;color:var(--muted);text-align:center;padding:18px 0}
+
+  .kds{flex:1;overflow-y:auto;padding:16px}
+  .kds::-webkit-scrollbar{width:4px}
+  .kds::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  .kds-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .kds-title{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
+  .tickets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+  .ticket{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:14px;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .ticket.s-new{border-top:2px solid var(--amber)}
+  .ticket.s-cooking{border-top:2px solid var(--accent)}
+  .ticket.s-done{border-top:2px solid var(--green);opacity:.55}
+  .t-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+  .t-table{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
+  .t-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .t-right{text-align:right}
+  .t-time{font-size:11px;color:var(--muted);margin-top:3px}
+  .t-items{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0;margin-bottom:10px}
+  .t-item{display:flex;justify-content:space-between;font-size:13px;padding:2px 0}
+  .t-qty{color:var(--muted);font-size:12px}
+  .t-note{font-size:12px;color:var(--amber);padding:5px 7px;background:var(--amber-dim);border-radius:6px;margin-bottom:8px}
+  .src-badge{font-size:11px;padding:2px 7px;border-radius:999px;font-weight:500}
+  .src-staff{background:var(--accent-dim);color:var(--accent)}
+  .src-customer{background:var(--green-dim);color:var(--green)}
+  .t-actions{display:flex;gap:6px;margin-top:8px}
+  .act-btn{flex:1;padding:6px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'Sarabun',sans-serif;font-size:12px;cursor:pointer;transition:all .12s;text-align:center}
+  .act-cook{border-color:rgba(79,142,247,.3);color:var(--accent)}
+  .act-cook:hover{background:var(--accent-dim)}
+  .act-done{border-color:rgba(45,212,160,.3);color:var(--green)}
+  .act-done:hover{background:var(--green-dim)}
+  .no-tickets{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px;grid-column:1/-1}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><div class="dot"></div>พนักงาน – ระบบออเดอร์</div>
+  <div class="counters">
+    <span class="pill p-w" id="cw">0 รอทำ</span>
+    <span class="pill p-c" id="cc">0 กำลังทำ</span>
+    <span class="pill p-d" id="cd">0 เสร็จ</span>
+  </div>
+  <span class="ws-status" id="ws-status">กำลังเชื่อมต่อ...</span>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-section">
+      <div class="slabel">เลือกโต๊ะ</div>
+      <div class="table-grid" id="table-grid"></div>
+    </div>
+    <div class="menu-scroll" id="menu-scroll"></div>
+  </div>
+
+  <div class="main">
+    <div class="order-panel">
+      <div class="order-hd">
+        <div class="order-title" id="order-title">ออเดอร์ – โต๊ะ 1</div>
+      </div>
+      <div class="order-list" id="order-list"><div class="empty-text">เลือกเมนูจากซ้าย</div></div>
+      <textarea id="note" placeholder="หมายเหตุ / โน้ตพิเศษ เช่น ไม่เผ็ด, ไม่ใส่ผักชี..."></textarea>
+      <div class="order-footer">
+        <div><div class="total-label">รวม</div><div class="total-num" id="total">฿0</div></div>
+        <button class="send-btn" id="send-btn" onclick="sendOrder()" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          ส่งเข้าครัว
+        </button>
+      </div>
+    </div>
+
+    <div class="kds">
+      <div class="kds-hd"><div class="kds-title">ใบสั่งครัว (KDS)</div></div>
+      <div class="tickets-grid" id="tickets-grid"><div class="no-tickets">ยังไม่มีออเดอร์</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let menu = [];
+let tickets = [];
+let currentTable = 1;
+let orders = {};
+let ws;
+
+function connect() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}`);
+  ws.onopen = () => {
+    document.getElementById('ws-status').textContent = '● เชื่อมต่อแล้ว';
+    document.getElementById('ws-status').classList.add('ok');
+  };
+  ws.onclose = () => {
+    document.getElementById('ws-status').textContent = '● ขาดการเชื่อมต่อ';
+    document.getElementById('ws-status').classList.remove('ok');
+    setTimeout(connect, 2000);
+  };
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'init') { menu = msg.menu; tickets = msg.tickets; initMenu(); renderTickets(); updateCounts(); }
+    if (msg.type === 'ticket_added') { tickets.unshift(msg.ticket); renderTickets(); updateCounts(); }
+    if (msg.type === 'ticket_updated') {
+      const i = tickets.findIndex(t => t.num === msg.ticket.num);
+      if (i >= 0) tickets[i] = msg.ticket;
+      renderTickets(); updateCounts();
+    }
+  };
+}
+
+function initTableGrid() {
+  const el = document.getElementById('table-grid');
+  el.innerHTML = Array.from({length:8},(_,i)=>i+1).map(n =>
+    `<button class="tbl-btn ${n===1?'active':''}" onclick="selectTable(${n})">T${n}</button>`
+  ).join('');
+}
+
+function allItems() { return menu.flatMap(c => c.items); }
+function getItem(id) { return allItems().find(x => x.id == id); }
+
+function initMenu() {
+  const el = document.getElementById('menu-scroll');
+  el.innerHTML = menu.map(cat => `
+    <div class="cat-label">${cat.cat}</div>
+    ${cat.items.map(item => `
+      <div class="menu-item">
+        <div class="mdot" style="background:${cat.color}"></div>
+        <span class="mname">${item.name}</span>
+        <span class="mprice">฿${item.price}</span>
+        <button class="add-btn" onclick="addItem(${item.id})">+</button>
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+function selectTable(n) {
+  currentTable = n;
+  document.querySelectorAll('.tbl-btn').forEach((b,i) => b.classList.toggle('active', i+1===n));
+  document.getElementById('order-title').textContent = `ออเดอร์ – โต๊ะ ${n}`;
+  renderOrder();
+}
+
+function addItem(id) {
+  if (!orders[currentTable]) orders[currentTable] = {};
+  orders[currentTable][id] = (orders[currentTable][id] || 0) + 1;
+  renderOrder();
+}
+
+function changeQty(id, d) {
+  if (!orders[currentTable]) return;
+  const next = (orders[currentTable][id] || 0) + d;
+  if (next <= 0) delete orders[currentTable][id]; else orders[currentTable][id] = next;
+  renderOrder();
+}
+
+function renderOrder() {
+  const tbl = orders[currentTable] || {};
+  const keys = Object.keys(tbl);
+  const el = document.getElementById('order-list');
+  if (!keys.length) {
+    el.innerHTML = '<div class="empty-text">เลือกเมนูจากซ้าย</div>';
+    document.getElementById('total').textContent = '฿0';
+    document.getElementById('send-btn').disabled = true;
+    return;
+  }
+  let total = 0;
+  el.innerHTML = keys.map(id => {
+    const item = getItem(id); const qty = tbl[id];
+    total += item.price * qty;
+    return `<div class="order-row">
+      <span class="oname">${item.name}</span>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+        <span class="qty-num">${qty}</span>
+        <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
+      </div>
+      <button class="del-btn" onclick="changeQty(${id},-999)">×</button>
+    </div>`;
+  }).join('');
+  document.getElementById('total').textContent = '฿' + total.toLocaleString();
+  document.getElementById('send-btn').disabled = false;
+}
+
+function sendOrder() {
+  const tbl = orders[currentTable] || {};
+  const keys = Object.keys(tbl);
+  if (!keys.length || !ws || ws.readyState !== 1) return;
+  ws.send(JSON.stringify({
+    type: 'new_order',
+    table: currentTable,
+    items: keys.map(id => ({ id, name: getItem(id).name, qty: tbl[id] })),
+    note: document.getElementById('note').value.trim(),
+    source: 'staff'
+  }));
+  delete orders[currentTable];
+  document.getElementById('note').value = '';
+  renderOrder();
+}
+
+function setStatus(num, status) {
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'set_status', num, status }));
+}
+
+function renderTickets() {
+  const el = document.getElementById('tickets-grid');
+  if (!tickets.length) { el.innerHTML = '<div class="no-tickets">ยังไม่มีออเดอร์</div>'; return; }
+  el.innerHTML = tickets.map(t => {
+    const sb = t.status==='new'?`<span class="pill p-w">รอทำ</span>`:t.status==='cooking'?`<span class="pill p-c">กำลังทำ</span>`:`<span class="pill p-d">เสร็จ</span>`;
+    const srcBadge = t.source==='customer'?`<span class="src-badge src-customer">ลูกค้าสั่ง</span>`:`<span class="src-badge src-staff">พนักงาน</span>`;
+    const act = t.status==='new'?`<button class="act-btn act-cook" onclick="setStatus(${t.num},'cooking')">▶ เริ่มทำ</button>`:t.status==='cooking'?`<button class="act-btn act-done" onclick="setStatus(${t.num},'done')">✓ เสร็จ</button>`:'';
+    return `<div class="ticket s-${t.status}">
+      <div class="t-hd">
+        <div><div class="t-table">โต๊ะ ${t.table}</div><div class="t-sub">#${t.num} ${srcBadge}</div></div>
+        <div class="t-right">${sb}<div class="t-time">${t.time}</div></div>
+      </div>
+      <div class="t-items">${t.items.map(i=>`<div class="t-item"><span>${i.name}</span><span class="t-qty">×${i.qty}</span></div>`).join('')}</div>
+      ${t.note?`<div class="t-note">📝 ${t.note}</div>`:''}
+      <div class="t-actions">${act}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateCounts() {
+  document.getElementById('cw').textContent = tickets.filter(t=>t.status==='new').length + ' รอทำ';
+  document.getElementById('cc').textContent = tickets.filter(t=>t.status==='cooking').length + ' กำลังทำ';
+  document.getElementById('cd').textContent = tickets.filter(t=>t.status==='done').length + ' เสร็จ';
+}
+
+initTableGrid();
+connect();
+</script>
+</body>
+</html>
