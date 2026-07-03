@@ -14,24 +14,37 @@ let tickets = [];
 let ticketCounter = 1001;
 
 const MENU = [
-  { cat: 'อาหารจานเดียว', color: '#f59e0b', items: [
-    { id: 1, name: 'ข้าวผัดกุ้ง', price: 85 },
-    { id: 2, name: 'ข้าวผัดปู', price: 100 },
-    { id: 3, name: 'ข้าวหมูแดง', price: 65 },
-    { id: 4, name: 'ข้าวมันไก่', price: 60 },
+  { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
+    { id: 1,  name: 'ข้าวผัดกระเทียม', price: 0 },
+    { id: 2,  name: 'ข้าวผัดมันเนื้อ', price: 0 },
+    { id: 3,  name: 'ข้าวสวย', price: 0 },
+    { id: 4,  name: 'ข้าวหน้าเนื้อตุ๋น', price: 0 },
+    { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 },
   ]},
-  { cat: 'กับข้าว', color: '#4f8ef7', items: [
-    { id: 5, name: 'ผัดกะเพราหมู', price: 70 },
-    { id: 6, name: 'ต้มยำกุ้ง', price: 130 },
-    { id: 7, name: 'แกงเขียวหวานไก่', price: 110 },
-    { id: 8, name: 'ยำวุ้นเส้น', price: 85 },
-    { id: 9, name: 'ผัดผักรวมมิตร', price: 75 },
+  { cat: 'ของทอด', color: '#4f8ef7', items: [
+    { id: 6,  name: 'ผักทอด', price: 0 },
+    { id: 7,  name: 'เฟรนฟราย', price: 0 },
+    { id: 8,  name: 'ปีกไก่ทอด', price: 0 },
+    { id: 9,  name: 'ซาลาเปาทอด', price: 0 },
+    { id: 10, name: 'กุ้งทอด', price: 0 },
+    { id: 11, name: 'นักเก็ต', price: 0 },
+    { id: 12, name: 'ชีสบอล', price: 0 },
+    { id: 13, name: 'หมึกทอด', price: 0 },
+    { id: 14, name: 'ไก่ป็อบ', price: 0 },
   ]},
-  { cat: 'เครื่องดื่ม / อื่นๆ', color: '#2dd4a0', items: [
-    { id: 10, name: 'ข้าวสวย', price: 15 },
-    { id: 11, name: 'น้ำเปล่า', price: 20 },
-    { id: 12, name: 'น้ำอัดลม', price: 35 },
-    { id: 13, name: 'ชาเย็น', price: 40 },
+  { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
+    { id: 15, name: 'ม่อนดอง', price: 0 },
+    { id: 16, name: 'กุ้งดอง', price: 0 },
+    { id: 17, name: 'ไข่ดอง', price: 0 },
+    { id: 18, name: 'จุ๊เนื้อ', price: 0 },
+    { id: 19, name: 'ยำเนื้อเย็น', price: 0 },
+  ]},
+  { cat: 'อื่นๆ', color: '#f87171', items: [
+    { id: 20, name: 'ถั่วแระ', price: 0 },
+    { id: 21, name: 'ไส้กรอกแดง', price: 0 },
+    { id: 22, name: 'ปลาแซลมอน', price: 0 },
+    { id: 23, name: 'หอยเชลล์', price: 0 },
+    { id: 24, name: 'หอยแมลงภู่', price: 0 },
   ]},
 ];
 
@@ -67,11 +80,18 @@ wss.on('connection', (ws) => {
       const t = tickets.find(x => x.num === msg.num);
       if (t) { t.status = msg.status; broadcast({ type: 'ticket_updated', ticket: t }); }
     }
+
+    if (msg.type === 'delete_ticket') {
+      tickets = tickets.filter(x => x.num !== msg.num);
+      broadcast({ type: 'ticket_deleted', num: msg.num });
+    }
   });
 });
 
-// Railway provides PORT automatically via environment variable
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`\n✅  Server running at http://localhost:${PORT}`);
+  console.log(`📱  Customer page: http://<IP ของคอม>:${PORT}/customer.html?table=1`);
+  console.log(`🧑‍🍳  Staff page:    http://<IP ของคอม>:${PORT}/staff.html\n`);
 });
+                             
