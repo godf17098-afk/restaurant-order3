@@ -3,171 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>พนักงาน – ออเดอร์</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Kanit:wght@400;500&display=swap" rel="stylesheet">
+<title>พนักงาน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;
-  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
-  --text:#f0f2f8;--muted:#8b90a8;
-  --accent:#4f8ef7;--accent-dim:rgba(79,142,247,0.13);
-  --green:#2dd4a0;--green-dim:rgba(45,212,160,0.13);
-  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.13);
-  --red:#f87171;--red-dim:rgba(248,113,113,0.13);
+  --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--muted:#a1a1aa;--muted2:#71717a;
+  --accent:#fff;--accent-fg:#09090b;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-border:rgba(74,222,128,0.2);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.1);--amber-border:rgba(251,191,36,0.2);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--blue-border:rgba(96,165,250,0.2);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);
+  --r:8px;
 }
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
 
 /* TOPBAR */
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 14px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:100}
-.brand{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;gap:7px}
-.dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.counters{display:flex;gap:6px}
-.pill{font-size:11px;padding:3px 8px;border-radius:999px;font-weight:500;white-space:nowrap}
-.p-w{background:var(--amber-dim);color:var(--amber)}
-.p-c{background:var(--accent-dim);color:var(--accent)}
-.p-d{background:var(--green-dim);color:var(--green)}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.brand{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.stats{display:flex;gap:6px}
+.stat{font-size:11px;font-weight:500;padding:3px 9px;border-radius:5px}
+.stat-w{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.stat-c{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+.stat-d{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
 
-/* TAB NAV */
-.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
-.tab{flex:1;padding:11px 4px;text-align:center;font-family:'Kanit',sans-serif;font-size:13px;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* TABS */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;padding:0 4px}
+.tab{flex:1;padding:11px 4px;text-align:center;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--text);border-bottom-color:var(--text)}
 
 /* PAGES */
 .page{display:none;flex:1;overflow:hidden;flex-direction:column}
 .page.active{display:flex}
 
 /* ORDER PAGE */
-.table-scroll{padding:12px 12px 6px;flex-shrink:0}
-.slabel{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.tbl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:10px 4px;font-family:'Kanit',sans-serif;font-size:14px;cursor:pointer;text-align:center;transition:all .15s}
-.tbl-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.table-row{padding:12px 14px 8px;flex-shrink:0}
+.row-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.tbl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);border-radius:var(--r);padding:10px 4px;font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .15s}
+.tbl-btn.active{background:var(--surface3);border-color:var(--border2);color:var(--text)}
 
-.menu-scroll{flex:1;overflow-y:auto;padding:0 12px}
-.menu-scroll::-webkit-scrollbar{display:none}
-.cat-label{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;padding:10px 0 5px}
-.menu-item{display:flex;align-items:center;padding:11px 10px;border-radius:10px;gap:8px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px}
-.mdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.mname{flex:1;font-size:14px;font-weight:500}
-.mprice{font-size:13px;color:var(--muted);margin-right:6px}
-.add-btn{width:30px;height:30px;background:var(--accent-dim);border:1px solid rgba(79,142,247,.3);border-radius:8px;color:var(--accent);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
+.menu-list{flex:1;overflow-y:auto;padding:0 14px}
+.menu-list::-webkit-scrollbar{display:none}
+.cat-head{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted2);padding:10px 0 6px}
+.m-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:4px;gap:10px}
+.m-name{font-size:14px;font-weight:500;flex:1}
+.m-add{width:28px;height:28px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;line-height:1}
+.m-add:hover{background:var(--text);border-color:var(--text);color:var(--bg)}
 
 /* CART BAR */
-.cart-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.cart-info{display:flex;align-items:center;gap:8px;flex:1}
-.cart-count{background:var(--accent);color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
-.cart-total{font-family:'Kanit',sans-serif;font-size:17px;font-weight:500}
-.send-btn{background:var(--accent);border:none;border-radius:10px;color:#fff;font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:10px 16px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
-.send-btn:disabled{opacity:.3;cursor:not-allowed}
+.cart-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.cart-left{display:flex;align-items:center;gap:8px;flex:1}
+.cart-badge{background:var(--text);color:var(--bg);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.cart-total{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
+.cart-table{font-size:12px;color:var(--muted)}
+.cart-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:9px 16px;cursor:pointer;white-space:nowrap}
+.cart-btn:disabled{opacity:.25;cursor:not-allowed}
 
 /* KDS PAGE */
-.kds-scroll{flex:1;overflow-y:auto;padding:12px}
-.kds-scroll::-webkit-scrollbar{display:none}
-.ticket{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;animation:fadeIn .2s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.ticket.s-new{border-top:2px solid var(--amber)}
-.ticket.s-cooking{border-top:2px solid var(--accent)}
-.ticket.s-done{border-top:2px solid var(--green);opacity:.55}
-.t-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.t-table{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
-.t-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.t-right{text-align:right}
-.t-time{font-size:11px;color:var(--muted);margin-top:3px}
-.t-items{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0;margin-bottom:10px}
-.t-item{display:flex;justify-content:space-between;font-size:14px;padding:3px 0}
+.kds-body{flex:1;overflow-y:auto;padding:12px 14px}
+.kds-body::-webkit-scrollbar{display:none}
+.ticket{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.ticket.s-new{border-left:3px solid var(--amber)}
+.ticket.s-cooking{border-left:3px solid var(--blue)}
+.ticket.s-done{border-left:3px solid var(--green);opacity:.5}
+.t-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.t-left{}
+.t-table{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
+.t-meta{display:flex;align-items:center;gap:6px;margin-top:3px}
+.t-num{font-size:11px;color:var(--muted2)}
+.src-tag{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:500}
+.src-c{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.src-s{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+.t-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.t-status{font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px}
+.st-new{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.st-cooking{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+.st-done{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.t-time{font-size:11px;color:var(--muted2)}
+.t-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+.t-item{display:flex;justify-content:space-between;font-size:14px;padding:2px 0;color:var(--text)}
 .t-qty{color:var(--muted);font-size:13px}
-.t-note{font-size:12px;color:var(--amber);padding:6px 8px;background:var(--amber-dim);border-radius:7px;margin-bottom:10px}
-.src-badge{font-size:11px;padding:2px 7px;border-radius:999px;font-weight:500}
-.src-staff{background:var(--accent-dim);color:var(--accent)}
-.src-customer{background:var(--green-dim);color:var(--green)}
-.t-actions{display:flex;gap:7px}
-.act-btn{flex:1;padding:9px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'Sarabun',sans-serif;font-size:13px;cursor:pointer;text-align:center}
-.act-cook{border-color:rgba(79,142,247,.35);color:var(--accent)}
-.act-done{border-color:rgba(45,212,160,.35);color:var(--green)}
-.no-tickets{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.t-note{font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:6px;padding:5px 8px;margin-top:8px}
+.t-actions{display:flex;gap:6px;margin-top:10px}
+.t-btn{flex:1;padding:8px;border-radius:7px;border:1px solid var(--border2);background:transparent;font-family:'Sarabun',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .12s;color:var(--muted)}
+.t-cook{border-color:var(--blue-border);color:var(--blue)}
+.t-cook:hover{background:var(--blue-dim)}
+.t-done{border-color:var(--green-border);color:var(--green)}
+.t-done:hover{background:var(--green-dim)}
+.t-del{border-color:var(--border2);color:var(--muted2);flex:none;padding:8px 10px}
+.t-del:hover{border-color:rgba(248,113,113,.3);color:var(--red)}
+.no-tickets{text-align:center;padding:60px 20px;color:var(--muted2);font-size:14px}
 
-/* NOTE MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end}
-.modal-overlay.show{display:flex}
-.modal{background:var(--surface);border-radius:18px 18px 0 0;padding:20px;width:100%;animation:slideUp .25s ease}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-title{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500;margin-bottom:12px;display:flex;justify-content:space-between}
-.close-btn{background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
-.order-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
-.order-item:last-child{border:none}
-.oname{flex:1;font-size:14px}
-.qty-ctrl{display:flex;align-items:center;gap:8px}
-.qty-btn{width:28px;height:28px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.qty-num{font-size:15px;font-weight:500;min-width:20px;text-align:center}
-.note-input{width:100%;border:1px solid var(--border2);border-radius:9px;padding:9px 12px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:var(--surface2);outline:none;margin:12px 0 10px;height:42px}
-.note-input:focus{border-color:var(--accent)}
-.note-input::placeholder{color:var(--muted)}
-.confirm-btn{width:100%;background:var(--accent);border:none;border-radius:11px;color:#fff;font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;padding:13px;cursor:pointer}
-.modal-footer{display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px}
-.modal-total-label{font-size:13px;color:var(--muted)}
-.modal-total-num{font-family:'Kanit',sans-serif;font-size:18px;font-weight:500}
-.empty-text{font-size:13px;color:var(--muted);text-align:center;padding:16px 0}
+/* CART SHEET */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.sheet{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:up .22s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:32px;height:3px;background:var(--surface3);border-radius:2px;margin:12px auto 0}
+.sheet-hd{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sheet-title{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
+.sheet-close{background:var(--surface2);border:none;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px}
+.sheet-body{flex:1;overflow-y:auto;padding:12px 16px}
+.sheet-body::-webkit-scrollbar{display:none}
+.o-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.o-item:last-child{border:none}
+.o-name{flex:1;font-size:14px;font-weight:500}
+.o-ctrl{display:flex;align-items:center;gap:6px}
+.o-btn{width:26px;height:26px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.o-btn:hover{border-color:var(--text);color:var(--text)}
+.o-num{font-size:14px;font-weight:600;min-width:20px;text-align:center}
+.note-wrap{padding:10px 0 4px}
+.note-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.note-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);outline:none;height:40px}
+.note-input:focus{border-color:var(--text)}
+.note-input::placeholder{color:var(--muted2)}
+.sheet-ft{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ft-total{font-family:'Kanit',sans-serif;font-size:18px;font-weight:600}
+.send-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:11px 22px;cursor:pointer;white-space:nowrap}
+.empty-text{font-size:13px;color:var(--muted2);text-align:center;padding:16px}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="brand"><div class="dot"></div>พนักงาน</div>
-  <div class="counters">
-    <span class="pill p-w" id="cw">0 รอ</span>
-    <span class="pill p-c" id="cc">0 ทำ</span>
-    <span class="pill p-d" id="cd">0 เสร็จ</span>
+  <div class="brand"><div class="live-dot"></div>พนักงาน</div>
+  <div class="stats">
+    <span class="stat stat-w" id="sw">0 รอ</span>
+    <span class="stat stat-c" id="sc">0 ทำ</span>
+    <span class="stat stat-d" id="sd">0 เสร็จ</span>
   </div>
 </div>
 
 <div class="tabs">
   <button class="tab active" onclick="showPage('order',this)">🛒 รับออเดอร์</button>
-  <button class="tab" onclick="showPage('kds',this)">🍳 ครัว (KDS)</button>
+  <button class="tab" onclick="showPage('kds',this)">🍳 ครัว</button>
 </div>
 
 <!-- ORDER PAGE -->
 <div class="page active" id="page-order">
-  <div class="table-scroll">
-    <div class="slabel">เลือกโต๊ะ</div>
+  <div class="table-row">
+    <div class="row-label">โต๊ะ</div>
     <div class="table-grid" id="table-grid"></div>
   </div>
-  <div class="menu-scroll" id="menu-scroll"></div>
+  <div class="menu-list" id="menu-list"></div>
   <div class="cart-bar">
-    <div class="cart-info">
-      <div class="cart-count" id="cart-count">0</div>
-      <div class="cart-total" id="cart-total">฿0</div>
+    <div class="cart-left">
+      <div class="cart-badge" id="cart-count">0</div>
+      <div>
+        <div class="cart-total" id="cart-total">ยังไม่มีรายการ</div>
+        <div class="cart-table" id="cart-table-label">โต๊ะ 1</div>
+      </div>
     </div>
-    <button class="send-btn" id="send-btn" onclick="openCart()" disabled>
-      ดูตะกร้า →
-    </button>
+    <button class="cart-btn" id="cart-btn" onclick="openCart()" disabled>ดูรายการ →</button>
   </div>
 </div>
 
 <!-- KDS PAGE -->
 <div class="page" id="page-kds">
-  <div class="kds-scroll" id="kds-scroll">
+  <div class="kds-body" id="kds-body">
     <div class="no-tickets">ยังไม่มีออเดอร์</div>
   </div>
 </div>
 
-<!-- CART MODAL -->
-<div class="modal-overlay" id="modal" onclick="closeCartIfOutside(event)">
-  <div class="modal">
-    <div class="modal-title">
-      ออเดอร์ – <span id="modal-table">โต๊ะ 1</span>
-      <button class="close-btn" onclick="closeCart()">×</button>
+<!-- CART SHEET -->
+<div class="overlay" id="overlay" onclick="closeIfOut(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hd">
+      <div class="sheet-title" id="sheet-title">รายการออเดอร์</div>
+      <button class="sheet-close" onclick="closeCart()">×</button>
     </div>
-    <div id="modal-items"></div>
-    <input class="note-input" id="note" placeholder="หมายเหตุ เช่น ไม่เผ็ด, ไม่ใส่ผักชี...">
-    <div class="modal-footer">
-      <div>
-        <div class="modal-total-label">รวมทั้งหมด</div>
-        <div class="modal-total-num" id="modal-total">฿0</div>
+    <div class="sheet-body">
+      <div id="sheet-items"></div>
+      <div class="note-wrap">
+        <span class="note-label">หมายเหตุ</span>
+        <input class="note-input" id="note" placeholder="เช่น ไม่เผ็ด, ไม่ใส่ผักชี...">
       </div>
-      <button class="confirm-btn" style="width:auto;padding:11px 24px" onclick="sendOrder()">ส่งเข้าครัว →</button>
+    </div>
+    <div class="sheet-ft">
+      <div class="ft-total" id="sheet-total">฿0</div>
+      <button class="send-btn" onclick="sendOrder()">ส่งเข้าครัว →</button>
     </div>
   </div>
 </div>
@@ -176,19 +198,19 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 let menu=[], tickets=[], orders={}, currentTable=1, ws;
 
 function connect(){
-  const proto = location.protocol==='https:'?'wss':'ws';
-  ws = new WebSocket(`${proto}://${location.host}`);
-  ws.onopen = ()=>{};
-  ws.onclose = ()=>setTimeout(connect,2000);
-  ws.onmessage = (e)=>{
+  const proto=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(`${proto}://${location.host}`);
+  ws.onclose=()=>setTimeout(connect,2000);
+  ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){menu=msg.menu;tickets=msg.tickets;initMenu();renderKDS();updateCounts();}
     if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderKDS();updateCounts();}
     if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderKDS();updateCounts();}
+    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderKDS();updateCounts();}
   };
 }
 
-function showPage(id, btn){
+function showPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
@@ -206,24 +228,22 @@ function allItems(){return menu.flatMap(c=>c.items)}
 function getItem(id){return allItems().find(x=>x.id==id)}
 
 function initMenu(){
-  const el=document.getElementById('menu-scroll');
-  el.innerHTML=menu.map(cat=>`
-    <div class="cat-label">${cat.cat}</div>
+  document.getElementById('menu-list').innerHTML=menu.map(cat=>`
+    <div class="cat-head">${cat.cat}</div>
     ${cat.items.map(item=>`
-      <div class="menu-item">
-        <div class="mdot" style="background:${cat.color}"></div>
-        <span class="mname">${item.name}</span>
-        <span class="mprice">฿${item.price}</span>
-        <button class="add-btn" onclick="addItem(${item.id})">+</button>
+      <div class="m-item">
+        <span class="m-name">${item.name}</span>
+        <button class="m-add" onclick="addItem(${item.id})">+</button>
       </div>
     `).join('')}
   `).join('');
 }
 
-function selectTable(n, btn){
+function selectTable(n,btn){
   currentTable=n;
   document.querySelectorAll('.tbl-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  document.getElementById('cart-table-label').textContent='โต๊ะ '+n;
   updateCartBar();
 }
 
@@ -233,51 +253,49 @@ function addItem(id){
   updateCartBar();
 }
 
-function changeQty(id,d){
+function changeQtySheet(id,d){
   if(!orders[currentTable])return;
   const next=(orders[currentTable][id]||0)+d;
   if(next<=0)delete orders[currentTable][id];else orders[currentTable][id]=next;
   updateCartBar();
-  renderModalItems();
+  renderSheetItems();
+  if(!Object.keys(orders[currentTable]||{}).length)closeCart();
 }
 
 function updateCartBar(){
   const tbl=orders[currentTable]||{};
   const keys=Object.keys(tbl);
   const count=keys.reduce((s,id)=>s+tbl[id],0);
-  let total=0;keys.forEach(id=>{const item=getItem(id);if(item)total+=item.price*tbl[id];});
   document.getElementById('cart-count').textContent=count;
-  document.getElementById('cart-total').textContent='฿'+total.toLocaleString();
-  document.getElementById('send-btn').disabled=count===0;
+  document.getElementById('cart-total').textContent=count?count+' รายการ':'ยังไม่มีรายการ';
+  document.getElementById('cart-btn').disabled=count===0;
 }
 
 function openCart(){
-  document.getElementById('modal-table').textContent='โต๊ะ '+currentTable;
-  renderModalItems();
-  document.getElementById('modal').classList.add('show');
+  document.getElementById('sheet-title').textContent='ออเดอร์ – โต๊ะ '+currentTable;
+  renderSheetItems();
+  document.getElementById('overlay').classList.add('show');
 }
 
-function renderModalItems(){
+function renderSheetItems(){
   const tbl=orders[currentTable]||{};
   const keys=Object.keys(tbl);
-  if(!keys.length){closeCart();return;}
-  let total=0;
-  document.getElementById('modal-items').innerHTML=keys.map(id=>{
-    const item=getItem(id);const qty=tbl[id];total+=item.price*qty;
-    return `<div class="order-item">
-      <span class="oname">${item.name}</span>
-      <div class="qty-ctrl">
-        <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
-        <span class="qty-num">${qty}</span>
-        <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
+  document.getElementById('sheet-items').innerHTML=keys.length?keys.map(id=>{
+    const item=getItem(id);const qty=tbl[id];
+    return `<div class="o-item">
+      <span class="o-name">${item?.name||''}</span>
+      <div class="o-ctrl">
+        <button class="o-btn" onclick="changeQtySheet(${id},-1)">−</button>
+        <span class="o-num">${qty}</span>
+        <button class="o-btn" onclick="changeQtySheet(${id},1)">+</button>
       </div>
     </div>`;
-  }).join('');
-  document.getElementById('modal-total').textContent='฿'+total.toLocaleString();
+  }).join(''):'<div class="empty-text">ไม่มีรายการ</div>';
+  document.getElementById('sheet-total').textContent=keys.length+' รายการ';
 }
 
-function closeCart(){document.getElementById('modal').classList.remove('show');}
-function closeCartIfOutside(e){if(e.target===document.getElementById('modal'))closeCart();}
+function closeCart(){document.getElementById('overlay').classList.remove('show');}
+function closeIfOut(e){if(e.target===document.getElementById('overlay'))closeCart();}
 
 function sendOrder(){
   const tbl=orders[currentTable]||{};
@@ -285,7 +303,7 @@ function sendOrder(){
   if(!keys.length||!ws||ws.readyState!==1)return;
   ws.send(JSON.stringify({
     type:'new_order',table:currentTable,
-    items:keys.map(id=>({id,name:getItem(id).name,qty:tbl[id]})),
+    items:keys.map(id=>({id,name:getItem(id)?.name||'',qty:tbl[id]})),
     note:document.getElementById('note').value.trim(),
     source:'staff'
   }));
@@ -295,33 +313,40 @@ function sendOrder(){
   showPage('kds',document.querySelectorAll('.tab')[1]);
 }
 
-function setStatus(num,status){
-  if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'set_status',num,status}));
-}
+function setStatus(num,status){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'set_status',num,status}));}
+function deleteTicket(num){if(!confirm('ลบออเดอร์นี้?'))return;if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'delete_ticket',num}));}
 
 function renderKDS(){
-  const el=document.getElementById('kds-scroll');
+  const el=document.getElementById('kds-body');
   if(!tickets.length){el.innerHTML='<div class="no-tickets">ยังไม่มีออเดอร์</div>';return;}
   el.innerHTML=tickets.map(t=>{
-    const sb=t.status==='new'?`<span class="pill p-w">รอทำ</span>`:t.status==='cooking'?`<span class="pill p-c">กำลังทำ</span>`:`<span class="pill p-d">เสร็จ</span>`;
-    const srcB=t.source==='customer'?`<span class="src-badge src-customer">ลูกค้า</span>`:`<span class="src-badge src-staff">พนักงาน</span>`;
-    const act=t.status==='new'?`<button class="act-btn act-cook" onclick="setStatus(${t.num},'cooking')">▶ เริ่มทำ</button>`:t.status==='cooking'?`<button class="act-btn act-done" onclick="setStatus(${t.num},'done')">✓ เสร็จแล้ว</button>`:'';
+    const stClass=t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
+    const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
+    const srcTag=t.source==='customer'?`<span class="src-tag src-c">ลูกค้า</span>`:`<span class="src-tag src-s">พนักงาน</span>`;
+    const act=t.status==='new'?`<button class="t-btn t-cook" onclick="setStatus(${t.num},'cooking')">▶ เริ่มทำ</button>`:t.status==='cooking'?`<button class="t-btn t-done" onclick="setStatus(${t.num},'done')">✓ เสร็จแล้ว</button>`:'';
     return `<div class="ticket s-${t.status}">
-      <div class="t-hd">
-        <div><div class="t-table">โต๊ะ ${t.table}</div><div class="t-sub">#${t.num} ${srcB}</div></div>
-        <div class="t-right">${sb}<div class="t-time">${t.time}</div></div>
+      <div class="t-top">
+        <div class="t-left">
+          <div class="t-table">โต๊ะ ${t.table}</div>
+          <div class="t-meta"><span class="t-num">#${t.num}</span>${srcTag}</div>
+        </div>
+        <div class="t-right">
+          <span class="t-status ${stClass}">${stText}</span>
+          <span class="t-time">${t.time}</span>
+        </div>
       </div>
-      <div class="t-items">${t.items.map(i=>`<div class="t-item"><span>${i.name}</span><span class="t-qty">×${i.qty}</span></div>`).join('')}</div>
+      <hr class="t-divider">
+      ${t.items.map(i=>`<div class="t-item"><span>${i.name}</span><span class="t-qty">×${i.qty}</span></div>`).join('')}
       ${t.note?`<div class="t-note">📝 ${t.note}</div>`:''}
-      ${act?`<div class="t-actions">${act}</div>`:''}
+      <div class="t-actions">${act}<button class="t-btn t-del" onclick="deleteTicket(${t.num})">🗑</button></div>
     </div>`;
   }).join('');
 }
 
 function updateCounts(){
-  document.getElementById('cw').textContent=tickets.filter(t=>t.status==='new').length+' รอ';
-  document.getElementById('cc').textContent=tickets.filter(t=>t.status==='cooking').length+' ทำ';
-  document.getElementById('cd').textContent=tickets.filter(t=>t.status==='done').length+' เสร็จ';
+  document.getElementById('sw').textContent=tickets.filter(t=>t.status==='new').length+' รอ';
+  document.getElementById('sc').textContent=tickets.filter(t=>t.status==='cooking').length+' ทำ';
+  document.getElementById('sd').textContent=tickets.filter(t=>t.status==='done').length+' เสร็จ';
 }
 
 initTableGrid();connect();
