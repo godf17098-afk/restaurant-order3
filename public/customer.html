@@ -2,148 +2,167 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>สั่งอาหาร</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#fafaf8;--surface:#ffffff;--surface2:#f4f3f0;
-    --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.15);
-    --text:#1a1a1a;--muted:#888;
-    --accent:#2563eb;--accent-dim:rgba(37,99,235,0.08);
-    --green:#059669;--green-dim:rgba(5,150,105,0.08);
-    --amber:#d97706;--amber-dim:rgba(217,119,6,0.08);
-    --r:10px;--rlg:16px;
-  }
-  body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;min-height:100vh;max-width:480px;margin:0 auto}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafafa;--surface:#fff;--surface2:#f4f4f5;--surface3:#e4e4e7;
+  --border:#e4e4e7;--border2:#d4d4d8;
+  --text:#09090b;--muted:#71717a;--muted2:#a1a1aa;
+  --accent:#18181b;--accent-fg:#fafafa;
+  --primary:#18181b;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --amber:#d97706;--amber-bg:#fffbeb;
+  --r:8px;--rlg:12px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
 
-  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-  .brand{font-family:'Kanit',sans-serif;font-size:17px;font-weight:500;color:var(--text)}
-  .table-tag{font-size:13px;background:var(--accent-dim);color:var(--accent);padding:4px 12px;border-radius:999px;font-weight:500}
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:50}
+.brand{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px}
+.table-badge{font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;color:var(--muted);font-weight:500}
+.ws-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s}
+.ws-dot.ok{background:var(--green)}
 
-  .hero{background:var(--surface);padding:16px;border-bottom:1px solid var(--border);text-align:center}
-  .hero-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:4px}
-  .hero-sub{font-size:13px;color:var(--muted)}
+/* CAT TABS */
+.cat-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;background:var(--surface)}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{flex-shrink:0;padding:12px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.cat-tab.active{color:var(--text);border-bottom-color:var(--text)}
 
-  .cat-tabs{display:flex;gap:6px;padding:12px 14px;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch}
-  .cat-tabs::-webkit-scrollbar{display:none}
-  .cat-tab{flex-shrink:0;padding:6px 14px;border-radius:999px;border:1px solid var(--border2);background:transparent;font-family:'Sarabun',sans-serif;font-size:13px;cursor:pointer;color:var(--muted);transition:all .15s;white-space:nowrap}
-  .cat-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+/* MENU */
+.menu-scroll{flex:1;overflow-y:auto;background:var(--bg)}
+.menu-scroll::-webkit-scrollbar{display:none}
+.menu-section{padding:16px}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.menu-grid{display:flex;flex-direction:column;gap:2px}
+.menu-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);transition:border-color .15s}
+.menu-item:hover{border-color:var(--border2)}
+.menu-emoji{width:36px;height:36px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.menu-info{flex:1;min-width:0}
+.menu-name{font-size:14px;font-weight:500;color:var(--text)}
+.menu-cat{font-size:12px;color:var(--muted);margin-top:1px}
+.item-ctrl{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ctrl-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .1s;flex-shrink:0}
+.ctrl-btn.plus{border-color:var(--text);background:var(--text);color:var(--bg)}
+.ctrl-btn.plus:hover{opacity:.85}
+.ctrl-btn.minus:hover{border-color:var(--text);color:var(--text)}
+.ctrl-num{font-size:14px;font-weight:600;min-width:20px;text-align:center;color:var(--text)}
 
-  .menu-section{padding:12px 14px}
-  .cat-name{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px}
-  .menu-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:border-color .15s}
-  .menu-card:hover{border-color:var(--border2)}
-  .menu-info{flex:1}
-  .menu-name{font-size:15px;font-weight:500;margin-bottom:2px}
-  .menu-price{font-size:14px;color:var(--accent);font-weight:500}
-  .menu-ctrl{display:flex;align-items:center;gap:8px}
-  .m-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .12s;flex-shrink:0}
-  .m-btn.plus{border-color:var(--accent);color:var(--accent)}
-  .m-btn.plus:hover{background:var(--accent);color:#fff}
-  .m-btn.minus:hover{border-color:var(--text);color:var(--text)}
-  .m-qty{font-size:15px;font-weight:500;min-width:20px;text-align:center}
+/* CART BAR */
+.cart-bar{background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.cart-left{display:flex;align-items:center;gap:8px;flex:1}
+.cart-badge{background:var(--text);color:var(--bg);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.cart-total{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
+.view-cart-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:10px 18px;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.view-cart-btn:hover{opacity:.85}
+.view-cart-btn:disabled{opacity:.3;cursor:not-allowed}
 
-  .cart-bar{background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .cart-info{display:flex;align-items:center;gap:8px}
-  .cart-count{background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
-  .cart-total{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
-  .checkout-btn{background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;padding:10px 20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
-  .checkout-btn:hover{background:#1d4fd8}
-  .checkout-btn:disabled{opacity:.35;cursor:not-allowed}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.sheet{background:var(--surface);border-radius:16px 16px 0 0;padding:0;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:up .22s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0}
+.sheet-header{padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sheet-title{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
+.sheet-close{background:var(--surface2);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px}
+.sheet-body{flex:1;overflow-y:auto;padding:12px 16px}
+.sheet-body::-webkit-scrollbar{display:none}
+.cart-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.cart-item:last-child{border:none}
+.ci-name{flex:1;font-size:14px;font-weight:500}
+.ci-ctrl{display:flex;align-items:center;gap:6px}
+.note-wrap{padding:0 0 12px}
+.note-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;display:block}
+.note-input{width:100%;border:1px solid var(--border2);border-radius:var(--r);padding:10px 12px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s;resize:none;height:42px}
+.note-input:focus{border-color:var(--text)}
+.note-input::placeholder{color:var(--muted2)}
+.sheet-footer{padding:12px 16px;border-top:1px solid var(--border)}
+.summary-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.summary-label{font-size:13px;color:var(--muted)}
+.summary-total{font-family:'Kanit',sans-serif;font-size:18px;font-weight:600}
+.confirm-btn{width:100%;background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;padding:13px;cursor:pointer;transition:opacity .15s}
+.confirm-btn:hover{opacity:.85}
 
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center}
-  .modal-overlay.show{display:flex}
-  .modal{background:var(--surface);border-radius:var(--rlg) var(--rlg) 0 0;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;animation:slideUp .25s ease}
-  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  .modal-title{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
-  .close-btn{background:transparent;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
-  .cart-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
-  .cart-item:last-child{border:none}
-  .ci-name{flex:1;font-size:14px}
-  .ci-price{font-size:13px;color:var(--muted);margin-right:8px}
-  .note-input{width:100%;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;margin:12px 0;height:40px;transition:border-color .15s}
-  .note-input:focus{border-color:var(--accent)}
-  .note-input::placeholder{color:var(--muted)}
-  .confirm-btn{width:100%;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;padding:12px;cursor:pointer;transition:all .15s;margin-top:4px}
-  .confirm-btn:hover{background:#1d4fd8}
-
-  .success-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:32px}
-  .success-screen.show{display:flex}
-  .success-icon{width:72px;height:72px;background:var(--green-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px}
-  .success-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:8px}
-  .success-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6}
-  .back-btn{background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-family:'Kanit',sans-serif;font-size:15px;padding:11px 28px;cursor:pointer}
-
-  .ws-dot{width:7px;height:7px;border-radius:50%;background:#ccc}
-  .ws-dot.ok{background:var(--green)}
+/* SUCCESS */
+.success-screen{display:none;position:fixed;inset:0;background:var(--surface);z-index:300;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
+.success-screen.show{display:flex}
+.success-icon{width:64px;height:64px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px}
+.success-title{font-family:'Kanit',sans-serif;font-size:20px;font-weight:500;margin-bottom:8px}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px}
+.back-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:11px 28px;cursor:pointer}
+.empty-text{text-align:center;padding:20px;font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="brand">🍽 สั่งอาหาร</div>
-  <div style="display:flex;align-items:center;gap:8px">
+  <div class="brand">
     <div class="ws-dot" id="ws-dot"></div>
-    <span class="table-tag" id="table-tag">โต๊ะ –</span>
+    🍽 สั่งอาหาร
   </div>
-</div>
-
-<div class="hero">
-  <div class="hero-title" id="hero-title">ยินดีต้อนรับ</div>
-  <div class="hero-sub">เลือกเมนูที่ต้องการแล้วกดยืนยันการสั่ง</div>
+  <span class="table-badge" id="table-badge">โต๊ะ –</span>
 </div>
 
 <div class="cat-tabs" id="cat-tabs"></div>
-<div class="menu-section" id="menu-section"></div>
+<div class="menu-scroll" id="menu-scroll"></div>
 
 <div class="cart-bar">
-  <div class="cart-info">
-    <div class="cart-count" id="cart-count">0</div>
+  <div class="cart-left">
+    <div class="cart-badge" id="cart-count">0</div>
     <div class="cart-total" id="cart-total">฿0</div>
   </div>
-  <button class="checkout-btn" id="checkout-btn" onclick="openCart()" disabled>
-    ดูตะกร้า →
-  </button>
+  <button class="view-cart-btn" id="view-cart-btn" onclick="openCart()" disabled>ดูตะกร้า →</button>
 </div>
 
-<div class="modal-overlay" id="modal" onclick="closeCartIfOutside(event)">
-  <div class="modal">
-    <div class="modal-title">
-      ตะกร้าของคุณ
-      <button class="close-btn" onclick="closeCart()">×</button>
+<!-- CART SHEET -->
+<div class="overlay" id="cart-overlay" onclick="closeIfOutside(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">ตะกร้าของคุณ</div>
+      <button class="sheet-close" onclick="closeCart()">×</button>
     </div>
-    <div id="cart-items"></div>
-    <input class="note-input" id="cart-note" placeholder="หมายเหตุ เช่น ไม่เผ็ด, ไม่ใส่ผักชี...">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
-      <span style="font-size:14px;color:var(--muted)">รวมทั้งหมด</span>
-      <span style="font-family:'Kanit',sans-serif;font-size:18px;font-weight:500" id="modal-total">฿0</span>
+    <div class="sheet-body">
+      <div id="cart-items"></div>
+      <div class="note-wrap">
+        <span class="note-label">หมายเหตุ</span>
+        <input class="note-input" id="cart-note" placeholder="เช่น ไม่เผ็ด, ไม่ใส่ผักชี...">
+      </div>
     </div>
-    <button class="confirm-btn" onclick="confirmOrder()">ยืนยันการสั่ง</button>
+    <div class="sheet-footer">
+      <div class="summary-row">
+        <span class="summary-label">รวมทั้งหมด</span>
+        <span class="summary-total" id="sheet-total">฿0</span>
+      </div>
+      <button class="confirm-btn" onclick="confirmOrder()">ยืนยันการสั่ง</button>
+    </div>
   </div>
 </div>
 
+<!-- SUCCESS -->
 <div class="success-screen" id="success">
   <div class="success-icon">✓</div>
   <div class="success-title">สั่งอาหารสำเร็จ!</div>
-  <div class="success-sub" id="success-sub">ทางร้านได้รับออเดอร์ของคุณแล้ว<br>กรุณารอสักครู่</div>
+  <div class="success-sub" id="success-sub">ทางร้านได้รับออเดอร์แล้ว<br>กรุณารอสักครู่</div>
   <button class="back-btn" onclick="resetOrder()">สั่งเพิ่ม</button>
 </div>
 
 <script>
+const EMOJIS = {'ข้าว / ก๋วยเตี๋ยว':'🍚','ของทอด':'🍟','ของดอง / ยำ':'🥗','อื่นๆ':'🍽'};
 const params = new URLSearchParams(location.search);
 const tableNum = parseInt(params.get('table')) || 1;
-document.getElementById('table-tag').textContent = `โต๊ะ ${tableNum}`;
-document.getElementById('hero-title').textContent = `โต๊ะ ${tableNum}`;
+document.getElementById('table-badge').textContent = 'โต๊ะ ' + tableNum;
 
-let menu = [];
-let cart = {};
-let ws;
+let menu = [], cart = {}, ws;
 
 function connect() {
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  ws = new WebSocket(`${protocol}//${location.host}`);
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
   ws.onopen = () => document.getElementById('ws-dot').classList.add('ok');
   ws.onclose = () => { document.getElementById('ws-dot').classList.remove('ok'); setTimeout(connect, 2000); };
   ws.onmessage = (e) => {
@@ -157,50 +176,68 @@ function getItem(id) { return allItems().find(x => x.id == id); }
 
 function renderMenu() {
   const catEl = document.getElementById('cat-tabs');
-  const menuEl = document.getElementById('menu-section');
-  catEl.innerHTML = `<button class="cat-tab active" onclick="filterCat('all',this)">ทั้งหมด</button>` +
-    menu.map(c => `<button class="cat-tab" onclick="filterCat('${c.cat}',this)">${c.cat}</button>`).join('');
+  const menuEl = document.getElementById('menu-scroll');
+  const cats = menu.map(c => c.cat);
+
+  catEl.innerHTML = cats.map((c, i) =>
+    `<button class="cat-tab ${i === 0 ? 'active' : ''}" onclick="scrollToSection('${c}', this)">${c}</button>`
+  ).join('');
+
   menuEl.innerHTML = menu.map(cat => `
-    <div class="cat-group" data-cat="${cat.cat}">
-      <div class="cat-name">${cat.cat}</div>
-      ${cat.items.map(item => `
-        <div class="menu-card" id="card-${item.id}">
-          <div class="menu-info">
-            <div class="menu-name">${item.name}</div>
-            <div class="menu-price">฿${item.price}</div>
+    <div class="menu-section" id="sec-${cat.cat}">
+      <div class="section-title">${cat.cat}</div>
+      <div class="menu-grid">
+        ${cat.items.map(item => `
+          <div class="menu-item" id="item-${item.id}">
+            <div class="menu-emoji">${EMOJIS[cat.cat] || '🍽'}</div>
+            <div class="menu-info">
+              <div class="menu-name">${item.name}</div>
+            </div>
+            <div class="item-ctrl" id="ctrl-${item.id}">
+              <button class="ctrl-btn plus" onclick="addItem(${item.id})">+</button>
+            </div>
           </div>
-          <div class="menu-ctrl">
-            <button class="m-btn minus" id="minus-${item.id}" onclick="changeQty(${item.id},-1)" style="display:none">−</button>
-            <span class="m-qty" id="qty-${item.id}" style="display:none">0</span>
-            <button class="m-btn plus" onclick="changeQty(${item.id},1)">+</button>
-          </div>
-        </div>
-      `).join('')}
+        `).join('')}
+      </div>
     </div>
   `).join('');
 }
 
-function filterCat(cat, btn) {
+function scrollToSection(cat, btn) {
   document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('.cat-group').forEach(g => {
-    g.style.display = (cat === 'all' || g.dataset.cat === cat) ? '' : 'none';
-  });
+  const el = document.getElementById('sec-' + cat);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function addItem(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  updateItemCtrl(id);
+  updateCartBar();
 }
 
 function changeQty(id, d) {
   const next = (cart[id] || 0) + d;
   if (next <= 0) delete cart[id]; else cart[id] = next;
-  updateCartUI(id);
+  updateItemCtrl(id);
   updateCartBar();
+  if (!Object.keys(cart).length) closeCart();
+  else renderCartItems();
 }
 
-function updateCartUI(id) {
+function updateItemCtrl(id) {
+  const el = document.getElementById('ctrl-' + id);
+  if (!el) return;
   const qty = cart[id] || 0;
-  const qtyEl = document.getElementById(`qty-${id}`);
-  const minusEl = document.getElementById(`minus-${id}`);
-  if (qtyEl) { qtyEl.textContent = qty; qtyEl.style.display = qty > 0 ? '' : 'none'; }
-  if (minusEl) { minusEl.style.display = qty > 0 ? '' : 'none'; }
+  if (qty === 0) {
+    el.innerHTML = `<button class="ctrl-btn plus" onclick="addItem(${id})">+</button>`;
+  } else {
+    el.innerHTML = `
+      <button class="ctrl-btn minus" onclick="changeQty(${id},-1)">−</button>
+      <span class="ctrl-num">${qty}</span>
+      <button class="ctrl-btn plus" onclick="addItem(${id})">+</button>
+    `;
+  }
 }
 
 function updateCartBar() {
@@ -209,67 +246,55 @@ function updateCartBar() {
   let total = 0;
   keys.forEach(id => { const item = getItem(id); if (item) total += item.price * cart[id]; });
   document.getElementById('cart-count').textContent = count;
-  document.getElementById('cart-total').textContent = '฿' + total.toLocaleString();
-  document.getElementById('checkout-btn').disabled = count === 0;
+  document.getElementById('cart-total').textContent = total > 0 ? '฿' + total.toLocaleString() : count + ' รายการ';
+  document.getElementById('view-cart-btn').disabled = count === 0;
 }
 
 function openCart() {
+  renderCartItems();
+  document.getElementById('cart-overlay').classList.add('show');
+}
+
+function renderCartItems() {
   const keys = Object.keys(cart);
   let total = 0;
   document.getElementById('cart-items').innerHTML = keys.map(id => {
     const item = getItem(id); const qty = cart[id];
-    total += item.price * qty;
+    if (item) total += item.price * qty;
     return `<div class="cart-item">
-      <span class="ci-name">${item.name}</span>
-      <span class="ci-price">×${qty}</span>
-      <div class="menu-ctrl" style="gap:6px">
-        <button class="m-btn minus" onclick="changeQtyModal(${id},-1)" style="width:26px;height:26px">−</button>
-        <span style="font-size:14px;font-weight:500;min-width:16px;text-align:center" id="mqty-${id}">${qty}</span>
-        <button class="m-btn plus" onclick="changeQtyModal(${id},1)" style="width:26px;height:26px">+</button>
+      <span class="ci-name">${item?.name || ''}</span>
+      <div class="ci-ctrl">
+        <button class="ctrl-btn minus" onclick="changeQty(${id},-1)">−</button>
+        <span class="ctrl-num">${qty}</span>
+        <button class="ctrl-btn plus" onclick="changeQty(${id},1)">+</button>
       </div>
     </div>`;
   }).join('');
-  document.getElementById('modal-total').textContent = '฿' + total.toLocaleString();
-  document.getElementById('modal').classList.add('show');
+  document.getElementById('sheet-total').textContent = total > 0 ? '฿' + total.toLocaleString() : Object.keys(cart).length + ' รายการ';
 }
 
-function changeQtyModal(id, d) {
-  changeQty(id, d);
-  if (!cart[id]) { openCart(); return; }
-  const el = document.getElementById(`mqty-${id}`);
-  if (el) el.textContent = cart[id];
-  const keys = Object.keys(cart);
-  let total = 0;
-  keys.forEach(id2 => { const item = getItem(id2); if (item) total += item.price * cart[id2]; });
-  document.getElementById('modal-total').textContent = '฿' + total.toLocaleString();
-  if (!keys.length) closeCart();
-}
-
-function closeCart() { document.getElementById('modal').classList.remove('show'); }
-function closeCartIfOutside(e) { if (e.target === document.getElementById('modal')) closeCart(); }
+function closeCart() { document.getElementById('cart-overlay').classList.remove('show'); }
+function closeIfOutside(e) { if (e.target === document.getElementById('cart-overlay')) closeCart(); }
 
 function confirmOrder() {
   const keys = Object.keys(cart);
   if (!keys.length || !ws || ws.readyState !== 1) return;
   ws.send(JSON.stringify({
-    type: 'new_order',
-    table: tableNum,
-    items: keys.map(id => ({ id, name: getItem(id).name, qty: cart[id] })),
+    type: 'new_order', table: tableNum,
+    items: keys.map(id => ({ id, name: getItem(id)?.name || '', qty: cart[id] })),
     note: document.getElementById('cart-note').value.trim(),
     source: 'customer'
   }));
-  const total = keys.reduce((s, id) => s + (getItem(id)?.price || 0) * cart[id], 0);
-  document.getElementById('success-sub').innerHTML = `ทางร้านได้รับออเดอร์ของคุณแล้ว<br>รวม ฿${total.toLocaleString()} – กรุณารอสักครู่`;
   closeCart();
   document.getElementById('success').classList.add('show');
 }
 
 function resetOrder() {
+  allItems().forEach(item => { delete cart[item.id]; updateItemCtrl(item.id); });
   cart = {};
-  document.getElementById('success').classList.remove('show');
-  allItems().forEach(item => updateCartUI(item.id));
-  updateCartBar();
   document.getElementById('cart-note').value = '';
+  document.getElementById('success').classList.remove('show');
+  updateCartBar();
 }
 
 connect();
