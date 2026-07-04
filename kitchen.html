@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ครัว</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--muted:#a1a1aa;--muted2:#71717a;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-border:rgba(74,222,128,0.2);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.1);--amber-border:rgba(251,191,36,0.2);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--blue-border:rgba(96,165,250,0.2);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.2);
+  --orange:#fb923c;--orange-dim:rgba(251,146,60,0.1);--orange-border:rgba(251,146,60,0.2);
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
+
+/* STATION SELECT SCREEN */
+.select-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px;gap:16px}
+.select-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:8px;text-align:center}
+.select-sub{font-size:14px;color:var(--muted);margin-bottom:24px;text-align:center}
+.station-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
+.station-card{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s}
+.station-card:hover{border-color:var(--surface3);background:var(--surface2)}
+.station-icon{font-size:32px;flex-shrink:0}
+.station-info{}
+.station-name{font-family:'Kanit',sans-serif;font-size:17px;font-weight:500}
+.station-desc{font-size:13px;color:var(--muted);margin-top:2px}
+.station-card.fry .station-name{color:var(--orange)}
+.station-card.fish .station-name{color:var(--blue)}
+.station-card.rice .station-name{color:var(--amber)}
+
+/* KITCHEN SCREEN */
+.kitchen-screen{display:none;flex-direction:column;height:100%}
+.kitchen-screen.show{display:flex}
+
+/* TOPBAR */
+.topbar{border-bottom:1px solid var(--border);padding:0 14px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.station-tag{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.back-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;font-family:'Sarabun',sans-serif}
+.stats{display:flex;gap:6px}
+.stat{font-size:11px;font-weight:500;padding:3px 9px;border-radius:5px}
+.stat-w{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.stat-c{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+
+/* TICKETS */
+.tickets-wrap{flex:1;overflow-y:auto;padding:12px 14px}
+.tickets-wrap::-webkit-scrollbar{display:none}
+.ticket{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.ticket.s-new{border-left:3px solid var(--amber)}
+.ticket.s-cooking{border-left:3px solid var(--blue)}
+.ticket.s-done{border-left:3px solid var(--green);opacity:.45}
+.t-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.t-table{font-family:'Kanit',sans-serif;font-size:16px;font-weight:600}
+.t-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.t-status{font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px}
+.st-new{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.st-cooking{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+.st-done{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.t-time{font-size:11px;color:var(--muted2)}
+.t-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+.t-item{display:flex;justify-content:space-between;font-size:15px;padding:3px 0}
+.t-qty{color:var(--muted);font-size:13px}
+.t-note{font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:6px;padding:5px 8px;margin-top:8px}
+.t-actions{display:flex;gap:6px;margin-top:10px}
+.t-btn{flex:1;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;font-family:'Kanit',sans-serif;font-size:14px;cursor:pointer;text-align:center;transition:all .12s;color:var(--muted)}
+.t-cook{border-color:var(--blue-border);color:var(--blue);background:var(--blue-dim)}
+.t-cook:hover{background:rgba(96,165,250,.2)}
+.t-done{border-color:var(--green-border);color:var(--green);background:var(--green-dim)}
+.t-done:hover{background:rgba(74,222,128,.2)}
+.no-tickets{text-align:center;padding:70px 20px;color:var(--muted2);font-size:14px}
+.no-tickets-icon{font-size:48px;margin-bottom:12px;opacity:.3}
+</style>
+</head>
+<body>
+
+<!-- SELECT STATION SCREEN -->
+<div class="select-screen" id="select-screen">
+  <div class="select-title">🍳 เลือกสถานีครัว</div>
+  <div class="select-sub">กดเลือกตำแหน่งของคุณ</div>
+  <div class="station-cards">
+    <div class="station-card fry" onclick="selectStation('fry')">
+      <div class="station-icon">🍟</div>
+      <div class="station-info">
+        <div class="station-name">สถานีทอด</div>
+        <div class="station-desc">ผักทอด, เฟรนฟราย, ปีกไก่, กุ้งทอด, หมึกทอด, ชีสบอล, ซาลาเปา, นักเก็ต, ไก่ป็อบ</div>
+      </div>
+    </div>
+    <div class="station-card fish" onclick="selectStation('fish')">
+      <div class="station-icon">🐟</div>
+      <div class="station-info">
+        <div class="station-name">สถานีปลา</div>
+        <div class="station-desc">ปลาแซลมอน, หอยเชลล์, หอยแมลงภู่, กุ้งดอง, ม่อนดอง, ยำเนื้อเย็น, จุ๊เนื้อ</div>
+      </div>
+    </div>
+    <div class="station-card rice" onclick="selectStation('rice')">
+      <div class="station-icon">🍚</div>
+      <div class="station-info">
+        <div class="station-name">สถานีข้าว</div>
+        <div class="station-desc">ข้าวผัดกระเทียม, ข้าวผัดมันเนื้อ, ข้าวสวย, ข้าวหน้าเนื้อตุ๋น, อุด้งเนื้อตุ๋น, ถั่วแระ, ไส้กรอกแดง, ไข่ดอง</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KITCHEN SCREEN -->
+<div class="kitchen-screen" id="kitchen-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="goBack()">← เปลี่ยน</button>
+      <div class="station-tag"><div class="live-dot"></div><span id="station-label">สถานีทอด</span></div>
+    </div>
+    <div class="stats">
+      <span class="stat stat-w" id="sw">0 รอ</span>
+      <span class="stat stat-c" id="sc">0 ทำ</span>
+    </div>
+  </div>
+  <div class="tickets-wrap" id="tickets-wrap">
+    <div class="no-tickets"><div class="no-tickets-icon">🍳</div>ยังไม่มีออเดอร์</div>
+  </div>
+</div>
+
+<script>
+// กำหนดเมนูแต่ละสถานี
+const STATIONS = {
+  fry: {
+    label: '🍟 สถานีทอด',
+    items: ['ผักทอด','เฟรนฟราย','ปีกไก่ทอด','ซาลาเปาทอด','กุ้งทอด','นักเก็ต','ชีสบอล','หมึกทอด','ไก่ป็อบ']
+  },
+  fish: {
+    label: '🐟 สถานีปลา',
+    items: ['ปลาแซลมอน','หอยเชลล์','หอยแมลงภู่','กุ้งดอง','ม่อนดอง','ยำเนื้อเย็น','จุ๊เนื้อ']
+  },
+  rice: {
+    label: '🍚 สถานีข้าว',
+    items: ['ข้าวผัดกระเทียม','ข้าวผัดมันเนื้อ','ข้าวสวย','ข้าวหน้าเนื้อตุ๋น','อุด้งเนื้อตุ๋น','ถั่วแระ','ไส้กรอกแดง','ไข่ดอง']
+  }
+};
+
+let currentStation = null;
+let tickets = [];
+let ws;
+
+function selectStation(station) {
+  currentStation = station;
+  document.getElementById('select-screen').style.display = 'none';
+  document.getElementById('kitchen-screen').classList.add('show');
+  document.getElementById('station-label').textContent = STATIONS[station].label;
+  connect();
+}
+
+function goBack() {
+  currentStation = null;
+  document.getElementById('select-screen').style.display = 'flex';
+  document.getElementById('kitchen-screen').classList.remove('show');
+  if (ws) ws.close();
+}
+
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+  ws.onclose = () => { if (currentStation) setTimeout(connect, 2000); };
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'init') { tickets = msg.tickets; renderTickets(); }
+    if (msg.type === 'ticket_added') { tickets.unshift(msg.ticket); renderTickets(); }
+    if (msg.type === 'ticket_updated') {
+      const i = tickets.findIndex(t => t.num === msg.ticket.num);
+      if (i >= 0) tickets[i] = msg.ticket;
+      renderTickets();
+    }
+    if (msg.type === 'ticket_deleted') {
+      tickets = tickets.filter(t => t.num !== msg.num);
+      renderTickets();
+    }
+  };
+}
+
+// กรองเฉพาะ items ที่เป็นของสถานีนี้
+function filterTicketItems(ticket) {
+  const stationItems = STATIONS[currentStation].items;
+  const filtered = ticket.items.filter(i => stationItems.includes(i.name));
+  return filtered;
+}
+
+function setStatus(num, status) {
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'set_status', num, status }));
+}
+
+function renderTickets() {
+  const el = document.getElementById('tickets-wrap');
+
+  // กรองเฉพาะออเดอร์ที่มี items ของสถานีนี้
+  const myTickets = tickets
+    .map(t => ({ ...t, items: filterTicketItems(t) }))
+    .filter(t => t.items.length > 0 && t.status !== 'done');
+
+  const waiting = myTickets.filter(t => t.status === 'new').length;
+  const cooking = myTickets.filter(t => t.status === 'cooking').length;
+  document.getElementById('sw').textContent = waiting + ' รอ';
+  document.getElementById('sc').textContent = cooking + ' ทำ';
+
+  if (!myTickets.length) {
+    el.innerHTML = '<div class="no-tickets"><div class="no-tickets-icon">✅</div>ไม่มีออเดอร์รอ</div>';
+    return;
+  }
+
+  el.innerHTML = myTickets.map(t => {
+    const stClass = t.status === 'new' ? 'st-new' : 'st-cooking';
+    const stText = t.status === 'new' ? 'รอทำ' : 'กำลังทำ';
+    const act = t.status === 'new'
+      ? `<button class="t-btn t-cook" onclick="setStatus(${t.num},'cooking')">▶ เริ่มทำ</button>`
+      : `<button class="t-btn t-done" onclick="setStatus(${t.num},'done')">✓ เสร็จแล้ว</button>`;
+    return `<div class="ticket s-${t.status}">
+      <div class="t-top">
+        <div class="t-table">โต๊ะ ${t.table} <span style="font-size:12px;color:var(--muted2);font-weight:400">#${t.num}</span></div>
+        <div class="t-right">
+          <span class="t-status ${stClass}">${stText}</span>
+          <span class="t-time">${t.time}</span>
+        </div>
+      </div>
+      <hr class="t-divider">
+      ${t.items.map(i => `<div class="t-item"><span>${i.name}</span><span class="t-qty">×${i.qty}</span></div>`).join('')}
+      ${t.note ? `<div class="t-note">📝 ${t.note}</div>` : ''}
+      <div class="t-actions">${act}</div>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
