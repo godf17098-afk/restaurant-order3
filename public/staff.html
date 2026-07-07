@@ -20,19 +20,7 @@
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
 
-/* LOGIN SCREEN */
-.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px;gap:0}
-.login-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:6px}
-.login-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
-.pin-display{font-family:'Kanit',sans-serif;font-size:28px;font-weight:600;letter-spacing:12px;height:48px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;min-width:160px}
-.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--surface3);margin:0 5px;transition:background .15s}
-.pin-dot.filled{background:var(--text)}
-.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
-.num-btn{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;font-family:'Kanit',sans-serif;font-size:20px;font-weight:500;color:var(--text);cursor:pointer;text-align:center;transition:all .12s;-webkit-tap-highlight-color:transparent}
-.num-btn:active{background:var(--surface2)}
-.num-btn.del{font-size:16px;color:var(--muted)}
-.num-btn.empty{background:transparent;border-color:transparent;cursor:default}
-.login-err{font-size:13px;color:var(--red);margin-top:12px;min-height:20px;text-align:center}
+
 
 /* MAIN APP */
 .app{display:none;flex-direction:column;height:100%}
@@ -165,41 +153,11 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </head>
 <body>
 
-<!-- LOGIN -->
-<div class="login-screen" id="login-screen">
-  <div class="login-title">🍽 เข้าสู่ระบบ</div>
-  <div class="login-sub">ใส่ PIN ของคุณ</div>
-  <div class="pin-display" id="pin-display">
-    <div class="pin-dot" id="d0"></div>
-    <div class="pin-dot" id="d1"></div>
-    <div class="pin-dot" id="d2"></div>
-    <div class="pin-dot" id="d3"></div>
-  </div>
-  <div class="numpad">
-    <button class="num-btn" onclick="pinPress('1')">1</button>
-    <button class="num-btn" onclick="pinPress('2')">2</button>
-    <button class="num-btn" onclick="pinPress('3')">3</button>
-    <button class="num-btn" onclick="pinPress('4')">4</button>
-    <button class="num-btn" onclick="pinPress('5')">5</button>
-    <button class="num-btn" onclick="pinPress('6')">6</button>
-    <button class="num-btn" onclick="pinPress('7')">7</button>
-    <button class="num-btn" onclick="pinPress('8')">8</button>
-    <button class="num-btn" onclick="pinPress('9')">9</button>
-    <div class="num-btn empty"></div>
-    <button class="num-btn" onclick="pinPress('0')">0</button>
-    <button class="num-btn del" onclick="pinDel()">⌫</button>
-  </div>
-  <div class="login-err" id="login-err"></div>
-</div>
-
 <!-- MAIN APP -->
-<div class="app" id="app">
+<div class="app show" id="app">
   <div class="topbar">
     <div class="brand"><div class="live-dot"></div>พนักงาน</div>
-    <div class="staff-name">
-      <span id="staff-name-label">-</span>
-      <button class="logout-btn" onclick="logout()">ออก</button>
-    </div>
+<div class="live-dot" style="background:var(--green)"></div>
   </div>
 
   <div class="tabs">
@@ -270,46 +228,13 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 let menu=[], tickets=[], orders={}, currentTable=1, ws;
 let currentStaff=null, pinInput='', kdsFilter='all';
 
-// PIN LOGIN
-function pinPress(n){
-  if(pinInput.length>=4)return;
-  pinInput+=n;
-  updatePinDots();
-  if(pinInput.length===4)setTimeout(doLogin,150);
-}
-function pinDel(){pinInput=pinInput.slice(0,-1);updatePinDots();}
-function updatePinDots(){
-  for(let i=0;i<4;i++){
-    document.getElementById('d'+i).classList.toggle('filled',i<pinInput.length);
-  }
-}
-async function doLogin(){
-  const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pinInput})});
-  const data=await res.json();
-  if(data.ok){
-    currentStaff=data.staff;
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').classList.add('show');
-    document.getElementById('staff-name-label').textContent=data.staff.name;
-    connect();
-  } else {
-    document.getElementById('login-err').textContent=data.message||'PIN ไม่ถูกต้อง';
-    pinInput='';updatePinDots();
-    setTimeout(()=>document.getElementById('login-err').textContent='',2000);
-  }
-}
-function logout(){
-  currentStaff=null;pinInput='';updatePinDots();
-  document.getElementById('app').classList.remove('show');
-  document.getElementById('login-screen').style.display='flex';
-  if(ws)ws.close();
-}
+// No login required
 
 // WS
 function connect(){
   const proto=location.protocol==='https:'?'wss':'ws';
   ws=new WebSocket(`${proto}://${location.host}`);
-  ws.onclose=()=>{if(currentStaff)setTimeout(connect,2000);};
+  ws.onclose=()=>setTimeout(connect,2000);
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){menu=msg.menu;tickets=msg.tickets;initMenu();renderKDS();renderTables();}
@@ -359,4 +284,101 @@ function initMenu(){
     ${cat.items.map(item=>`
       <div class="m-item">
         <span class="m-name">${item.name}</span>
-        <button class="m-
+        <button class="m-add" onclick="addItem(${item.id})">+</button>
+      </div>
+    `).join('')}
+  `).join('');
+  initTableGrid();
+}
+
+function selectTable(n,btn){
+  currentTable=n;
+  document.querySelectorAll('.tbl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cart-sub').textContent='โต๊ะ '+n;
+  updateCartBar();
+}
+
+function addItem(id){
+  if(!orders[currentTable])orders[currentTable]={};
+  orders[currentTable][id]=(orders[currentTable][id]||0)+1;
+  updateCartBar();
+}
+
+function changeQtySheet(id,d){
+  if(!orders[currentTable])return;
+  const next=(orders[currentTable][id]||0)+d;
+  if(next<=0)delete orders[currentTable][id];else orders[currentTable][id]=next;
+  updateCartBar();renderSheetItems();
+  if(!Object.keys(orders[currentTable]||{}).length)closeCart();
+}
+
+function updateCartBar(){
+  const tbl=orders[currentTable]||{};
+  const count=Object.keys(tbl).reduce((s,id)=>s+tbl[id],0);
+  document.getElementById('cart-count').textContent=count;
+  document.getElementById('cart-total').textContent=count?count+' รายการ':'ยังไม่มีรายการ';
+  document.getElementById('cart-btn').disabled=count===0;
+}
+
+function openCart(){
+  document.getElementById('sheet-title').textContent='ออเดอร์ – โต๊ะ '+currentTable;
+  renderSheetItems();
+  document.getElementById('overlay').classList.add('show');
+}
+
+function renderSheetItems(){
+  const tbl=orders[currentTable]||{};
+  const keys=Object.keys(tbl);
+  document.getElementById('sheet-items').innerHTML=keys.length?keys.map(id=>{
+    const item=getItem(id);const qty=tbl[id];
+    return `<div class="o-item">
+      <span class="o-name">${item?.name||''}</span>
+      <div class="o-ctrl">
+        <button class="o-btn" onclick="changeQtySheet(${id},-1)">−</button>
+        <span class="o-num">${qty}</span>
+        <button class="o-btn" onclick="changeQtySheet(${id},1)">+</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty-text">ไม่มีรายการ</div>';
+  document.getElementById('ft-info').textContent=keys.length+' รายการ';
+}
+
+function closeCart(){document.getElementById('overlay').classList.remove('show');}
+function closeIfOut(e){if(e.target===document.getElementById('overlay'))closeCart();}
+
+function sendOrder(){
+  const tbl=orders[currentTable]||{};
+  const keys=Object.keys(tbl);
+  if(!keys.length||!ws||ws.readyState!==1)return;
+  ws.send(JSON.stringify({
+    type:'new_order',table:currentTable,
+    items:keys.map(id=>({id,name:getItem(id)?.name||'',qty:tbl[id]})),
+    note:document.getElementById('note').value.trim(),
+    source:'staff',staffName:''
+  }));
+  delete orders[currentTable];
+  document.getElementById('note').value='';
+  closeCart();updateCartBar();
+  showPage('kds',document.querySelectorAll('.tab')[1]);
+}
+
+function filterKDS(f,btn){
+  kdsFilter=f;
+  document.querySelectorAll('.kf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderKDS();
+}
+
+function setStatus(num,status){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'set_status',num,status}));}
+function deleteTicket(num){if(!confirm('ลบออเดอร์นี้?'))return;if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'delete_ticket',num}));}
+
+function renderKDS(){
+  const el=document.getElementById('kds-body');
+  let filtered=tickets.filter(t=>!t.tableCleared);
+  if(kdsFilter!=='all')filtered=filtered.filter(t=>t.status===kdsFilter);
+  if(!filtered.length){el.innerHTML='<div class="no-tickets">ไม่มีออเดอร์</div>';return;}
+  el.innerHTML=filtered.map(t=>{
+    const stClass=t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
+    const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
+    const srcTag=t.source==='customer'?`<span class="src-tag src-c">ลูกค้า</span>`:`<span class="src-tag src-s">พนักงาน</span>`;
