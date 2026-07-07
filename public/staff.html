@@ -4,36 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>พนักงาน</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
   --border:#27272a;--border2:#3f3f46;
   --text:#fafafa;--muted:#a1a1aa;--muted2:#71717a;
-  --accent:#fff;--accent-fg:#09090b;
   --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-border:rgba(74,222,128,0.2);
   --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.1);--amber-border:rgba(251,191,36,0.2);
   --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--blue-border:rgba(96,165,250,0.2);
-  --red:#f87171;--red-dim:rgba(248,113,113,0.1);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.2);
   --r:8px;
 }
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
 
+/* LOGIN SCREEN */
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px;gap:0}
+.login-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:6px}
+.login-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.pin-display{font-family:'Kanit',sans-serif;font-size:28px;font-weight:600;letter-spacing:12px;height:48px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;min-width:160px}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--surface3);margin:0 5px;transition:background .15s}
+.pin-dot.filled{background:var(--text)}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
+.num-btn{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;font-family:'Kanit',sans-serif;font-size:20px;font-weight:500;color:var(--text);cursor:pointer;text-align:center;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.num-btn:active{background:var(--surface2)}
+.num-btn.del{font-size:16px;color:var(--muted)}
+.num-btn.empty{background:transparent;border-color:transparent;cursor:default}
+.login-err{font-size:13px;color:var(--red);margin-top:12px;min-height:20px;text-align:center}
+
+/* MAIN APP */
+.app{display:none;flex-direction:column;height:100%}
+.app.show{display:flex}
+
 /* TOPBAR */
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.brand{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 14px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.brand{font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.stats{display:flex;gap:6px}
-.stat{font-size:11px;font-weight:500;padding:3px 9px;border-radius:5px}
-.stat-w{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
-.stat-c{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
-.stat-d{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.staff-name{font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 10px;display:flex;align-items:center;gap:6px}
+.logout-btn{background:transparent;border:none;color:var(--muted2);font-size:11px;cursor:pointer;padding:2px 0}
 
 /* TABS */
-.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;padding:0 4px}
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
 .tab{flex:1;padding:11px 4px;text-align:center;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
 .tab.active{color:var(--text);border-bottom-color:var(--text)}
 
@@ -45,8 +59,9 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .table-row{padding:12px 14px 8px;flex-shrink:0}
 .row-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.tbl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);border-radius:var(--r);padding:10px 4px;font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .15s}
+.tbl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);border-radius:var(--r);padding:10px 4px;font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .15s;position:relative}
 .tbl-btn.active{background:var(--surface3);border-color:var(--border2);color:var(--text)}
+.tbl-badge{position:absolute;top:-4px;right:-4px;background:var(--amber);color:#000;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
 
 .menu-list{flex:1;overflow-y:auto;padding:0 14px}
 .menu-list::-webkit-scrollbar{display:none}
@@ -60,35 +75,53 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .cart-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .cart-left{display:flex;align-items:center;gap:8px;flex:1}
 .cart-badge{background:var(--text);color:var(--bg);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-.cart-total{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
-.cart-table{font-size:12px;color:var(--muted)}
+.cart-total{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
+.cart-sub{font-size:12px;color:var(--muted)}
 .cart-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:9px 16px;cursor:pointer;white-space:nowrap}
 .cart-btn:disabled{opacity:.25;cursor:not-allowed}
 
 /* KDS PAGE */
 .kds-body{flex:1;overflow-y:auto;padding:12px 14px}
 .kds-body::-webkit-scrollbar{display:none}
+.kds-filter{display:flex;gap:6px;padding:10px 14px 0;flex-shrink:0;overflow-x:auto}
+.kds-filter::-webkit-scrollbar{display:none}
+.kf-btn{flex-shrink:0;padding:5px 12px;border-radius:999px;border:1px solid var(--border2);background:transparent;font-size:12px;color:var(--muted);cursor:pointer}
+.kf-btn.active{background:var(--surface3);color:var(--text);border-color:var(--surface3)}
+
+/* TABLES PAGE */
+.tables-body{flex:1;overflow-y:auto;padding:12px 14px}
+.tables-body::-webkit-scrollbar{display:none}
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px}
+.tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tc-name{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
+.tc-count{font-size:12px;color:var(--muted)}
+.tc-items{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:10px}
+.clear-btn{width:100%;padding:9px;border-radius:8px;border:1px solid var(--red-border);background:var(--red-dim);color:var(--red);font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer}
+.clear-btn:hover{background:rgba(248,113,113,.2)}
+.no-orders{font-size:13px;color:var(--muted2);text-align:center;padding:8px 0}
+
+/* TICKET */
 .ticket{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;animation:fadeUp .2s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .ticket.s-new{border-left:3px solid var(--amber)}
 .ticket.s-cooking{border-left:3px solid var(--blue)}
 .ticket.s-done{border-left:3px solid var(--green);opacity:.5}
 .t-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.t-left{}
 .t-table{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
-.t-meta{display:flex;align-items:center;gap:6px;margin-top:3px}
+.t-meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
 .t-num{font-size:11px;color:var(--muted2)}
 .src-tag{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:500}
 .src-c{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
 .src-s{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
-.t-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.staff-tag{font-size:10px;color:var(--muted2)}
+.t-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .t-status{font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px}
 .st-new{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
 .st-cooking{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
 .st-done{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
 .t-time{font-size:11px;color:var(--muted2)}
 .t-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
-.t-item{display:flex;justify-content:space-between;font-size:14px;padding:2px 0;color:var(--text)}
+.t-item{display:flex;justify-content:space-between;font-size:14px;padding:2px 0}
 .t-qty{color:var(--muted);font-size:13px}
 .t-note{font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:6px;padding:5px 8px;margin-top:8px}
 .t-actions{display:flex;gap:6px;margin-top:10px}
@@ -98,7 +131,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .t-done{border-color:var(--green-border);color:var(--green)}
 .t-done:hover{background:var(--green-dim)}
 .t-del{border-color:var(--border2);color:var(--muted2);flex:none;padding:8px 10px}
-.t-del:hover{border-color:rgba(248,113,113,.3);color:var(--red)}
+.t-del:hover{border-color:var(--red-border);color:var(--red)}
 .no-tickets{text-align:center;padding:60px 20px;color:var(--muted2);font-size:14px}
 
 /* CART SHEET */
@@ -125,50 +158,89 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .note-input:focus{border-color:var(--text)}
 .note-input::placeholder{color:var(--muted2)}
 .sheet-ft{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
-.ft-total{font-family:'Kanit',sans-serif;font-size:18px;font-weight:600}
+.ft-info{font-size:13px;color:var(--muted)}
 .send-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:11px 22px;cursor:pointer;white-space:nowrap}
 .empty-text{font-size:13px;color:var(--muted2);text-align:center;padding:16px}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="brand"><div class="live-dot"></div>พนักงาน</div>
-  <div class="stats">
-    <span class="stat stat-w" id="sw">0 รอ</span>
-    <span class="stat stat-c" id="sc">0 ทำ</span>
-    <span class="stat stat-d" id="sd">0 เสร็จ</span>
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-title">🍽 เข้าสู่ระบบ</div>
+  <div class="login-sub">ใส่ PIN ของคุณ</div>
+  <div class="pin-display" id="pin-display">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
   </div>
+  <div class="numpad">
+    <button class="num-btn" onclick="pinPress('1')">1</button>
+    <button class="num-btn" onclick="pinPress('2')">2</button>
+    <button class="num-btn" onclick="pinPress('3')">3</button>
+    <button class="num-btn" onclick="pinPress('4')">4</button>
+    <button class="num-btn" onclick="pinPress('5')">5</button>
+    <button class="num-btn" onclick="pinPress('6')">6</button>
+    <button class="num-btn" onclick="pinPress('7')">7</button>
+    <button class="num-btn" onclick="pinPress('8')">8</button>
+    <button class="num-btn" onclick="pinPress('9')">9</button>
+    <div class="num-btn empty"></div>
+    <button class="num-btn" onclick="pinPress('0')">0</button>
+    <button class="num-btn del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="login-err" id="login-err"></div>
 </div>
 
-<div class="tabs">
-  <button class="tab active" onclick="showPage('order',this)">🛒 รับออเดอร์</button>
-  <button class="tab" onclick="showPage('kds',this)">🍳 ครัว</button>
-</div>
-
-<!-- ORDER PAGE -->
-<div class="page active" id="page-order">
-  <div class="table-row">
-    <div class="row-label">โต๊ะ</div>
-    <div class="table-grid" id="table-grid"></div>
-  </div>
-  <div class="menu-list" id="menu-list"></div>
-  <div class="cart-bar">
-    <div class="cart-left">
-      <div class="cart-badge" id="cart-count">0</div>
-      <div>
-        <div class="cart-total" id="cart-total">ยังไม่มีรายการ</div>
-        <div class="cart-table" id="cart-table-label">โต๊ะ 1</div>
-      </div>
+<!-- MAIN APP -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand"><div class="live-dot"></div>พนักงาน</div>
+    <div class="staff-name">
+      <span id="staff-name-label">-</span>
+      <button class="logout-btn" onclick="logout()">ออก</button>
     </div>
-    <button class="cart-btn" id="cart-btn" onclick="openCart()" disabled>ดูรายการ →</button>
   </div>
-</div>
 
-<!-- KDS PAGE -->
-<div class="page" id="page-kds">
-  <div class="kds-body" id="kds-body">
-    <div class="no-tickets">ยังไม่มีออเดอร์</div>
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('order',this)">🛒 รับออเดอร์</button>
+    <button class="tab" onclick="showPage('kds',this)">🍳 ครัว</button>
+    <button class="tab" onclick="showPage('tables',this)">🪑 โต๊ะ</button>
+  </div>
+
+  <!-- ORDER PAGE -->
+  <div class="page active" id="page-order">
+    <div class="table-row">
+      <div class="row-label">เลือกโต๊ะ</div>
+      <div class="table-grid" id="table-grid"></div>
+    </div>
+    <div class="menu-list" id="menu-list"></div>
+    <div class="cart-bar">
+      <div class="cart-left">
+        <div class="cart-badge" id="cart-count">0</div>
+        <div>
+          <div class="cart-total" id="cart-total">ยังไม่มีรายการ</div>
+          <div class="cart-sub" id="cart-sub">โต๊ะ 1</div>
+        </div>
+      </div>
+      <button class="cart-btn" id="cart-btn" onclick="openCart()" disabled>ดูรายการ →</button>
+    </div>
+  </div>
+
+  <!-- KDS PAGE -->
+  <div class="page" id="page-kds">
+    <div class="kds-filter">
+      <button class="kf-btn active" onclick="filterKDS('all',this)">ทั้งหมด</button>
+      <button class="kf-btn" onclick="filterKDS('new',this)">รอทำ</button>
+      <button class="kf-btn" onclick="filterKDS('cooking',this)">กำลังทำ</button>
+      <button class="kf-btn" onclick="filterKDS('done',this)">เสร็จแล้ว</button>
+    </div>
+    <div class="kds-body" id="kds-body"><div class="no-tickets">ยังไม่มีออเดอร์</div></div>
+  </div>
+
+  <!-- TABLES PAGE -->
+  <div class="page" id="page-tables">
+    <div class="tables-body" id="tables-body"></div>
   </div>
 </div>
 
@@ -177,7 +249,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-hd">
-      <div class="sheet-title" id="sheet-title">รายการออเดอร์</div>
+      <div class="sheet-title" id="sheet-title">ออเดอร์</div>
       <button class="sheet-close" onclick="closeCart()">×</button>
     </div>
     <div class="sheet-body">
@@ -188,7 +260,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
       </div>
     </div>
     <div class="sheet-ft">
-      <div class="ft-total" id="sheet-total">฿0</div>
+      <div class="ft-info" id="ft-info">0 รายการ</div>
       <button class="send-btn" onclick="sendOrder()">ส่งเข้าครัว →</button>
     </div>
   </div>
@@ -196,17 +268,55 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 
 <script>
 let menu=[], tickets=[], orders={}, currentTable=1, ws;
+let currentStaff=null, pinInput='', kdsFilter='all';
 
+// PIN LOGIN
+function pinPress(n){
+  if(pinInput.length>=4)return;
+  pinInput+=n;
+  updatePinDots();
+  if(pinInput.length===4)setTimeout(doLogin,150);
+}
+function pinDel(){pinInput=pinInput.slice(0,-1);updatePinDots();}
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    document.getElementById('d'+i).classList.toggle('filled',i<pinInput.length);
+  }
+}
+async function doLogin(){
+  const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pinInput})});
+  const data=await res.json();
+  if(data.ok){
+    currentStaff=data.staff;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').classList.add('show');
+    document.getElementById('staff-name-label').textContent=data.staff.name;
+    connect();
+  } else {
+    document.getElementById('login-err').textContent=data.message||'PIN ไม่ถูกต้อง';
+    pinInput='';updatePinDots();
+    setTimeout(()=>document.getElementById('login-err').textContent='',2000);
+  }
+}
+function logout(){
+  currentStaff=null;pinInput='';updatePinDots();
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-screen').style.display='flex';
+  if(ws)ws.close();
+}
+
+// WS
 function connect(){
   const proto=location.protocol==='https:'?'wss':'ws';
   ws=new WebSocket(`${proto}://${location.host}`);
-  ws.onclose=()=>setTimeout(connect,2000);
+  ws.onclose=()=>{if(currentStaff)setTimeout(connect,2000);};
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
-    if(msg.type==='init'){menu=msg.menu;tickets=msg.tickets;initMenu();renderKDS();updateCounts();}
-    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderKDS();updateCounts();}
-    if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderKDS();updateCounts();}
-    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderKDS();updateCounts();}
+    if(msg.type==='init'){menu=msg.menu;tickets=msg.tickets;initMenu();renderKDS();renderTables();}
+    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderKDS();renderTables();updateTableBadges();}
+    if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderKDS();renderTables();}
+    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderKDS();renderTables();updateTableBadges();}
+    if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderKDS();renderTables();updateTableBadges();}
   };
 }
 
@@ -215,13 +325,29 @@ function showPage(id,btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
+  if(id==='tables')renderTables();
 }
 
 function initTableGrid(){
   const el=document.getElementById('table-grid');
-  el.innerHTML=Array.from({length:8},(_,i)=>i+1).map(n=>
-    `<button class="tbl-btn ${n===1?'active':''}" onclick="selectTable(${n},this)">โต๊ะ ${n}</button>`
+  el.innerHTML=Array.from({length:16},(_,i)=>i+1).map(n=>
+    `<button class="tbl-btn ${n===1?'active':''}" id="tbl-${n}" onclick="selectTable(${n},this)">โต๊ะ ${n}</button>`
   ).join('');
+}
+
+function updateTableBadges(){
+  for(let n=1;n<=16;n++){
+    const btn=document.getElementById('tbl-'+n);
+    if(!btn)return;
+    const count=tickets.filter(t=>t.table===n&&!t.tableCleared&&t.status!=='done').length;
+    const existing=btn.querySelector('.tbl-badge');
+    if(existing)existing.remove();
+    if(count>0){
+      const badge=document.createElement('div');
+      badge.className='tbl-badge';badge.textContent=count;
+      btn.appendChild(badge);
+    }
+  }
 }
 
 function allItems(){return menu.flatMap(c=>c.items)}
@@ -233,123 +359,4 @@ function initMenu(){
     ${cat.items.map(item=>`
       <div class="m-item">
         <span class="m-name">${item.name}</span>
-        <button class="m-add" onclick="addItem(${item.id})">+</button>
-      </div>
-    `).join('')}
-  `).join('');
-}
-
-function selectTable(n,btn){
-  currentTable=n;
-  document.querySelectorAll('.tbl-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('cart-table-label').textContent='โต๊ะ '+n;
-  updateCartBar();
-}
-
-function addItem(id){
-  if(!orders[currentTable])orders[currentTable]={};
-  orders[currentTable][id]=(orders[currentTable][id]||0)+1;
-  updateCartBar();
-}
-
-function changeQtySheet(id,d){
-  if(!orders[currentTable])return;
-  const next=(orders[currentTable][id]||0)+d;
-  if(next<=0)delete orders[currentTable][id];else orders[currentTable][id]=next;
-  updateCartBar();
-  renderSheetItems();
-  if(!Object.keys(orders[currentTable]||{}).length)closeCart();
-}
-
-function updateCartBar(){
-  const tbl=orders[currentTable]||{};
-  const keys=Object.keys(tbl);
-  const count=keys.reduce((s,id)=>s+tbl[id],0);
-  document.getElementById('cart-count').textContent=count;
-  document.getElementById('cart-total').textContent=count?count+' รายการ':'ยังไม่มีรายการ';
-  document.getElementById('cart-btn').disabled=count===0;
-}
-
-function openCart(){
-  document.getElementById('sheet-title').textContent='ออเดอร์ – โต๊ะ '+currentTable;
-  renderSheetItems();
-  document.getElementById('overlay').classList.add('show');
-}
-
-function renderSheetItems(){
-  const tbl=orders[currentTable]||{};
-  const keys=Object.keys(tbl);
-  document.getElementById('sheet-items').innerHTML=keys.length?keys.map(id=>{
-    const item=getItem(id);const qty=tbl[id];
-    return `<div class="o-item">
-      <span class="o-name">${item?.name||''}</span>
-      <div class="o-ctrl">
-        <button class="o-btn" onclick="changeQtySheet(${id},-1)">−</button>
-        <span class="o-num">${qty}</span>
-        <button class="o-btn" onclick="changeQtySheet(${id},1)">+</button>
-      </div>
-    </div>`;
-  }).join(''):'<div class="empty-text">ไม่มีรายการ</div>';
-  document.getElementById('sheet-total').textContent=keys.length+' รายการ';
-}
-
-function closeCart(){document.getElementById('overlay').classList.remove('show');}
-function closeIfOut(e){if(e.target===document.getElementById('overlay'))closeCart();}
-
-function sendOrder(){
-  const tbl=orders[currentTable]||{};
-  const keys=Object.keys(tbl);
-  if(!keys.length||!ws||ws.readyState!==1)return;
-  ws.send(JSON.stringify({
-    type:'new_order',table:currentTable,
-    items:keys.map(id=>({id,name:getItem(id)?.name||'',qty:tbl[id]})),
-    note:document.getElementById('note').value.trim(),
-    source:'staff'
-  }));
-  delete orders[currentTable];
-  document.getElementById('note').value='';
-  closeCart();updateCartBar();
-  showPage('kds',document.querySelectorAll('.tab')[1]);
-}
-
-function setStatus(num,status){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'set_status',num,status}));}
-function deleteTicket(num){if(!confirm('ลบออเดอร์นี้?'))return;if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'delete_ticket',num}));}
-
-function renderKDS(){
-  const el=document.getElementById('kds-body');
-  if(!tickets.length){el.innerHTML='<div class="no-tickets">ยังไม่มีออเดอร์</div>';return;}
-  el.innerHTML=tickets.map(t=>{
-    const stClass=t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
-    const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
-    const srcTag=t.source==='customer'?`<span class="src-tag src-c">ลูกค้า</span>`:`<span class="src-tag src-s">พนักงาน</span>`;
-    const act=t.status==='new'?`<button class="t-btn t-cook" onclick="setStatus(${t.num},'cooking')">▶ เริ่มทำ</button>`:t.status==='cooking'?`<button class="t-btn t-done" onclick="setStatus(${t.num},'done')">✓ เสร็จแล้ว</button>`:'';
-    return `<div class="ticket s-${t.status}">
-      <div class="t-top">
-        <div class="t-left">
-          <div class="t-table">โต๊ะ ${t.table}</div>
-          <div class="t-meta"><span class="t-num">#${t.num}</span>${srcTag}</div>
-        </div>
-        <div class="t-right">
-          <span class="t-status ${stClass}">${stText}</span>
-          <span class="t-time">${t.time}</span>
-        </div>
-      </div>
-      <hr class="t-divider">
-      ${t.items.map(i=>`<div class="t-item"><span>${i.name}</span><span class="t-qty">×${i.qty}</span></div>`).join('')}
-      ${t.note?`<div class="t-note">📝 ${t.note}</div>`:''}
-      <div class="t-actions">${act}<button class="t-btn t-del" onclick="deleteTicket(${t.num})">🗑</button></div>
-    </div>`;
-  }).join('');
-}
-
-function updateCounts(){
-  document.getElementById('sw').textContent=tickets.filter(t=>t.status==='new').length+' รอ';
-  document.getElementById('sc').textContent=tickets.filter(t=>t.status==='cooking').length+' ทำ';
-  document.getElementById('sd').textContent=tickets.filter(t=>t.status==='done').length+' เสร็จ';
-}
-
-initTableGrid();connect();
-</script>
-</body>
-</html>
+        <button class="m-
