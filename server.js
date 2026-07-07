@@ -7,11 +7,19 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/staff.html'));
 
+// State
 let tickets = [];
 let ticketCounter = 1001;
+let tables = {}; // { tableNum: { orders: [], closed: false, sessionId: string } }
+let staff = [
+  { id: 1, name: 'พนักงาน 1', pin: '1111', role: 'staff' },
+  { id: 2, name: 'พนักงาน 2', pin: '2222', role: 'staff' },
+  { id: 3, name: 'แคชเชียร์', pin: '9999', role: 'cashier' },
+];
 
 const MENU = [
   { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
@@ -50,17 +58,46 @@ const MENU = [
 
 function broadcast(data) {
   const msg = JSON.stringify(data);
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) client.send(msg);
+  wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
+}
+
+function broadcastToTable(tableNum, data) {
+  const msg = JSON.stringify(data);
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN && c.tableNum === tableNum) c.send(msg);
   });
 }
 
-wss.on('connection', (ws) => {
+function getTableOrders(tableNum) {
+  return tickets.filter(t => t.table === tableNum && !t.tableCleared);
+}
+
+// Login API
+app.post('/api/login', (req, res) => {
+  const { pin } = req.body;
+  const s = staff.find(x => x.pin === pin);
+  if (!s) return res.json({ ok: false, message: 'PIN ไม่ถูกต้อง' });
+  res.json({ ok: true, staff: { id: s.id, name: s.name, role: s.role } });
+});
+
+// Get table orders for customer
+app.get('/api/table/:num/orders', (req, res) => {
+  const num = parseInt(req.params.num);
+  const orders = getTableOrders(num);
+  res.json({ orders });
+});
+
+wss.on('connection', (ws, req) => {
   ws.send(JSON.stringify({ type: 'init', tickets, menu: MENU }));
 
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
+
+    // Register table for customer
+    if (msg.type === 'join_table') {
+      ws.tableNum = msg.table;
+    }
 
     if (msg.type === 'new_order') {
       const ticket = {
@@ -71,9 +108,13 @@ wss.on('connection', (ws) => {
         time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
         status: 'new',
         source: msg.source || 'staff',
+        staffName: msg.staffName || '',
+        tableCleared: false,
       };
       tickets.unshift(ticket);
       broadcast({ type: 'ticket_added', ticket });
+      // Notify same table customers
+      broadcastToTable(msg.table, { type: 'table_updated', table: msg.table, orders: getTableOrders(msg.table) });
     }
 
     if (msg.type === 'set_status') {
@@ -85,13 +126,16 @@ wss.on('connection', (ws) => {
       tickets = tickets.filter(x => x.num !== msg.num);
       broadcast({ type: 'ticket_deleted', num: msg.num });
     }
+
+    // Clear table / close bill
+    if (msg.type === 'clear_table') {
+      tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; });
+      broadcast({ type: 'table_cleared', table: msg.table });
+    }
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅  Server running at http://localhost:${PORT}`);
-  console.log(`📱  Customer page: http://<IP ของคอม>:${PORT}/customer.html?table=1`);
-  console.log(`🧑‍🍳  Staff page:    http://<IP ของคอม>:${PORT}/staff.html\n`);
+  console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-                             
