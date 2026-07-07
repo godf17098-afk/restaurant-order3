@@ -288,7 +288,6 @@ function initMenu(){
       </div>
     `).join('')}
   `).join('');
-  initTableGrid();
 }
 
 function selectTable(n,btn){
@@ -382,3 +381,4 @@ function renderKDS(){
     const stClass=t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
     const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
     const srcTag=t.source==='customer'?`<span class="src-tag src-c">ลูกค้า</span>`:`<span class="src-tag src-s">พนักงาน</span>`;
+    const staffTag
