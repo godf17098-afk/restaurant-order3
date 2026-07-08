@@ -20,35 +20,29 @@
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
 
-
-
-/* MAIN APP */
-.app{display:none;flex-direction:column;height:100%}
-.app.show{display:flex}
-
-/* TOPBAR */
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 14px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.brand{font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px}
+.brand{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.staff-name{font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 10px;display:flex;align-items:center;gap:6px}
-.logout-btn{background:transparent;border:none;color:var(--muted2);font-size:11px;cursor:pointer;padding:2px 0}
+.stats{display:flex;gap:6px}
+.stat{font-size:11px;font-weight:500;padding:3px 9px;border-radius:5px}
+.stat-w{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.stat-c{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+.stat-d{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
 
-/* TABS */
 .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
 .tab{flex:1;padding:11px 4px;text-align:center;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
 .tab.active{color:var(--text);border-bottom-color:var(--text)}
 
-/* PAGES */
 .page{display:none;flex:1;overflow:hidden;flex-direction:column}
 .page.active{display:flex}
 
-/* ORDER PAGE */
-.table-row{padding:12px 14px 8px;flex-shrink:0}
+/* ORDER */
+.section-pad{padding:12px 14px 8px;flex-shrink:0}
 .row-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.table-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-.tbl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);border-radius:var(--r);padding:10px 4px;font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .15s;position:relative}
-.tbl-btn.active{background:var(--surface3);border-color:var(--border2);color:var(--text)}
+.staff-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.staff-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);border-radius:var(--r);padding:10px 4px;font-family:'Kanit',sans-serif;font-size:12px;cursor:pointer;text-align:center;transition:all .15s;position:relative}
+.staff-btn.active{background:var(--surface3);border-color:var(--border2);color:var(--text)}
 .tbl-badge{position:absolute;top:-4px;right:-4px;background:var(--amber);color:#000;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
 
 .menu-list{flex:1;overflow-y:auto;padding:0 14px}
@@ -56,37 +50,35 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .cat-head{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted2);padding:10px 0 6px}
 .m-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:4px;gap:10px}
 .m-name{font-size:14px;font-weight:500;flex:1}
-.m-add{width:28px;height:28px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;line-height:1}
+.m-add{width:28px;height:28px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
 .m-add:hover{background:var(--text);border-color:var(--text);color:var(--bg)}
 
-/* CART BAR */
 .cart-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .cart-left{display:flex;align-items:center;gap:8px;flex:1}
 .cart-badge{background:var(--text);color:var(--bg);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.cart-info{}
 .cart-total{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
 .cart-sub{font-size:12px;color:var(--muted)}
 .cart-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:9px 16px;cursor:pointer;white-space:nowrap}
 .cart-btn:disabled{opacity:.25;cursor:not-allowed}
 
-/* KDS PAGE */
-.kds-body{flex:1;overflow-y:auto;padding:12px 14px}
-.kds-body::-webkit-scrollbar{display:none}
+/* KDS */
 .kds-filter{display:flex;gap:6px;padding:10px 14px 0;flex-shrink:0;overflow-x:auto}
 .kds-filter::-webkit-scrollbar{display:none}
 .kf-btn{flex-shrink:0;padding:5px 12px;border-radius:999px;border:1px solid var(--border2);background:transparent;font-size:12px;color:var(--muted);cursor:pointer}
 .kf-btn.active{background:var(--surface3);color:var(--text);border-color:var(--surface3)}
+.kds-body{flex:1;overflow-y:auto;padding:10px 14px}
+.kds-body::-webkit-scrollbar{display:none}
 
-/* TABLES PAGE */
+/* TABLES */
 .tables-body{flex:1;overflow-y:auto;padding:12px 14px}
 .tables-body::-webkit-scrollbar{display:none}
 .table-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px}
-.tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .tc-name{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
 .tc-count{font-size:12px;color:var(--muted)}
 .tc-items{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:10px}
 .clear-btn{width:100%;padding:9px;border-radius:8px;border:1px solid var(--red-border);background:var(--red-dim);color:var(--red);font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer}
-.clear-btn:hover{background:rgba(248,113,113,.2)}
-.no-orders{font-size:13px;color:var(--muted2);text-align:center;padding:8px 0}
 
 /* TICKET */
 .ticket{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;animation:fadeUp .2s ease}
@@ -101,7 +93,6 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .src-tag{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:500}
 .src-c{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
 .src-s{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
-.staff-tag{font-size:10px;color:var(--muted2)}
 .t-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .t-status{font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px}
 .st-new{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
@@ -113,16 +104,16 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .t-qty{color:var(--muted);font-size:13px}
 .t-note{font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:6px;padding:5px 8px;margin-top:8px}
 .t-actions{display:flex;gap:6px;margin-top:10px}
-.t-btn{flex:1;padding:8px;border-radius:7px;border:1px solid var(--border2);background:transparent;font-family:'Sarabun',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .12s;color:var(--muted)}
+.t-btn{flex:1;padding:8px;border-radius:7px;border:1px solid var(--border2);background:transparent;font-family:'Sarabun',sans-serif;font-size:13px;cursor:pointer;text-align:center;color:var(--muted)}
 .t-cook{border-color:var(--blue-border);color:var(--blue)}
 .t-cook:hover{background:var(--blue-dim)}
 .t-done{border-color:var(--green-border);color:var(--green)}
 .t-done:hover{background:var(--green-dim)}
 .t-del{border-color:var(--border2);color:var(--muted2);flex:none;padding:8px 10px}
 .t-del:hover{border-color:var(--red-border);color:var(--red)}
-.no-tickets{text-align:center;padding:60px 20px;color:var(--muted2);font-size:14px}
+.no-tickets{text-align:center;padding:50px 20px;color:var(--muted2);font-size:14px}
 
-/* CART SHEET */
+/* SHEET */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;backdrop-filter:blur(2px)}
 .overlay.show{display:flex}
 .sheet{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:up .22s ease}
@@ -138,71 +129,65 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .o-name{flex:1;font-size:14px;font-weight:500}
 .o-ctrl{display:flex;align-items:center;gap:6px}
 .o-btn{width:26px;height:26px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.o-btn:hover{border-color:var(--text);color:var(--text)}
 .o-num{font-size:14px;font-weight:600;min-width:20px;text-align:center}
 .note-wrap{padding:10px 0 4px}
 .note-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
 .note-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);outline:none;height:40px}
-.note-input:focus{border-color:var(--text)}
 .note-input::placeholder{color:var(--muted2)}
 .sheet-ft{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ft-info{font-size:13px;color:var(--muted)}
-.send-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:11px 22px;cursor:pointer;white-space:nowrap}
-.empty-text{font-size:13px;color:var(--muted2);text-align:center;padding:16px}
+.send-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:11px 22px;cursor:pointer}
 </style>
 </head>
 <body>
 
-<!-- MAIN APP -->
-<div class="app show" id="app">
-  <div class="topbar">
-    <div class="brand"><div class="live-dot"></div>พนักงาน</div>
-<div class="live-dot" style="background:var(--green)"></div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="showPage('order',this)">🛒 รับออเดอร์</button>
-    <button class="tab" onclick="showPage('kds',this)">🍳 ครัว</button>
-    <button class="tab" onclick="showPage('tables',this)">🪑 โต๊ะ</button>
-  </div>
-
-  <!-- ORDER PAGE -->
-  <div class="page active" id="page-order">
-    <div class="table-row">
-      <div class="row-label">ผู้รับออเดอร์</div>
-      <div class="table-grid" id="table-grid"></div>
-    </div>
-    <div class="menu-list" id="menu-list"></div>
-    <div class="cart-bar">
-      <div class="cart-left">
-        <div class="cart-badge" id="cart-count">0</div>
-        <div>
-          <div class="cart-total" id="cart-total">ยังไม่มีรายการ</div>
-          <div class="cart-sub" id="cart-sub">แคชเชียร์</div>
-        </div>
-      </div>
-      <button class="cart-btn" id="cart-btn" onclick="openCart()" disabled>ดูรายการ →</button>
-    </div>
-  </div>
-
-  <!-- KDS PAGE -->
-  <div class="page" id="page-kds">
-    <div class="kds-filter">
-      <button class="kf-btn active" onclick="filterKDS('all',this)">ทั้งหมด</button>
-      <button class="kf-btn" onclick="filterKDS('new',this)">รอทำ</button>
-      <button class="kf-btn" onclick="filterKDS('cooking',this)">กำลังทำ</button>
-      <button class="kf-btn" onclick="filterKDS('done',this)">เสร็จแล้ว</button>
-    </div>
-    <div class="kds-body" id="kds-body"><div class="no-tickets">ยังไม่มีออเดอร์</div></div>
-  </div>
-
-  <!-- TABLES PAGE -->
-  <div class="page" id="page-tables">
-    <div class="tables-body" id="tables-body"></div>
+<div class="topbar">
+  <div class="brand"><div class="live-dot"></div>พนักงาน</div>
+  <div class="stats">
+    <span class="stat stat-w" id="sw">0 รอ</span>
+    <span class="stat stat-c" id="sc">0 ทำ</span>
+    <span class="stat stat-d" id="sd">0 เสร็จ</span>
   </div>
 </div>
 
-<!-- CART SHEET -->
+<div class="tabs">
+  <button class="tab active" onclick="showPage('order',this)">🛒 รับออเดอร์</button>
+  <button class="tab" onclick="showPage('kds',this)">🍳 ครัว</button>
+  <button class="tab" onclick="showPage('tables',this);renderTables()">🪑 พนักงาน</button>
+</div>
+
+<div class="page active" id="page-order">
+  <div class="section-pad">
+    <div class="row-label">พนักงาน</div>
+    <div class="staff-grid" id="staff-grid"></div>
+  </div>
+  <div class="menu-list" id="menu-list"></div>
+  <div class="cart-bar">
+    <div class="cart-left">
+      <div class="cart-badge" id="cart-count">0</div>
+      <div class="cart-info">
+        <div class="cart-total" id="cart-total">ยังไม่มีรายการ</div>
+        <div class="cart-sub" id="cart-sub">แคชเชียร์</div>
+      </div>
+    </div>
+    <button class="cart-btn" id="cart-btn" onclick="openCart()" disabled>ดูรายการ →</button>
+  </div>
+</div>
+
+<div class="page" id="page-kds">
+  <div class="kds-filter">
+    <button class="kf-btn active" onclick="filterKDS('all',this)">ทั้งหมด</button>
+    <button class="kf-btn" onclick="filterKDS('new',this)">รอทำ</button>
+    <button class="kf-btn" onclick="filterKDS('cooking',this)">กำลังทำ</button>
+    <button class="kf-btn" onclick="filterKDS('done',this)">เสร็จแล้ว</button>
+  </div>
+  <div class="kds-body" id="kds-body"><div class="no-tickets">ยังไม่มีออเดอร์</div></div>
+</div>
+
+<div class="page" id="page-tables">
+  <div class="tables-body" id="tables-body"></div>
+</div>
+
 <div class="overlay" id="overlay" onclick="closeIfOut(event)">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -225,23 +210,33 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </div>
 
 <script>
-let menu=[], tickets=[], orders={}, currentTable=1, ws;
-let currentStaff=null, pinInput='', kdsFilter='all';
+const STAFF_LIST = [
+  {id:1, name:'แคชเชียร์'},
+  {id:2, name:'มาย'},
+  {id:3, name:'วุ้น'},
+  {id:4, name:'กาฟิว'},
+  {id:5, name:'ต้นหอม'},
+];
 
-// No login required
+let menu=[], tickets=[], orders={}, currentTable=1, ws, kdsFilter='all';
 
-// WS
+function getStaffName(id){ return STAFF_LIST.find(s=>s.id===id)?.name||'#'+id; }
+
+// WebSocket
 function connect(){
   const proto=location.protocol==='https:'?'wss':'ws';
   ws=new WebSocket(`${proto}://${location.host}`);
   ws.onclose=()=>setTimeout(connect,2000);
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
-    if(msg.type==='init'){menu=msg.menu;tickets=msg.tickets;initMenu();renderKDS();renderTables();}
-    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderKDS();renderTables();updateTableBadges();}
-    if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderKDS();renderTables();}
-    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderKDS();renderTables();updateTableBadges();}
-    if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderKDS();renderTables();updateTableBadges();}
+    if(msg.type==='init'){
+      menu=msg.menu; tickets=msg.tickets;
+      renderMenu(); renderKDS(); renderTables(); updateCounts(); updateBadges();
+    }
+    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderKDS();renderTables();updateCounts();updateBadges();}
+    if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderKDS();renderTables();updateCounts();}
+    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderKDS();renderTables();updateCounts();updateBadges();}
+    if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderKDS();renderTables();updateCounts();updateBadges();}
   };
 }
 
@@ -250,37 +245,36 @@ function showPage(id,btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
-  if(id==='tables')renderTables();
 }
 
-const STAFF_NAMES = ['แคชเชียร์','มาย','วุ้น','กาฟิว','ต้นหอม'];
-
-function initTableGrid(){
-  const el=document.getElementById('table-grid');
-  el.innerHTML=STAFF_NAMES.map((name,i)=>
-    `<button class="tbl-btn ${i===0?'active':''}" id="tbl-${i+1}" onclick="selectTable(${i+1},this)">${name}</button>`
+// Staff Grid
+function initStaffGrid(){
+  const el=document.getElementById('staff-grid');
+  el.innerHTML=STAFF_LIST.map((s,i)=>
+    `<button class="staff-btn ${i===0?'active':''}" id="sb-${s.id}" onclick="selectStaff(${s.id},this)">${s.name}</button>`
   ).join('');
 }
 
-function updateTableBadges(){
-  for(let n=1;n<=STAFF_NAMES.length;n++){
-    const btn=document.getElementById('tbl-'+n);
-    if(!btn)continue;
-    const count=tickets.filter(t=>t.table===n&&!t.tableCleared&&t.status!=='done').length;
-    const existing=btn.querySelector('.tbl-badge');
-    if(existing)existing.remove();
-    if(count>0){
-      const badge=document.createElement('div');
-      badge.className='tbl-badge';badge.textContent=count;
-      btn.appendChild(badge);
-    }
-  }
+function updateBadges(){
+  STAFF_LIST.forEach(s=>{
+    const btn=document.getElementById('sb-'+s.id);
+    if(!btn)return;
+    const ex=btn.querySelector('.tbl-badge');if(ex)ex.remove();
+    const count=tickets.filter(t=>t.table===s.id&&!t.tableCleared&&t.status!=='done').length;
+    if(count>0){const b=document.createElement('div');b.className='tbl-badge';b.textContent=count;btn.appendChild(b);}
+  });
 }
 
-function allItems(){return menu.flatMap(c=>c.items)}
-function getItem(id){return allItems().find(x=>x.id==id)}
+function selectStaff(id,btn){
+  currentTable=id;
+  document.querySelectorAll('.staff-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cart-sub').textContent=getStaffName(id);
+  updateCartBar();
+}
 
-function initMenu(){
+// Menu
+function renderMenu(){
   document.getElementById('menu-list').innerHTML=menu.map(cat=>`
     <div class="cat-head">${cat.cat}</div>
     ${cat.items.map(item=>`
@@ -292,13 +286,8 @@ function initMenu(){
   `).join('');
 }
 
-function selectTable(n,btn){
-  currentTable=n;
-  document.querySelectorAll('.tbl-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('cart-sub').textContent=STAFF_NAMES[n-1]||('คน '+n);
-  updateCartBar();
-}
+function allItems(){return menu.flatMap(c=>c.items)}
+function getItem(id){return allItems().find(x=>x.id==id)}
 
 function addItem(id){
   if(!orders[currentTable])orders[currentTable]={};
@@ -323,7 +312,7 @@ function updateCartBar(){
 }
 
 function openCart(){
-  document.getElementById('sheet-title').textContent='ออเดอร์ – '+(STAFF_NAMES[currentTable-1]||'คน '+currentTable);
+  document.getElementById('sheet-title').textContent='ออเดอร์ – '+getStaffName(currentTable);
   renderSheetItems();
   document.getElementById('overlay').classList.add('show');
 }
@@ -341,7 +330,7 @@ function renderSheetItems(){
         <button class="o-btn" onclick="changeQtySheet(${id},1)">+</button>
       </div>
     </div>`;
-  }).join(''):'<div class="empty-text">ไม่มีรายการ</div>';
+  }).join(''):'<div style="text-align:center;padding:16px;color:var(--muted2)">ไม่มีรายการ</div>';
   document.getElementById('ft-info').textContent=keys.length+' รายการ';
 }
 
@@ -356,7 +345,7 @@ function sendOrder(){
     type:'new_order',table:currentTable,
     items:keys.map(id=>({id,name:getItem(id)?.name||'',qty:tbl[id]})),
     note:document.getElementById('note').value.trim(),
-    source:'staff',staffName:''
+    source:'staff',staffName:getStaffName(currentTable)
   }));
   delete orders[currentTable];
   document.getElementById('note').value='';
@@ -364,6 +353,7 @@ function sendOrder(){
   showPage('kds',document.querySelectorAll('.tab')[1]);
 }
 
+// KDS
 function filterKDS(f,btn){
   kdsFilter=f;
   document.querySelectorAll('.kf-btn').forEach(b=>b.classList.remove('active'));
@@ -376,10 +366,13 @@ function deleteTicket(num){if(!confirm('ลบออเดอร์นี้?'))
 
 function renderKDS(){
   const el=document.getElementById('kds-body');
-  let filtered=tickets.filter(t=>!t.tableCleared);
-  if(kdsFilter!=='all')filtered=filtered.filter(t=>t.status===kdsFilter);
-  if(!filtered.length){el.innerHTML='<div class="no-tickets">ไม่มีออเดอร์</div>';return;}
-  el.innerHTML=filtered.map(t=>{
+  let list=tickets.filter(t=>!t.tableCleared);
+  if(kdsFilter!=='all')list=list.filter(t=>t.status===kdsFilter);
+  if(!list.length){el.innerHTML='<div class="no-tickets">ไม่มีออเดอร์</div>';return;}
+  el.innerHTML=list.map(t=>{
     const stClass=t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
     const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
-    const srcTag=t.s
+    const srcTag=t.source==='customer'?`<span class="src-tag src-c">ลูกค้า</span>`:`<span class="src-tag src-s">พนักงาน</span>`;
+    const act=t.status==='new'?`<button class="t-btn t-cook" onclick="setStatus(${t.num},'cooking')">▶ เริ่มทำ</button>`:t.status==='cooking'?`<button class="t-btn t-done" onclick="setStatus(${t.num},'done')">✓ เสร็จแล้ว</button>`:'';
+    return `<div class="ticket s-${t.status}">
+  
