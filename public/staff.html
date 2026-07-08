@@ -46,7 +46,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 /* ORDER PAGE */
 .table-row{padding:12px 14px 8px;flex-shrink:0}
 .row-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.table-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
 .tbl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);border-radius:var(--r);padding:10px 4px;font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .15s;position:relative}
 .tbl-btn.active{background:var(--surface3);border-color:var(--border2);color:var(--text)}
 .tbl-badge{position:absolute;top:-4px;right:-4px;background:var(--amber);color:#000;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
@@ -169,7 +169,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
   <!-- ORDER PAGE -->
   <div class="page active" id="page-order">
     <div class="table-row">
-      <div class="row-label">เลือกโต๊ะ</div>
+      <div class="row-label">ผู้รับออเดอร์</div>
       <div class="table-grid" id="table-grid"></div>
     </div>
     <div class="menu-list" id="menu-list"></div>
@@ -178,7 +178,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
         <div class="cart-badge" id="cart-count">0</div>
         <div>
           <div class="cart-total" id="cart-total">ยังไม่มีรายการ</div>
-          <div class="cart-sub" id="cart-sub">โต๊ะ 1</div>
+          <div class="cart-sub" id="cart-sub">แคชเชียร์</div>
         </div>
       </div>
       <button class="cart-btn" id="cart-btn" onclick="openCart()" disabled>ดูรายการ →</button>
@@ -253,17 +253,19 @@ function showPage(id,btn){
   if(id==='tables')renderTables();
 }
 
+const STAFF_NAMES = ['แคชเชียร์','มาย','วุ้น','กาฟิว','ต้นหอม'];
+
 function initTableGrid(){
   const el=document.getElementById('table-grid');
-  el.innerHTML=Array.from({length:16},(_,i)=>i+1).map(n=>
-    `<button class="tbl-btn ${n===1?'active':''}" id="tbl-${n}" onclick="selectTable(${n},this)">โต๊ะ ${n}</button>`
+  el.innerHTML=STAFF_NAMES.map((name,i)=>
+    `<button class="tbl-btn ${i===0?'active':''}" id="tbl-${i+1}" onclick="selectTable(${i+1},this)">${name}</button>`
   ).join('');
 }
 
 function updateTableBadges(){
-  for(let n=1;n<=16;n++){
+  for(let n=1;n<=STAFF_NAMES.length;n++){
     const btn=document.getElementById('tbl-'+n);
-    if(!btn)return;
+    if(!btn)continue;
     const count=tickets.filter(t=>t.table===n&&!t.tableCleared&&t.status!=='done').length;
     const existing=btn.querySelector('.tbl-badge');
     if(existing)existing.remove();
@@ -294,7 +296,7 @@ function selectTable(n,btn){
   currentTable=n;
   document.querySelectorAll('.tbl-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('cart-sub').textContent='โต๊ะ '+n;
+  document.getElementById('cart-sub').textContent=STAFF_NAMES[n-1]||('คน '+n);
   updateCartBar();
 }
 
@@ -321,7 +323,7 @@ function updateCartBar(){
 }
 
 function openCart(){
-  document.getElementById('sheet-title').textContent='ออเดอร์ – โต๊ะ '+currentTable;
+  document.getElementById('sheet-title').textContent='ออเดอร์ – '+(STAFF_NAMES[currentTable-1]||'คน '+currentTable);
   renderSheetItems();
   document.getElementById('overlay').classList.add('show');
 }
@@ -380,5 +382,4 @@ function renderKDS(){
   el.innerHTML=filtered.map(t=>{
     const stClass=t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
     const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
-    const srcTag=t.source==='customer'?`<span class="src-tag src-c">ลูกค้า</span>`:`<span class="src-tag src-s">พนักงาน</span>`;
-    const staffTag
+    const srcTag=t.s
