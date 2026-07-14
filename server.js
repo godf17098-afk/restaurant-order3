@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
+const ExcelJS = require('exceljs');
 
 const app = express();
 const server = http.createServer(app);
@@ -12,6 +13,7 @@ app.get('/', (req, res) => res.redirect('/staff.html'));
 
 let tickets = [];
 let ticketCounter = 1001;
+let billHistory = []; // stores cleared table bills for reporting
 
 const MENU = [
   { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
@@ -117,14 +119,99 @@ wss.on('connection', (ws) => {
     }
 
     if (msg.type === 'clear_table') {
+      const tableOrders = tickets.filter(t => t.table === msg.table && !t.tableCleared);
+      const now = new Date();
+      const bangkokTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+
+      tableOrders.forEach(t => {
+        billHistory.push({
+          date: bangkokTime.toISOString().slice(0, 10),
+          time: bangkokTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }),
+          table: t.table,
+          ticketNum: t.num,
+          items: t.items.map(i => `${i.name} x${i.qty}`).join(', '),
+          itemCount: t.items.reduce((s, i) => s + i.qty, 0),
+          source: t.source,
+          staffName: t.staffName || '',
+        });
+      });
+
       tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; });
       broadcast({ type: 'table_cleared', table: msg.table });
     }
   });
 });
 
+// API: download today's sales report as Excel
+app.get('/api/report/excel', async (req, res) => {
+  const dateParam = req.query.date || new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+  const dayBills = billHistory.filter(b => b.date === dateParam);
+
+  const workbook = new ExcelJS.Workbook();
+
+  // Sheet 1: Summary
+  const summarySheet = workbook.addWorksheet('สรุปยอด');
+  summarySheet.columns = [
+    { header: 'รายการ', key: 'label', width: 25 },
+    { header: 'ค่า', key: 'value', width: 20 },
+  ];
+  const totalBills = dayBills.length;
+  const totalItems = dayBills.reduce((s, b) => s + b.itemCount, 0);
+
+  const menuCount = {};
+  dayBills.forEach(b => {
+    b.items.split(', ').forEach(entry => {
+      const match = entry.match(/^(.+) x(\d+)$/);
+      if (match) {
+        const name = match[1];
+        const qty = parseInt(match[2]);
+        menuCount[name] = (menuCount[name] || 0) + qty;
+      }
+    });
+  });
+  const topItems = Object.entries(menuCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  summarySheet.addRow({ label: 'วันที่', value: dateParam });
+  summarySheet.addRow({ label: 'จำนวนบิลทั้งหมด', value: totalBills });
+  summarySheet.addRow({ label: 'จำนวนรายการอาหารรวม', value: totalItems });
+  summarySheet.addRow({});
+  summarySheet.addRow({ label: 'เมนูขายดี Top 5', value: '' });
+  topItems.forEach(([name, qty]) => summarySheet.addRow({ label: name, value: qty + ' รายการ' }));
+
+  summarySheet.getRow(1).font = { bold: true };
+  summarySheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
+
+  // Sheet 2: Bill details
+  const detailSheet = workbook.addWorksheet('รายละเอียดบิล');
+  detailSheet.columns = [
+    { header: 'เวลา', key: 'time', width: 12 },
+    { header: 'โต๊ะ/พนักงาน', key: 'table', width: 15 },
+    { header: 'เลขออเดอร์', key: 'ticketNum', width: 14 },
+    { header: 'รายการอาหาร', key: 'items', width: 60 },
+    { header: 'จำนวนรวม', key: 'itemCount', width: 12 },
+    { header: 'ที่มา', key: 'source', width: 12 },
+  ];
+  dayBills.forEach(b => {
+    detailSheet.addRow({
+      time: b.time,
+      table: b.table,
+      ticketNum: b.ticketNum,
+      items: b.items,
+      itemCount: b.itemCount,
+      source: b.source === 'customer' ? 'ลูกค้า' : 'พนักงาน',
+    });
+  });
+  detailSheet.getRow(1).font = { bold: true };
+  detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="sales-report-${dateParam}.xlsx"`);
+  await workbook.xlsx.write(res);
+  res.end();
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-                   
+     
