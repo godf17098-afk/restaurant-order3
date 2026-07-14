@@ -53,6 +53,13 @@ function broadcast(data) {
   wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
 }
 
+// API: get orders for a specific table (used by customer.html "My Orders" tab)
+app.get('/api/table/:num/orders', (req, res) => {
+  const num = parseInt(req.params.num);
+  const orders = tickets.filter(t => t.table === num && !t.tableCleared);
+  res.json({ orders });
+});
+
 wss.on('connection', (ws) => {
   ws.send(JSON.stringify({ type: 'init', tickets, menu: MENU }));
 
@@ -78,11 +85,15 @@ wss.on('connection', (ws) => {
       };
       tickets.unshift(ticket);
       broadcast({ type: 'ticket_added', ticket });
+      broadcast({ type: 'table_updated', table: msg.table, orders: tickets.filter(t => t.table === msg.table && !t.tableCleared) });
     }
 
     if (msg.type === 'set_status') {
       const t = tickets.find(x => x.num === msg.num);
-      if (t) { t.status = msg.status; broadcast({ type: 'ticket_updated', ticket: t }); }
+      if (t) {
+        t.status = msg.status;
+        broadcast({ type: 'ticket_updated', ticket: t });
+      }
     }
 
     if (msg.type === 'delete_ticket') {
@@ -101,3 +112,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
+    
