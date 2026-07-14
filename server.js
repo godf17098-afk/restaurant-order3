@@ -75,9 +75,9 @@ wss.on('connection', (ws) => {
       const ticket = {
         num: ticketCounter++,
         table: msg.table,
-        items: msg.items,
+        items: msg.items.map(i => ({ ...i, done: false })),
         note: msg.note || '',
-        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' }),
         status: 'new',
         source: msg.source || 'staff',
         staffName: msg.staffName || '',
@@ -86,6 +86,21 @@ wss.on('connection', (ws) => {
       tickets.unshift(ticket);
       broadcast({ type: 'ticket_added', ticket });
       broadcast({ type: 'table_updated', table: msg.table, orders: tickets.filter(t => t.table === msg.table && !t.tableCleared) });
+    }
+
+    if (msg.type === 'toggle_item') {
+      const t = tickets.find(x => x.num === msg.num);
+      if (t) {
+        const item = t.items[msg.itemIndex];
+        if (item) {
+          item.done = !item.done;
+          if (item.done && t.status === 'new') t.status = 'cooking';
+          const allDone = t.items.every(i => i.done);
+          if (allDone) t.status = 'done';
+          else if (t.status === 'done') t.status = 'cooking';
+          broadcast({ type: 'ticket_updated', ticket: t });
+        }
+      }
     }
 
     if (msg.type === 'set_status') {
@@ -112,4 +127,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-    
+                   
