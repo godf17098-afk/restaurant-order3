@@ -2,274 +2,176 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>สั่งอาหาร</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>แคชเชียร์</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#fafaf8;--surface:#ffffff;--surface2:#f4f3f0;
-    --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.15);
-    --text:#1a1a1a;--muted:#888;
-    --accent:#2563eb;--accent-dim:rgba(37,99,235,0.08);
-    --green:#059669;--green-dim:rgba(5,150,105,0.08);
-    --amber:#d97706;--amber-dim:rgba(217,119,6,0.08);
-    --r:10px;--rlg:16px;
-  }
-  body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;min-height:100vh;max-width:480px;margin:0 auto}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--muted:#a1a1aa;--muted2:#71717a;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-border:rgba(74,222,128,0.2);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.1);--amber-border:rgba(251,191,36,0.2);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--blue-border:rgba(96,165,250,0.2);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.2);
+  --r:10px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
 
-  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-  .brand{font-family:'Kanit',sans-serif;font-size:17px;font-weight:500;color:var(--text)}
-  .table-tag{font-size:13px;background:var(--accent-dim);color:var(--accent);padding:4px 12px;border-radius:999px;font-weight:500}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.brand{font-family:'Kanit',sans-serif;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-  .hero{background:var(--surface);padding:16px;border-bottom:1px solid var(--border);text-align:center}
-  .hero-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:4px}
-  .hero-sub{font-size:13px;color:var(--muted)}
+/* SUMMARY */
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px;flex-shrink:0}
+.s-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+.s-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
+.s-num{font-family:'Kanit',sans-serif;font-size:22px;font-weight:600}
+.s-num.amber{color:var(--amber)}
+.s-num.blue{color:var(--blue)}
+.s-num.green{color:var(--green)}
 
-  .cat-tabs{display:flex;gap:6px;padding:12px 14px;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch}
-  .cat-tabs::-webkit-scrollbar{display:none}
-  .cat-tab{flex-shrink:0;padding:6px 14px;border-radius:999px;border:1px solid var(--border2);background:transparent;font-family:'Sarabun',sans-serif;font-size:13px;cursor:pointer;color:var(--muted);transition:all .15s;white-space:nowrap}
-  .cat-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+/* TABLES LIST */
+.tables-scroll{flex:1;overflow-y:auto;padding:0 16px 16px}
+.tables-scroll::-webkit-scrollbar{display:none}
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
+.tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tc-name{font-family:'Kanit',sans-serif;font-size:18px;font-weight:600}
+.tc-badge{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:500}
+.tc-badge.pending{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.tc-badge.cooking{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+.tc-badge.ready{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.tc-orders{border-top:1px solid var(--border);padding-top:10px;margin-top:2px}
+.order-block{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.order-block:last-child{border:none;margin-bottom:0;padding-bottom:0}
+.ob-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ob-num{font-size:12px;color:var(--muted2)}
+.ob-status{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500}
+.ob-item{display:flex;justify-content:space-between;font-size:14px;padding:2px 0;color:var(--text)}
+.ob-qty{color:var(--muted);font-size:13px}
+.ob-note{font-size:12px;color:var(--amber);margin-top:4px}
+.tc-actions{display:flex;gap:8px;margin-top:12px}
+.tc-btn{flex:1;padding:11px;border-radius:10px;border:none;font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;text-align:center}
+.tc-btn.clear{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
+.tc-btn.clear:hover{background:rgba(248,113,113,.2)}
+.no-tables{text-align:center;padding:80px 20px;color:var(--muted2);font-size:14px}
+.no-tables-icon{font-size:52px;margin-bottom:16px;opacity:.3}
 
-  .menu-section{padding:12px 14px}
-  .cat-name{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px}
-  .menu-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:border-color .15s}
-  .menu-card:hover{border-color:var(--border2)}
-  .menu-info{flex:1}
-  .menu-name{font-size:15px;font-weight:500;margin-bottom:2px}
-  .menu-price{font-size:14px;color:var(--accent);font-weight:500}
-  .menu-ctrl{display:flex;align-items:center;gap:8px}
-  .m-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .12s;flex-shrink:0}
-  .m-btn.plus{border-color:var(--accent);color:var(--accent)}
-  .m-btn.plus:hover{background:var(--accent);color:#fff}
-  .m-btn.minus:hover{border-color:var(--text);color:var(--text)}
-  .m-qty{font-size:15px;font-weight:500;min-width:20px;text-align:center}
-
-  .cart-bar{background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .cart-info{display:flex;align-items:center;gap:8px}
-  .cart-count{background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
-  .cart-total{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500}
-  .checkout-btn{background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;padding:10px 20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
-  .checkout-btn:hover{background:#1d4fd8}
-  .checkout-btn:disabled{opacity:.35;cursor:not-allowed}
-
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center}
-  .modal-overlay.show{display:flex}
-  .modal{background:var(--surface);border-radius:var(--rlg) var(--rlg) 0 0;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;animation:slideUp .25s ease}
-  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  .modal-title{font-family:'Kanit',sans-serif;font-size:16px;font-weight:500;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
-  .close-btn{background:transparent;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
-  .cart-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
-  .cart-item:last-child{border:none}
-  .ci-name{flex:1;font-size:14px}
-  .ci-price{font-size:13px;color:var(--muted);margin-right:8px}
-  .note-input{width:100%;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;margin:12px 0;height:40px;transition:border-color .15s}
-  .note-input:focus{border-color:var(--accent)}
-  .note-input::placeholder{color:var(--muted)}
-  .confirm-btn{width:100%;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;padding:12px;cursor:pointer;transition:all .15s;margin-top:4px}
-  .confirm-btn:hover{background:#1d4fd8}
-
-  .success-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:32px}
-  .success-screen.show{display:flex}
-  .success-icon{width:72px;height:72px;background:var(--green-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px}
-  .success-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:8px}
-  .success-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6}
-  .back-btn{background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-family:'Kanit',sans-serif;font-size:15px;padding:11px 28px;cursor:pointer}
-
-  .ws-dot{width:7px;height:7px;border-radius:50%;background:#ccc}
-  .ws-dot.ok{background:var(--green)}
+/* SEARCH */
+.toolbar{padding:0 16px 10px;flex-shrink:0}
+.search-box{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);outline:none}
+.search-box::placeholder{color:var(--muted2)}
+.search-box:focus{border-color:var(--border2)}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="brand">🍽 สั่งอาหาร</div>
-  <div style="display:flex;align-items:center;gap:8px">
-    <div class="ws-dot" id="ws-dot"></div>
-    <span class="table-tag" id="table-tag">โต๊ะ –</span>
-  </div>
+  <div class="brand"><div class="live-dot"></div>💰 แคชเชียร์</div>
 </div>
 
-<div class="hero">
-  <div class="hero-title" id="hero-title">ยินดีต้อนรับ</div>
-  <div class="hero-sub">เลือกเมนูที่ต้องการแล้วกดยืนยันการสั่ง</div>
+<div class="summary">
+  <div class="s-card"><div class="s-label">โต๊ะเปิดอยู่</div><div class="s-num" id="s-tables">0</div></div>
+  <div class="s-card"><div class="s-label">ออเดอร์รอ/ทำ</div><div class="s-num amber" id="s-pending">0</div></div>
+  <div class="s-card"><div class="s-label">เสร็จแล้ว</div><div class="s-num green" id="s-done">0</div></div>
 </div>
 
-<div class="cat-tabs" id="cat-tabs"></div>
-<div class="menu-section" id="menu-section"></div>
-
-<div class="cart-bar">
-  <div class="cart-info">
-    <div class="cart-count" id="cart-count">0</div>
-    <div class="cart-total" id="cart-total">฿0</div>
-  </div>
-  <button class="checkout-btn" id="checkout-btn" onclick="openCart()" disabled>
-    ดูตะกร้า →
-  </button>
+<div class="toolbar">
+  <input class="search-box" id="search" placeholder="🔍 ค้นหาโต๊ะ..." oninput="renderTables()">
 </div>
 
-<div class="modal-overlay" id="modal" onclick="closeCartIfOutside(event)">
-  <div class="modal">
-    <div class="modal-title">
-      ตะกร้าของคุณ
-      <button class="close-btn" onclick="closeCart()">×</button>
-    </div>
-    <div id="cart-items"></div>
-    <input class="note-input" id="cart-note" placeholder="หมายเหตุ เช่น ไม่เผ็ด, ไม่ใส่ผักชี...">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
-      <span style="font-size:14px;color:var(--muted)">รวมทั้งหมด</span>
-      <span style="font-family:'Kanit',sans-serif;font-size:18px;font-weight:500" id="modal-total">฿0</span>
-    </div>
-    <button class="confirm-btn" onclick="confirmOrder()">ยืนยันการสั่ง</button>
-  </div>
-</div>
-
-<div class="success-screen" id="success">
-  <div class="success-icon">✓</div>
-  <div class="success-title">สั่งอาหารสำเร็จ!</div>
-  <div class="success-sub" id="success-sub">ทางร้านได้รับออเดอร์ของคุณแล้ว<br>กรุณารอสักครู่</div>
-  <button class="back-btn" onclick="resetOrder()">สั่งเพิ่ม</button>
+<div class="tables-scroll" id="tables-scroll">
+  <div class="no-tables"><div class="no-tables-icon">🧾</div>ยังไม่มีโต๊ะที่เปิดอยู่</div>
 </div>
 
 <script>
-const params = new URLSearchParams(location.search);
-const tableNum = parseInt(params.get('table')) || 1;
-document.getElementById('table-tag').textContent = `โต๊ะ ${tableNum}`;
-document.getElementById('hero-title').textContent = `โต๊ะ ${tableNum}`;
-
-let menu = [];
-let cart = {};
+let tickets = [];
 let ws;
 
-function connect() {
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  ws = new WebSocket(`${protocol}//${location.host}`);
-  ws.onopen = () => document.getElementById('ws-dot').classList.add('ok');
-  ws.onclose = () => { document.getElementById('ws-dot').classList.remove('ok'); setTimeout(connect, 2000); };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'init') { menu = msg.menu; renderMenu(); }
+function connect(){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(`${proto}://${location.host}`);
+  ws.onclose=()=>setTimeout(connect,2000);
+  ws.onmessage=(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.type==='init'){tickets=msg.tickets;renderTables();}
+    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderTables();}
+    if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderTables();}
+    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderTables();}
+    if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderTables();}
   };
 }
 
-function allItems() { return menu.flatMap(c => c.items); }
-function getItem(id) { return allItems().find(x => x.id == id); }
-
-function renderMenu() {
-  const catEl = document.getElementById('cat-tabs');
-  const menuEl = document.getElementById('menu-section');
-  catEl.innerHTML = `<button class="cat-tab active" onclick="filterCat('all',this)">ทั้งหมด</button>` +
-    menu.map(c => `<button class="cat-tab" onclick="filterCat('${c.cat}',this)">${c.cat}</button>`).join('');
-  menuEl.innerHTML = menu.map(cat => `
-    <div class="cat-group" data-cat="${cat.cat}">
-      <div class="cat-name">${cat.cat}</div>
-      ${cat.items.map(item => `
-        <div class="menu-card" id="card-${item.id}">
-          <div class="menu-info">
-            <div class="menu-name">${item.name}</div>
-            <div class="menu-price">฿${item.price}</div>
-          </div>
-          <div class="menu-ctrl">
-            <button class="m-btn minus" id="minus-${item.id}" onclick="changeQty(${item.id},-1)" style="display:none">−</button>
-            <span class="m-qty" id="qty-${item.id}" style="display:none">0</span>
-            <button class="m-btn plus" onclick="changeQty(${item.id},1)">+</button>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
+function getTableStatus(list){
+  if(list.some(t=>t.status==='new'))return 'pending';
+  if(list.some(t=>t.status==='cooking'))return 'cooking';
+  return 'ready';
 }
 
-function filterCat(cat, btn) {
-  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.cat-group').forEach(g => {
-    g.style.display = (cat === 'all' || g.dataset.cat === cat) ? '' : 'none';
+function renderTables(){
+  const q=(document.getElementById('search').value||'').trim();
+  const el=document.getElementById('tables-scroll');
+
+  const activeTables = {};
+  tickets.filter(t=>!t.tableCleared).forEach(t=>{
+    if(!activeTables[t.table]) activeTables[t.table]=[];
+    activeTables[t.table].push(t);
   });
-}
 
-function changeQty(id, d) {
-  const next = (cart[id] || 0) + d;
-  if (next <= 0) delete cart[id]; else cart[id] = next;
-  updateCartUI(id);
-  updateCartBar();
-}
+  let tableNums = Object.keys(activeTables).map(Number).sort((a,b)=>a-b);
+  if(q) tableNums = tableNums.filter(n => String(n).includes(q));
 
-function updateCartUI(id) {
-  const qty = cart[id] || 0;
-  const qtyEl = document.getElementById(`qty-${id}`);
-  const minusEl = document.getElementById(`minus-${id}`);
-  if (qtyEl) { qtyEl.textContent = qty; qtyEl.style.display = qty > 0 ? '' : 'none'; }
-  if (minusEl) { minusEl.style.display = qty > 0 ? '' : 'none'; }
-}
+  // Update summary
+  document.getElementById('s-tables').textContent = Object.keys(activeTables).length;
+  document.getElementById('s-pending').textContent = tickets.filter(t=>!t.tableCleared && (t.status==='new'||t.status==='cooking')).length;
+  document.getElementById('s-done').textContent = tickets.filter(t=>!t.tableCleared && t.status==='done').length;
 
-function updateCartBar() {
-  const keys = Object.keys(cart);
-  const count = keys.reduce((s, id) => s + cart[id], 0);
-  let total = 0;
-  keys.forEach(id => { const item = getItem(id); if (item) total += item.price * cart[id]; });
-  document.getElementById('cart-count').textContent = count;
-  document.getElementById('cart-total').textContent = '฿' + total.toLocaleString();
-  document.getElementById('checkout-btn').disabled = count === 0;
-}
+  if(!tableNums.length){
+    el.innerHTML = '<div class="no-tables"><div class="no-tables-icon">🧾</div>ยังไม่มีโต๊ะที่เปิดอยู่</div>';
+    return;
+  }
 
-function openCart() {
-  const keys = Object.keys(cart);
-  let total = 0;
-  document.getElementById('cart-items').innerHTML = keys.map(id => {
-    const item = getItem(id); const qty = cart[id];
-    total += item.price * qty;
-    return `<div class="cart-item">
-      <span class="ci-name">${item.name}</span>
-      <span class="ci-price">×${qty}</span>
-      <div class="menu-ctrl" style="gap:6px">
-        <button class="m-btn minus" onclick="changeQtyModal(${id},-1)" style="width:26px;height:26px">−</button>
-        <span style="font-size:14px;font-weight:500;min-width:16px;text-align:center" id="mqty-${id}">${qty}</span>
-        <button class="m-btn plus" onclick="changeQtyModal(${id},1)" style="width:26px;height:26px">+</button>
+  el.innerHTML = tableNums.map(n => {
+    const list = activeTables[n];
+    const status = getTableStatus(list);
+    const badgeText = status==='pending'?'มีรอทำ':status==='cooking'?'กำลังทำ':'พร้อมเสิร์ฟครบ';
+    const badgeClass = status;
+
+    const ordersHtml = list.map(t => {
+      const stClass = t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
+      const stColor = t.status==='new'?'background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)':
+                      t.status==='cooking'?'background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)':
+                      'background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)';
+      const stText = t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
+      return `<div class="order-block">
+        <div class="ob-head">
+          <span class="ob-num">#${t.num} · ${t.time}</span>
+          <span class="ob-status" style="${stColor}">${stText}</span>
+        </div>
+        ${t.items.map(i=>`<div class="ob-item"><span>${i.name}</span><span class="ob-qty">×${i.qty}</span></div>`).join('')}
+        ${t.note?`<div class="ob-note">📝 ${t.note}</div>`:''}
+      </div>`;
+    }).join('');
+
+    return `<div class="table-card">
+      <div class="tc-head">
+        <div class="tc-name">โต๊ะ ${n}</div>
+        <span class="tc-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="tc-orders">${ordersHtml}</div>
+      <div class="tc-actions">
+        <button class="tc-btn clear" onclick="clearTable(${n})">🧾 เช็กบิล / เคลียร์โต๊ะ</button>
       </div>
     </div>`;
   }).join('');
-  document.getElementById('modal-total').textContent = '฿' + total.toLocaleString();
-  document.getElementById('modal').classList.add('show');
 }
 
-function changeQtyModal(id, d) {
-  changeQty(id, d);
-  if (!cart[id]) { openCart(); return; }
-  const el = document.getElementById(`mqty-${id}`);
-  if (el) el.textContent = cart[id];
-  const keys = Object.keys(cart);
-  let total = 0;
-  keys.forEach(id2 => { const item = getItem(id2); if (item) total += item.price * cart[id2]; });
-  document.getElementById('modal-total').textContent = '฿' + total.toLocaleString();
-  if (!keys.length) closeCart();
-}
-
-function closeCart() { document.getElementById('modal').classList.remove('show'); }
-function closeCartIfOutside(e) { if (e.target === document.getElementById('modal')) closeCart(); }
-
-function confirmOrder() {
-  const keys = Object.keys(cart);
-  if (!keys.length || !ws || ws.readyState !== 1) return;
-  ws.send(JSON.stringify({
-    type: 'new_order',
-    table: tableNum,
-    items: keys.map(id => ({ id, name: getItem(id).name, qty: cart[id] })),
-    note: document.getElementById('cart-note').value.trim(),
-    source: 'customer'
-  }));
-  const total = keys.reduce((s, id) => s + (getItem(id)?.price || 0) * cart[id], 0);
-  document.getElementById('success-sub').innerHTML = `ทางร้านได้รับออเดอร์ของคุณแล้ว<br>รวม ฿${total.toLocaleString()} – กรุณารอสักครู่`;
-  closeCart();
-  document.getElementById('success').classList.add('show');
-}
-
-function resetOrder() {
-  cart = {};
-  document.getElementById('success').classList.remove('show');
-  allItems().forEach(item => updateCartUI(item.id));
-  updateCartBar();
-  document.getElementById('cart-note').value = '';
+function clearTable(n){
+  if(!confirm(`ยืนยันเช็กบิลและเคลียร์โต๊ะ ${n}?`))return;
+  if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'clear_table',table:n}));
 }
 
 connect();
