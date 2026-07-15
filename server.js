@@ -122,19 +122,29 @@ wss.on('connection', (ws) => {
       const tableOrders = tickets.filter(t => t.table === msg.table && !t.tableCleared);
       const now = new Date();
       const bangkokTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+      const dateStr = bangkokTime.toISOString().slice(0, 10);
+      const timeStr = bangkokTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
 
-      tableOrders.forEach(t => {
+      const peopleCount = msg.peopleCount || null;
+      const pricePerPerson = msg.pricePerPerson || null;
+      const totalPrice = msg.totalPrice || null;
+
+      // One summary row per table checkout (with price), plus item detail per ticket
+      if (tableOrders.length) {
         billHistory.push({
-          date: bangkokTime.toISOString().slice(0, 10),
-          time: bangkokTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }),
-          table: t.table,
-          ticketNum: t.num,
-          items: t.items.map(i => `${i.name} x${i.qty}`).join(', '),
-          itemCount: t.items.reduce((s, i) => s + i.qty, 0),
-          source: t.source,
-          staffName: t.staffName || '',
+          date: dateStr,
+          time: timeStr,
+          table: msg.table,
+          ticketNum: tableOrders.map(t => t.num).join(', '),
+          items: tableOrders.flatMap(t => t.items.map(i => `${i.name} x${i.qty}`)).join(', '),
+          itemCount: tableOrders.reduce((s, t) => s + t.items.reduce((s2, i) => s2 + i.qty, 0), 0),
+          source: tableOrders[0].source,
+          staffName: tableOrders[0].staffName || '',
+          peopleCount,
+          pricePerPerson,
+          totalPrice,
         });
-      });
+      }
 
       tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; });
       broadcast({ type: 'table_cleared', table: msg.table });
@@ -157,6 +167,8 @@ app.get('/api/report/excel', async (req, res) => {
   ];
   const totalBills = dayBills.length;
   const totalItems = dayBills.reduce((s, b) => s + b.itemCount, 0);
+  const totalRevenue = dayBills.reduce((s, b) => s + (b.totalPrice || 0), 0);
+  const totalPeople = dayBills.reduce((s, b) => s + (b.peopleCount || 0), 0);
 
   const menuCount = {};
   dayBills.forEach(b => {
@@ -173,6 +185,8 @@ app.get('/api/report/excel', async (req, res) => {
 
   summarySheet.addRow({ label: 'วันที่', value: dateParam });
   summarySheet.addRow({ label: 'จำนวนบิลทั้งหมด', value: totalBills });
+  summarySheet.addRow({ label: 'จำนวนลูกค้ารวม', value: totalPeople + ' คน' });
+  summarySheet.addRow({ label: 'ยอดขายรวม', value: '฿' + totalRevenue.toLocaleString() });
   summarySheet.addRow({ label: 'จำนวนรายการอาหารรวม', value: totalItems });
   summarySheet.addRow({});
   summarySheet.addRow({ label: 'เมนูขายดี Top 5', value: '' });
@@ -185,19 +199,23 @@ app.get('/api/report/excel', async (req, res) => {
   const detailSheet = workbook.addWorksheet('รายละเอียดบิล');
   detailSheet.columns = [
     { header: 'เวลา', key: 'time', width: 12 },
-    { header: 'โต๊ะ/พนักงาน', key: 'table', width: 15 },
-    { header: 'เลขออเดอร์', key: 'ticketNum', width: 14 },
+    { header: 'โต๊ะ', key: 'table', width: 10 },
+    { header: 'จำนวนคน', key: 'peopleCount', width: 10 },
+    { header: 'ราคา/คน', key: 'pricePerPerson', width: 12 },
+    { header: 'ยอดรวม', key: 'totalPrice', width: 14 },
+    { header: 'เลขออเดอร์', key: 'ticketNum', width: 16 },
     { header: 'รายการอาหาร', key: 'items', width: 60 },
-    { header: 'จำนวนรวม', key: 'itemCount', width: 12 },
     { header: 'ที่มา', key: 'source', width: 12 },
   ];
   dayBills.forEach(b => {
     detailSheet.addRow({
       time: b.time,
       table: b.table,
+      peopleCount: b.peopleCount || '-',
+      pricePerPerson: b.pricePerPerson ? '฿' + b.pricePerPerson : '-',
+      totalPrice: b.totalPrice ? '฿' + b.totalPrice.toLocaleString() : '-',
       ticketNum: b.ticketNum,
       items: b.items,
-      itemCount: b.itemCount,
       source: b.source === 'customer' ? 'ลูกค้า' : 'พนักงาน',
     });
   });
@@ -214,4 +232,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-    
+          
