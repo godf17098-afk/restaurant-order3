@@ -64,6 +64,26 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .search-box{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);outline:none}
 .search-box::placeholder{color:var(--muted2)}
 .search-box:focus{border-color:var(--border2)}
+
+/* CHECKOUT MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:flex-end;backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.sheet{background:var(--surface);border-radius:18px 18px 0 0;padding:20px;width:100%;animation:up .22s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-title{font-family:'Kanit',sans-serif;font-size:17px;font-weight:600;margin-bottom:4px}
+.sheet-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+.field-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;display:block}
+.field-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;font-family:'Kanit',sans-serif;font-size:18px;font-weight:600;color:var(--text);outline:none;text-align:center;margin-bottom:16px}
+.field-input:focus{border-color:var(--green)}
+.price-preview{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.pp-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted);padding:4px 0}
+.pp-row.total{border-top:1px solid var(--border);margin-top:8px;padding-top:12px;font-size:16px;color:var(--text);font-weight:600}
+.pp-total-num{font-family:'Kanit',sans-serif;font-size:24px;font-weight:700;color:var(--green)}
+.pp-note{font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:8px;padding:8px 10px;margin-top:4px}
+.modal-actions{display:flex;gap:10px}
+.modal-btn{flex:1;padding:13px;border-radius:12px;border:none;font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;cursor:pointer}
+.modal-btn.cancel{background:var(--surface2);color:var(--muted)}
+.modal-btn.confirm{background:var(--green);color:#052e16}
 </style>
 </head>
 <body>
@@ -85,6 +105,20 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 
 <div class="tables-scroll" id="tables-scroll">
   <div class="no-tables"><div class="no-tables-icon">🧾</div>ยังไม่มีโต๊ะที่เปิดอยู่</div>
+</div>
+
+<div class="overlay" id="checkout-overlay" onclick="closeCheckoutIfOut(event)">
+  <div class="sheet">
+    <div class="sheet-title" id="checkout-title">เช็กบิล โต๊ะ 1</div>
+    <div class="sheet-sub">ระบุจำนวนคนเพื่อคำนวณราคาบุฟเฟ่ต์</div>
+    <span class="field-label">จำนวนคน</span>
+    <input class="field-input" id="people-count" type="number" min="1" value="1" inputmode="numeric" oninput="updatePricePreview()">
+    <div class="price-preview" id="price-preview"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeCheckout()">ยกเลิก</button>
+      <button class="modal-btn confirm" onclick="confirmCheckout()">✓ ยืนยันเช็กบิล</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -167,9 +201,73 @@ function renderTables(){
   }).join('');
 }
 
+const BUFFET_PRICE_NORMAL = 399;
+const BUFFET_PRICE_SALMON = 448;
+const SALMON_NAME = 'ปลาแซลมอน';
+
+let checkoutTable = null;
+
+function hasExtraSalmon(list){
+  // returns true if ANY single order in the table has more than 1 salmon
+  return list.some(t => {
+    const salmonItem = t.items.find(i => i.name === SALMON_NAME);
+    return salmonItem && salmonItem.qty > 1;
+  });
+}
+
 function clearTable(n){
-  if(!confirm(`ยืนยันเช็กบิลและเคลียร์โต๊ะ ${n}?`))return;
-  if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'clear_table',table:n}));
+  checkoutTable = n;
+  document.getElementById('checkout-title').textContent = `เช็กบิล โต๊ะ ${n}`;
+  document.getElementById('people-count').value = 1;
+  updatePricePreview();
+  document.getElementById('checkout-overlay').classList.add('show');
+}
+
+function closeCheckout(){
+  document.getElementById('checkout-overlay').classList.remove('show');
+  checkoutTable = null;
+}
+
+function closeCheckoutIfOut(e){
+  if(e.target === document.getElementById('checkout-overlay')) closeCheckout();
+}
+
+function updatePricePreview(){
+  if(checkoutTable === null) return;
+  const list = tickets.filter(t => t.table === checkoutTable && !t.tableCleared);
+  const people = Math.max(1, parseInt(document.getElementById('people-count').value) || 1);
+  const extraSalmon = hasExtraSalmon(list);
+  const pricePerPerson = extraSalmon ? BUFFET_PRICE_SALMON : BUFFET_PRICE_NORMAL;
+  const total = pricePerPerson * people;
+
+  document.getElementById('price-preview').innerHTML = `
+    <div class="pp-row"><span>ราคาต่อคน</span><span>฿${pricePerPerson.toLocaleString()}</span></div>
+    <div class="pp-row"><span>จำนวนคน</span><span>${people} คน</span></div>
+    <div class="pp-row total"><span>ยอดรวม</span><span class="pp-total-num">฿${total.toLocaleString()}</span></div>
+    ${extraSalmon ? `<div class="pp-note">🐟 มีออเดอร์สั่งปลาแซลมอนมากกว่า 1 จาน → ปรับราคาเป็น 448/คน</div>` : ''}
+  `;
+}
+
+function confirmCheckout(){
+  if(checkoutTable === null) return;
+  const people = Math.max(1, parseInt(document.getElementById('people-count').value) || 1);
+  const list = tickets.filter(t => t.table === checkoutTable && !t.tableCleared);
+  const extraSalmon = hasExtraSalmon(list);
+  const pricePerPerson = extraSalmon ? BUFFET_PRICE_SALMON : BUFFET_PRICE_NORMAL;
+  const total = pricePerPerson * people;
+
+  if(!confirm(`ยืนยันเช็กบิลโต๊ะ ${checkoutTable}\nจำนวน ${people} คน · รวม ฿${total.toLocaleString()}\n\nเคลียร์โต๊ะนี้?`)) return;
+
+  if(ws && ws.readyState === 1){
+    ws.send(JSON.stringify({
+      type:'clear_table',
+      table: checkoutTable,
+      peopleCount: people,
+      pricePerPerson: pricePerPerson,
+      totalPrice: total
+    }));
+  }
+  closeCheckout();
 }
 
 function exportExcel(){
