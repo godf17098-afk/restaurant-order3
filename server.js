@@ -14,6 +14,7 @@ app.get('/', (req, res) => res.redirect('/staff.html'));
 let tickets = [];
 let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
+const SPECIAL_ITEM_NAME = 'เดี่ยวแซลมอน';
 
 const MENU = [
   { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
@@ -47,6 +48,47 @@ const MENU = [
     { id: 22, name: 'ปลาแซลมอน', price: 0 },
     { id: 23, name: 'หอยเชลล์', price: 0 },
     { id: 24, name: 'หอยแมลงภู่', price: 0 },
+    { id: 25, name: 'เดี่ยวแซลมอน', price: 0 },
+  ]},
+  { cat: 'เนื้อ', color: '#dc2626', items: [
+    { id: 26, name: 'ลิ้น', price: 0 },
+    { id: 27, name: 'ริบอาย', price: 0 },
+    { id: 28, name: 'น่องลาย', price: 0 },
+    { id: 29, name: 'ตับเนื้อ', price: 0 },
+    { id: 30, name: 'เนื้อหมัก', price: 0 },
+    { id: 31, name: 'พิคานย่า', price: 0 },
+    { id: 32, name: 'สันสะโพก', price: 0 },
+    { id: 33, name: 'ติดมัน', price: 0 },
+    { id: 34, name: 'ไบพาย', price: 0 },
+    { id: 35, name: 'ปลาซี่โครง', price: 0 },
+    { id: 36, name: 'เสือ', price: 0 },
+    { id: 37, name: 'รูบิค', price: 0 },
+    { id: 38, name: 'สันคอ (เนื้อ)', price: 0 },
+  ]},
+  { cat: 'หมู', color: '#f472b6', items: [
+    { id: 39, name: 'สามชั้น', price: 0 },
+    { id: 40, name: 'สันนอก', price: 0 },
+    { id: 41, name: 'สันคอ (หมู)', price: 0 },
+    { id: 42, name: 'หมูสามชั้นเกาหลี', price: 0 },
+    { id: 43, name: 'หมูหมัก', price: 0 },
+  ]},
+  { cat: 'ผัก', color: '#22c55e', items: [
+    { id: 44, name: 'ผักกาดหอม', price: 0 },
+    { id: 45, name: 'ผักกาดขาว', price: 0 },
+    { id: 46, name: 'เห็ดเข็มทอง', price: 0 },
+    { id: 47, name: 'เห็ดออรินจิ', price: 0 },
+    { id: 48, name: 'ข้าวโพดอ่อน', price: 0 },
+    { id: 49, name: 'ผักบุ้ง', price: 0 },
+    { id: 50, name: 'ฟักทอง', price: 0 },
+    { id: 51, name: 'หอมหัวใหญ่', price: 0 },
+    { id: 52, name: 'แครอท', price: 0 },
+  ]},
+  { cat: 'ทะเล', color: '#0ea5e9', items: [
+    { id: 53, name: 'กุ้ง', price: 0 },
+    { id: 54, name: 'หอย', price: 0 },
+    { id: 55, name: 'ปลาดอลลี่', price: 0 },
+    { id: 56, name: 'หมึกวง', price: 0 },
+    { id: 57, name: 'หมึกหนวด', price: 0 },
   ]},
 ];
 
@@ -232,4 +274,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-    
+  
