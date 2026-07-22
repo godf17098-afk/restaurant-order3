@@ -32,6 +32,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .station-card.fry .station-name{color:var(--orange)}
 .station-card.fish .station-name{color:var(--blue)}
 .station-card.rice .station-name{color:var(--amber)}
+.station-card.grill .station-name{color:#dc2626}
 
 .kitchen-screen{display:none;flex-direction:column;height:100%}
 .kitchen-screen.show{display:flex}
@@ -88,21 +89,28 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
       <div class="station-icon">🍟</div>
       <div>
         <div class="station-name">สถานีทอด</div>
-        <div class="station-desc">ผักทอด, เฟรนฟราย, ปีกไก่, กุ้งทอด, หมึกทอด, ชีสบอล, ซาลาเปา, นักเก็ต, ไก่ป็อบ</div>
+        <div class="station-desc">ผักทอด, เฟรนฟราย, ปีกไก่, กุ้งทอด, หมึกทอด, ชีสบอล, ซาลาเปา, นักเก็ต, ไก่ป็อบ, ข้าวผัดมันเนื้อ, ข้าวผัดกระเทียม, ไส้กรอกแดง</div>
       </div>
     </div>
     <div class="station-card fish" onclick="selectStation('fish')">
       <div class="station-icon">🐟</div>
       <div>
         <div class="station-name">สถานีปลา</div>
-        <div class="station-desc">ปลาแซลมอน, หอยเชลล์, หอยแมลงภู่, กุ้งดอง, ม่อนดอง, ยำเนื้อเย็น, จุ๊เนื้อ</div>
+        <div class="station-desc">ปลาแซลมอน, ม่อนดอง, กุ้งดอง</div>
+      </div>
+    </div>
+    <div class="station-card grill" onclick="selectStation('grill')">
+      <div class="station-icon">🥩</div>
+      <div>
+        <div class="station-name">สถานีเนื้อ / ผัก / ทะเล</div>
+        <div class="station-desc">เนื้อ, หมู, ผักทุกชนิด, กุ้ง, หอย, ปลาดอลลี่, หมึกวง, หมึกหนวด</div>
       </div>
     </div>
     <div class="station-card rice" onclick="selectStation('rice')">
       <div class="station-icon">🍚</div>
       <div>
         <div class="station-name">สถานีข้าว</div>
-        <div class="station-desc">ข้าวผัดกระเทียม, ข้าวผัดมันเนื้อ, ข้าวสวย, ข้าวหน้าเนื้อตุ๋น, อุด้งเนื้อตุ๋น, ถั่วแระ, ไส้กรอกแดง, ไข่ดอง</div>
+        <div class="station-desc">ข้าวสวย, ข้าวหน้าเนื้อตุ๋น, อุด้งเนื้อตุ๋น, ถั่วแระ, ไข่ดอง, หอยเชลล์, หอยแมลงภู่, จุ๊เนื้อ, ยำเนื้อเย็น</div>
       </div>
     </div>
   </div>
@@ -126,9 +134,15 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 
 <script>
 const STATIONS = {
-  fry: { label: '🍟 สถานีทอด', items: ['ผักทอด','เฟรนฟราย','ปีกไก่ทอด','ซาลาเปาทอด','กุ้งทอด','นักเก็ต','ชีสบอล','หมึกทอด','ไก่ป็อบ'] },
-  fish: { label: '🐟 สถานีปลา', items: ['ปลาแซลมอน','หอยเชลล์','หอยแมลงภู่','กุ้งดอง','ม่อนดอง','ยำเนื้อเย็น','จุ๊เนื้อ'] },
-  rice: { label: '🍚 สถานีข้าว', items: ['ข้าวผัดกระเทียม','ข้าวผัดมันเนื้อ','ข้าวสวย','ข้าวหน้าเนื้อตุ๋น','อุด้งเนื้อตุ๋น','ถั่วแระ','ไส้กรอกแดง','ไข่ดอง'] }
+  fry: { label: '🍟 สถานีทอด', items: ['ผักทอด','เฟรนฟราย','ปีกไก่ทอด','ซาลาเปาทอด','กุ้งทอด','นักเก็ต','ชีสบอล','หมึกทอด','ไก่ป็อบ','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง'] },
+  fish: { label: '🐟 สถานีปลา', items: ['ปลาแซลมอน','ม่อนดอง','กุ้งดอง'] },
+  grill: { label: '🥩 สถานีเนื้อ / ผัก / ทะเล', items: [
+    'ลิ้น','ริบอาย','น่องลาย','ตับเนื้อ','เนื้อหมัก','พิคานย่า','สันสะโพก','ติดมัน','ไบพาย','ปลาซี่โครง','เสือ','รูบิค','สันคอ (เนื้อ)',
+    'สามชั้น','สันนอก','สันคอ (หมู)','หมูสามชั้นเกาหลี','หมูหมัก',
+    'ผักกาดหอม','ผักกาดขาว','เห็ดเข็มทอง','เห็ดออรินจิ','ข้าวโพดอ่อน','ผักบุ้ง','ฟักทอง','หอมหัวใหญ่','แครอท',
+    'กุ้ง','หอย','ปลาดอลลี่','หมึกวง','หมึกหนวด'
+  ] },
+  rice: { label: '🍚 สถานีข้าว', items: ['ข้าวสวย','ข้าวหน้าเนื้อตุ๋น','อุด้งเนื้อตุ๋น','ถั่วแระ','ไข่ดอง','หอยเชลล์','หอยแมลงภู่','จุ๊เนื้อ','ยำเนื้อเย็น'] }
 };
 
 let currentStation = null;
