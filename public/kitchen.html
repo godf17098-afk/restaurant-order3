@@ -32,7 +32,8 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .station-card.fry .station-name{color:var(--orange)}
 .station-card.fish .station-name{color:var(--blue)}
 .station-card.rice .station-name{color:var(--amber)}
-.station-card.grill .station-name{color:#dc2626}
+.station-card.meat .station-name{color:#dc2626}
+.station-card.veggie .station-name{color:#22c55e}
 
 .kitchen-screen{display:none;flex-direction:column;height:100%}
 .kitchen-screen.show{display:flex}
@@ -99,11 +100,18 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
         <div class="station-desc">ปลาแซลมอน, ม่อนดอง, กุ้งดอง</div>
       </div>
     </div>
-    <div class="station-card grill" onclick="selectStation('grill')">
+    <div class="station-card meat" onclick="selectStation('meat')">
       <div class="station-icon">🥩</div>
       <div>
-        <div class="station-name">สถานีเนื้อ / ผัก / ทะเล</div>
-        <div class="station-desc">เนื้อ, หมู, ผักทุกชนิด, กุ้ง, หอย, ปลาดอลลี่, หมึกวง, หมึกหนวด</div>
+        <div class="station-name">สถานีเนื้อ</div>
+        <div class="station-desc">เนื้อทุกชนิด, หมูทุกชนิด</div>
+      </div>
+    </div>
+    <div class="station-card veggie" onclick="selectStation('veggie')">
+      <div class="station-icon">🥬</div>
+      <div>
+        <div class="station-name">สถานีผัก / ทะเล</div>
+        <div class="station-desc">ผักทุกชนิด, กุ้ง, หอย, ปลาดอลลี่, หมึกวง, หมึกหนวด</div>
       </div>
     </div>
     <div class="station-card rice" onclick="selectStation('rice')">
@@ -136,9 +144,11 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 const STATIONS = {
   fry: { label: '🍟 สถานีทอด', items: ['ผักทอด','เฟรนฟราย','ปีกไก่ทอด','ซาลาเปาทอด','กุ้งทอด','นักเก็ต','ชีสบอล','หมึกทอด','ไก่ป็อบ','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง'] },
   fish: { label: '🐟 สถานีปลา', items: ['ปลาแซลมอน','ม่อนดอง','กุ้งดอง'] },
-  grill: { label: '🥩 สถานีเนื้อ / ผัก / ทะเล', items: [
+  meat: { label: '🥩 สถานีเนื้อ', items: [
     'ลิ้น','ริบอาย','น่องลาย','ตับเนื้อ','เนื้อหมัก','พิคานย่า','สันสะโพก','ติดมัน','ไบพาย','ปลาซี่โครง','เสือ','รูบิค','สันคอ (เนื้อ)',
-    'สามชั้น','สันนอก','สันคอ (หมู)','หมูสามชั้นเกาหลี','หมูหมัก',
+    'สามชั้น','สันนอก','สันคอ (หมู)','หมูสามชั้นเกาหลี','หมูหมัก'
+  ] },
+  veggie: { label: '🥬 สถานีผัก / ทะเล', items: [
     'ผักกาดหอม','ผักกาดขาว','เห็ดเข็มทอง','เห็ดออรินจิ','ข้าวโพดอ่อน','ผักบุ้ง','ฟักทอง','หอมหัวใหญ่','แครอท',
     'กุ้ง','หอย','ปลาดอลลี่','หมึกวง','หมึกหนวด'
   ] },
