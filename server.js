@@ -60,7 +60,7 @@ const MENU = [
     { id: 32, name: 'สันสะโพก', price: 0 },
     { id: 33, name: 'ติดมัน', price: 0 },
     { id: 34, name: 'ไบพาย', price: 0 },
-    { id: 35, name: 'ปลาซี่โครง', price: 0 },
+    { id: 35, name: 'ปลาช่อน': 0 },
     { id: 36, name: 'เสือ', price: 0 },
     { id: 37, name: 'รูบิค', price: 0 },
     { id: 38, name: 'สันคอ (เนื้อ)', price: 0 },
