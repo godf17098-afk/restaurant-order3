@@ -84,6 +84,27 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .modal-btn{flex:1;padding:13px;border-radius:12px;border:none;font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;cursor:pointer}
 .modal-btn.cancel{background:var(--surface2);color:var(--muted)}
 .modal-btn.confirm{background:var(--green);color:#052e16}
+
+/* TABS */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:11px 4px;text-align:center;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--text);border-bottom-color:var(--text)}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.active{display:flex}
+
+/* SERVE PAGE */
+.serve-scroll{flex:1;overflow-y:auto;padding:12px 16px}
+.serve-scroll::-webkit-scrollbar{display:none}
+.serve-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
+.serve-head{font-family:'Kanit',sans-serif;font-size:17px;font-weight:600;margin-bottom:10px}
+.serve-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.serve-item:last-child{border:none}
+.serve-name{flex:1;font-size:15px;font-weight:500;color:var(--green)}
+.serve-qty{color:var(--muted);font-size:13px;margin-right:4px}
+.serve-btn{background:var(--green);color:#052e16;border:none;border-radius:8px;padding:8px 16px;font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+.serve-btn:hover{opacity:.85}
+.no-serve{text-align:center;padding:80px 20px;color:var(--muted2);font-size:14px}
+.no-serve-icon{font-size:52px;margin-bottom:16px;opacity:.3}
 </style>
 </head>
 <body>
@@ -93,6 +114,12 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
   <button class="export-btn" onclick="exportExcel()">📊 สรุปยอดวันนี้</button>
 </div>
 
+<div class="tabs">
+  <button class="tab active" onclick="showPage('bills',this)">🧾 บิล/โต๊ะ</button>
+  <button class="tab" onclick="showPage('serve',this)">🍽 เสิร์ฟอาหาร</button>
+</div>
+
+<div class="page active" id="page-bills">
 <div class="summary">
   <div class="s-card"><div class="s-label">โต๊ะเปิดอยู่</div><div class="s-num" id="s-tables">0</div></div>
   <div class="s-card"><div class="s-label">ออเดอร์รอ/ทำ</div><div class="s-num amber" id="s-pending">0</div></div>
@@ -105,6 +132,13 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 
 <div class="tables-scroll" id="tables-scroll">
   <div class="no-tables"><div class="no-tables-icon">🧾</div>ยังไม่มีโต๊ะที่เปิดอยู่</div>
+</div>
+</div>
+
+<div class="page" id="page-serve">
+  <div class="serve-scroll" id="serve-scroll">
+    <div class="no-serve"><div class="no-serve-icon">🍽</div>ยังไม่มีเมนูที่ทำเสร็จ</div>
+  </div>
 </div>
 
 <div class="overlay" id="checkout-overlay" onclick="closeCheckoutIfOut(event)">
@@ -131,12 +165,20 @@ function connect(){
   ws.onclose=()=>setTimeout(connect,2000);
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
-    if(msg.type==='init'){tickets=msg.tickets;renderTables();}
-    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderTables();}
-    if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderTables();}
-    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderTables();}
-    if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderTables();}
+    if(msg.type==='init'){tickets=msg.tickets;renderTables();renderServe();}
+    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderTables();renderServe();}
+    if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderTables();renderServe();}
+    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderTables();renderServe();}
+    if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderTables();renderServe();}
   };
+}
+
+function showPage(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id === 'serve') renderServe();
 }
 
 function getTableStatus(list){
@@ -201,18 +243,63 @@ function renderTables(){
   }).join('');
 }
 
+// ===== SERVE PAGE (เมนูที่ทำเสร็จ รอเสิร์ฟ) =====
+function serveItem(num, itemIndex){
+  if(ws && ws.readyState === 1){
+    ws.send(JSON.stringify({ type:'serve_item', num, itemIndex }));
+  }
+}
+
+function renderServe(){
+  const el = document.getElementById('serve-scroll');
+
+  // group ready-to-serve items by table
+  const byTable = {};
+  tickets.filter(t => !t.tableCleared).forEach(t => {
+    t.items.forEach((item, idx) => {
+      if(item.done && !item.served){
+        if(!byTable[t.table]) byTable[t.table] = [];
+        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: item.qty });
+      }
+    });
+  });
+
+  const tableNums = Object.keys(byTable).map(Number).sort((a,b)=>a-b);
+
+  if(!tableNums.length){
+    el.innerHTML = '<div class="no-serve"><div class="no-serve-icon">🍽</div>ยังไม่มีเมนูที่ทำเสร็จ</div>';
+    return;
+  }
+
+  el.innerHTML = tableNums.map(n => {
+    const items = byTable[n];
+    return `<div class="serve-card">
+      <div class="serve-head">โต๊ะ ${n}</div>
+      ${items.map(i => `
+        <div class="serve-item">
+          <span class="serve-name">${i.name}</span>
+          <span class="serve-qty">×${i.qty}</span>
+          <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟแล้ว</button>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+}
+
 const BUFFET_PRICE_NORMAL = 399;
 const BUFFET_PRICE_SALMON = 448;
 const SALMON_NAME = 'ปลาแซลมอน';
 
 let checkoutTable = null;
 
-function hasExtraSalmon(list){
-  // returns true if ANY single order in the table has more than 1 salmon
-  return list.some(t => {
+function hasExtraSalmon(list, people){
+  // count total salmon across ALL orders in the table
+  const totalSalmon = list.reduce((sum, t) => {
     const salmonItem = t.items.find(i => i.name === SALMON_NAME);
-    return salmonItem && salmonItem.qty > 1;
-  });
+    return sum + (salmonItem ? salmonItem.qty : 0);
+  }, 0);
+  // if total salmon exceeds number of people, someone had more than 1 plate
+  return totalSalmon > people;
 }
 
 function clearTable(n){
@@ -236,15 +323,21 @@ function updatePricePreview(){
   if(checkoutTable === null) return;
   const list = tickets.filter(t => t.table === checkoutTable && !t.tableCleared);
   const people = Math.max(1, parseInt(document.getElementById('people-count').value) || 1);
-  const extraSalmon = hasExtraSalmon(list);
+  const extraSalmon = hasExtraSalmon(list, people);
   const pricePerPerson = extraSalmon ? BUFFET_PRICE_SALMON : BUFFET_PRICE_NORMAL;
   const total = pricePerPerson * people;
+
+  const totalSalmonCount = list.reduce((sum, t) => {
+    const s = t.items.find(i => i.name === SALMON_NAME);
+    return sum + (s ? s.qty : 0);
+  }, 0);
 
   document.getElementById('price-preview').innerHTML = `
     <div class="pp-row"><span>ราคาต่อคน</span><span>฿${pricePerPerson.toLocaleString()}</span></div>
     <div class="pp-row"><span>จำนวนคน</span><span>${people} คน</span></div>
+    <div class="pp-row"><span>ปลาแซลมอนที่สั่งรวม</span><span>${totalSalmonCount} จาน</span></div>
     <div class="pp-row total"><span>ยอดรวม</span><span class="pp-total-num">฿${total.toLocaleString()}</span></div>
-    ${extraSalmon ? `<div class="pp-note">🐟 มีออเดอร์สั่งปลาแซลมอนมากกว่า 1 จาน → ปรับราคาเป็น 448/คน</div>` : ''}
+    ${extraSalmon ? `<div class="pp-note">🐟 สั่งปลาแซลมอนรวม ${totalSalmonCount} จาน มากกว่าจำนวนคน (${people} คน) → ปรับราคาเป็น 448/คน</div>` : ''}
   `;
 }
 
@@ -252,7 +345,7 @@ function confirmCheckout(){
   if(checkoutTable === null) return;
   const people = Math.max(1, parseInt(document.getElementById('people-count').value) || 1);
   const list = tickets.filter(t => t.table === checkoutTable && !t.tableCleared);
-  const extraSalmon = hasExtraSalmon(list);
+  const extraSalmon = hasExtraSalmon(list, people);
   const pricePerPerson = extraSalmon ? BUFFET_PRICE_SALMON : BUFFET_PRICE_NORMAL;
   const total = pricePerPerson * people;
 
@@ -277,4 +370,5 @@ function exportExcel(){
 connect();
 </script>
 </body>
-</html>
+  </html>
+  
