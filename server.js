@@ -2,8 +2,6 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
 const ExcelJS = require('exceljs');
 
 const app = express();
@@ -12,25 +10,6 @@ const wss = new WebSocket.Server({ server });
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/staff.html'));
-
-// ===== Menu image uploads =====
-const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname) || '.jpg';
-      cb(null, `item-${req.params.id}-${Date.now()}${ext}`);
-    },
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    if (/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) cb(null, true);
-    else cb(new Error('ไฟล์ต้องเป็นรูปภาพเท่านั้น'));
-  },
-});
 
 let tickets = [];
 let ticketCounter = 1001;
@@ -41,7 +20,7 @@ const MENU = [
   { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
     { id: 1,  name: 'ข้าวผัดกระเทียม', price: 0 },
     { id: 2,  name: 'ข้าวผัดมันเนื้อ', price: 0 },
-    { id: 3,  name: 'ข้าวสวย', price: 0 },
+    { id: 3,  name: 'ข้าวสวยญี่ปุ่น', price: 0 },
     { id: 4,  name: 'ข้าวหน้าเนื้อตุ๋น', price: 0 },
     { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 },
   ]},
@@ -57,7 +36,7 @@ const MENU = [
     { id: 14, name: 'ไก่ป็อบ', price: 0 },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
-    { id: 15, name: 'ม่อนดอง', price: 0 },
+    { id: 15, name: 'แซลมอนดอง', price: 0 },
     { id: 16, name: 'กุ้งดอง', price: 0 },
     { id: 17, name: 'ไข่ดอง', price: 0 },
     { id: 18, name: 'จุ๊เนื้อ', price: 0 },
@@ -66,13 +45,13 @@ const MENU = [
   { cat: 'อื่นๆ', color: '#f87171', items: [
     { id: 20, name: 'ถั่วแระ', price: 0 },
     { id: 21, name: 'ไส้กรอกแดง', price: 0 },
-    { id: 22, name: 'ปลาแซลมอน', price: 0 },
+    { id: 22, name: 'แซลมอนซาชิมิ', price: 0 },
     { id: 23, name: 'หอยเชลล์', price: 0 },
     { id: 24, name: 'หอยแมลงภู่', price: 0 },
     { id: 25, name: 'เดี่ยวแซลมอน', price: 0 },
   ]},
   { cat: 'เนื้อ', color: '#dc2626', items: [
-    { id: 26, name: 'ลิ้น', price: 0 },
+    { id: 26, name: 'ลิ้นวัว', price: 0 },
     { id: 27, name: 'ริบอาย', price: 0 },
     { id: 28, name: 'น่องลาย', price: 0 },
     { id: 29, name: 'ตับเนื้อ', price: 0 },
@@ -80,9 +59,9 @@ const MENU = [
     { id: 31, name: 'พิคานย่า', price: 0 },
     { id: 32, name: 'สันสะโพก', price: 0 },
     { id: 33, name: 'ติดมัน', price: 0 },
-    { id: 34, name: 'ไบพาย', price: 0 },
-    { id: 35, name: 'ปลาซี่โครง', price: 0 },
-    { id: 36, name: 'เสือ', price: 0 },
+    { id: 34, name: 'ใบพาย', price: 0 },
+    { id: 35, name: 'ปลาช่อน', price: 0 },
+    { id: 36, name: 'เนื้อบริสเก็ต (เสือร้องไห้)', price: 0 },
     { id: 37, name: 'รูบิค', price: 0 },
     { id: 38, name: 'สันคอ (เนื้อ)', price: 0 },
   ]},
@@ -108,8 +87,21 @@ const MENU = [
     { id: 53, name: 'กุ้ง', price: 0 },
     { id: 54, name: 'หอย', price: 0 },
     { id: 55, name: 'ปลาดอลลี่', price: 0 },
-    { id: 56, name: 'หมึกวง', price: 0 },
+    { id: 56, name: 'หมึกวงทอด', price: 0 },
     { id: 57, name: 'หมึกหนวด', price: 0 },
+  ]},
+  { cat: 'เครื่องเคียง', color: '#a855f7', items: [
+    { id: 58, name: 'กิมจิ', price: 0 },
+    { id: 59, name: 'ยำสาหร่าย', price: 0 },
+    { id: 60, name: 'ผักดอง 3 รส', price: 0 },
+    { id: 61, name: 'เนื้อมันเนื้อ', price: 0 },
+    { id: 62, name: 'เนย', price: 0 },
+    { id: 63, name: 'ไข่', price: 0 },
+  ]},
+  { cat: 'ของแปรรูป', color: '#eab308', items: [
+    { id: 64, name: 'ไส้กรอกชีส', price: 0 },
+    { id: 65, name: 'ปูอัด', price: 0 },
+    { id: 66, name: 'สามชั้นพันเบคอน', price: 0 },
   ]},
 ];
 
@@ -117,49 +109,6 @@ function broadcast(data) {
   const msg = JSON.stringify(data);
   wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
 }
-
-function findMenuItem(id) {
-  for (const cat of MENU) {
-    const item = cat.items.find(i => i.id === Number(id));
-    if (item) return item;
-  }
-  return null;
-}
-
-// API: get current menu (used by the image-management admin page)
-app.get('/api/menu', (req, res) => {
-  res.json({ menu: MENU });
-});
-
-// API: upload/replace an image for a specific menu item
-app.post('/api/menu/:id/image', upload.single('image'), (req, res) => {
-  const item = findMenuItem(req.params.id);
-  if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
-  if (!req.file) return res.status(400).json({ error: 'ไม่พบไฟล์รูปภาพ' });
-
-  // remove old uploaded image file if it exists
-  if (item.image) {
-    const oldPath = path.join(__dirname, 'public', item.image);
-    fs.unlink(oldPath, () => {});
-  }
-
-  item.image = `/uploads/${req.file.filename}`;
-  broadcast({ type: 'menu_updated', menu: MENU });
-  res.json({ ok: true, image: item.image });
-});
-
-// API: remove an image from a menu item
-app.delete('/api/menu/:id/image', (req, res) => {
-  const item = findMenuItem(req.params.id);
-  if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
-  if (item.image) {
-    const oldPath = path.join(__dirname, 'public', item.image);
-    fs.unlink(oldPath, () => {});
-    item.image = null;
-  }
-  broadcast({ type: 'menu_updated', menu: MENU });
-  res.json({ ok: true });
-});
 
 // API: get orders for a specific table (used by customer.html "My Orders" tab)
 app.get('/api/table/:id/orders', (req, res) => {
@@ -234,23 +183,6 @@ wss.on('connection', (ws) => {
     if (msg.type === 'delete_ticket') {
       tickets = tickets.filter(x => x.num !== msg.num);
       broadcast({ type: 'ticket_deleted', num: msg.num });
-    }
-
-    // remove a single menu item (row) from a ticket
-    if (msg.type === 'delete_item') {
-      const t = tickets.find(x => x.num === msg.num);
-      if (t) {
-        t.items.splice(msg.itemIndex, 1);
-        if (t.items.length === 0) {
-          // no items left, remove the whole ticket
-          tickets = tickets.filter(x => x.num !== msg.num);
-          broadcast({ type: 'ticket_deleted', num: msg.num });
-        } else {
-          const allDone = t.items.every(i => i.done);
-          t.status = allDone ? 'done' : (t.items.some(i => i.done) ? 'cooking' : 'new');
-          broadcast({ type: 'ticket_updated', ticket: t });
-        }
-      }
     }
 
     if (msg.type === 'clear_table') {
@@ -363,14 +295,8 @@ app.get('/api/report/excel', async (req, res) => {
   res.end();
 });
 
-// catch multer/upload errors (wrong file type, too large, etc.)
-app.use((err, req, res, next) => {
-  if (err) return res.status(400).json({ error: err.message || 'อัปโหลดไม่สำเร็จ' });
-  next();
-});
-
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-      
+     
