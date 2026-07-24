@@ -60,7 +60,7 @@ const MENU = [
     { id: 32, name: 'สันสะโพก', price: 0 },
     { id: 33, name: 'ติดมัน', price: 0 },
     { id: 34, name: 'ไบพาย', price: 0 },
-    { id: 35, name: 'ปลาช่อน',price: 0 },
+    { id: 35, name: 'ปลาซี่โครง', price: 0 },
     { id: 36, name: 'เสือ', price: 0 },
     { id: 37, name: 'รูบิค', price: 0 },
     { id: 38, name: 'สันคอ (เนื้อ)', price: 0 },
@@ -98,9 +98,9 @@ function broadcast(data) {
 }
 
 // API: get orders for a specific table (used by customer.html "My Orders" tab)
-app.get('/api/table/:num/orders', (req, res) => {
-  const num = parseInt(req.params.num);
-  const orders = tickets.filter(t => t.table === num && !t.tableCleared);
+app.get('/api/table/:id/orders', (req, res) => {
+  const tableId = req.params.id;
+  const orders = tickets.filter(t => t.table === tableId && !t.tableCleared);
   res.json({ orders });
 });
 
@@ -286,4 +286,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-     
+                                                               
