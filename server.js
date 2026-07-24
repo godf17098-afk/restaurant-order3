@@ -2,6 +2,8 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const ExcelJS = require('exceljs');
 
 const app = express();
@@ -10,6 +12,25 @@ const wss = new WebSocket.Server({ server });
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/staff.html'));
+
+// ===== Menu image uploads =====
+const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname) || '.jpg';
+      cb(null, `item-${req.params.id}-${Date.now()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('ไฟล์ต้องเป็นรูปภาพเท่านั้น'));
+  },
+});
 
 let tickets = [];
 let ticketCounter = 1001;
@@ -97,6 +118,49 @@ function broadcast(data) {
   wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
 }
 
+function findMenuItem(id) {
+  for (const cat of MENU) {
+    const item = cat.items.find(i => i.id === Number(id));
+    if (item) return item;
+  }
+  return null;
+}
+
+// API: get current menu (used by the image-management admin page)
+app.get('/api/menu', (req, res) => {
+  res.json({ menu: MENU });
+});
+
+// API: upload/replace an image for a specific menu item
+app.post('/api/menu/:id/image', upload.single('image'), (req, res) => {
+  const item = findMenuItem(req.params.id);
+  if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
+  if (!req.file) return res.status(400).json({ error: 'ไม่พบไฟล์รูปภาพ' });
+
+  // remove old uploaded image file if it exists
+  if (item.image) {
+    const oldPath = path.join(__dirname, 'public', item.image);
+    fs.unlink(oldPath, () => {});
+  }
+
+  item.image = `/uploads/${req.file.filename}`;
+  broadcast({ type: 'menu_updated', menu: MENU });
+  res.json({ ok: true, image: item.image });
+});
+
+// API: remove an image from a menu item
+app.delete('/api/menu/:id/image', (req, res) => {
+  const item = findMenuItem(req.params.id);
+  if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
+  if (item.image) {
+    const oldPath = path.join(__dirname, 'public', item.image);
+    fs.unlink(oldPath, () => {});
+    item.image = null;
+  }
+  broadcast({ type: 'menu_updated', menu: MENU });
+  res.json({ ok: true });
+});
+
 // API: get orders for a specific table (used by customer.html "My Orders" tab)
 app.get('/api/table/:id/orders', (req, res) => {
   const tableId = req.params.id;
@@ -170,6 +234,23 @@ wss.on('connection', (ws) => {
     if (msg.type === 'delete_ticket') {
       tickets = tickets.filter(x => x.num !== msg.num);
       broadcast({ type: 'ticket_deleted', num: msg.num });
+    }
+
+    // remove a single menu item (row) from a ticket
+    if (msg.type === 'delete_item') {
+      const t = tickets.find(x => x.num === msg.num);
+      if (t) {
+        t.items.splice(msg.itemIndex, 1);
+        if (t.items.length === 0) {
+          // no items left, remove the whole ticket
+          tickets = tickets.filter(x => x.num !== msg.num);
+          broadcast({ type: 'ticket_deleted', num: msg.num });
+        } else {
+          const allDone = t.items.every(i => i.done);
+          t.status = allDone ? 'done' : (t.items.some(i => i.done) ? 'cooking' : 'new');
+          broadcast({ type: 'ticket_updated', ticket: t });
+        }
+      }
     }
 
     if (msg.type === 'clear_table') {
@@ -282,8 +363,14 @@ app.get('/api/report/excel', async (req, res) => {
   res.end();
 });
 
+// catch multer/upload errors (wrong file type, too large, etc.)
+app.use((err, req, res, next) => {
+  if (err) return res.status(400).json({ error: err.message || 'อัปโหลดไม่สำเร็จ' });
+  next();
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-                                                               
+      
