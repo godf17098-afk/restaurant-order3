@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>จัดการรูปเมนู</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--muted:#a1a1aa;--muted2:#71717a;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-border:rgba(74,222,128,0.2);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.2);
+  --r:10px;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;position:sticky;top:0;z-index:10}
+.brand{font-family:'Kanit',sans-serif;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:16px}
+.cat-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
+.cat-title:first-child{margin-top:0}
+.item-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.thumb{width:56px;height:56px;border-radius:8px;background:var(--surface2);flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.item-info{flex:1;min-width:0}
+.item-name{font-weight:500;font-size:14px;margin-bottom:2px}
+.item-status{font-size:12px;color:var(--muted2)}
+.item-actions{display:flex;gap:6px;flex-shrink:0}
+.btn{border:none;border-radius:8px;padding:8px 12px;font-family:'Kanit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn-upload{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)}
+.btn-remove{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
+.hidden-input{display:none}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface3);color:var(--text);padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="brand">🖼 จัดการรูปเมนู</div></div>
+<div class="wrap" id="menu-list">กำลังโหลด...</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let menu = [];
+
+async function loadMenu(){
+  const res = await fetch('/api/menu');
+  const data = await res.json();
+  menu = data.menu;
+  render();
+}
+
+function render(){
+  const el = document.getElementById('menu-list');
+  el.innerHTML = menu.map(cat => `
+    <div class="cat-title">${cat.cat}</div>
+    ${cat.items.map(item => `
+      <div class="item-card">
+        <div class="thumb" id="thumb-${item.id}">${item.image ? `<img src="${item.image}">` : '🍽'}</div>
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          <div class="item-status" id="status-${item.id}">${item.image ? 'มีรูปแล้ว' : 'ยังไม่มีรูป'}</div>
+        </div>
+        <div class="item-actions">
+          <button class="btn btn-upload" onclick="pickFile(${item.id})">📤 อัปโหลด</button>
+          ${item.image ? `<button class="btn btn-remove" onclick="removeImage(${item.id})">ลบ</button>` : ''}
+        </div>
+        <input type="file" accept="image/*" class="hidden-input" id="file-${item.id}" onchange="uploadImage(${item.id})">
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+function pickFile(id){
+  document.getElementById('file-'+id).click();
+}
+
+async function uploadImage(id){
+  const input = document.getElementById('file-'+id);
+  const file = input.files[0];
+  if(!file) return;
+
+  const fd = new FormData();
+  fd.append('image', file);
+
+  showToast('กำลังอัปโหลด...');
+  try{
+    const res = await fetch(`/api/menu/${id}/image`, { method:'POST', body: fd });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'อัปโหลดไม่สำเร็จ');
+    showToast('✓ อัปโหลดสำเร็จ');
+    await loadMenu();
+  }catch(e){
+    showToast('❌ ' + e.message);
+  }
+  input.value = '';
+}
+
+async function removeImage(id){
+  if(!confirm('ลบรูปเมนูนี้?')) return;
+  showToast('กำลังลบ...');
+  try{
+    const res = await fetch(`/api/menu/${id}/image`, { method:'DELETE' });
+    if(!res.ok) throw new Error('ลบไม่สำเร็จ');
+    showToast('✓ ลบรูปแล้ว');
+    await loadMenu();
+  }catch(e){
+    showToast('❌ ' + e.message);
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+loadMenu();
+</script>
+</body>
+</html>
