@@ -39,6 +39,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 
 .table-row{padding:12px 14px 8px;flex-shrink:0}
 .row-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.zone-label{font-size:11px;font-weight:600;color:var(--muted2);margin:10px 0 6px}
 .table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
 .tbl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);border-radius:var(--r);padding:10px 4px;font-family:'Kanit',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .15s}
 .tbl-btn.active{background:var(--surface3);border-color:var(--border2);color:var(--text)}
@@ -138,7 +139,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 <div class="page active" id="page-order">
   <div class="table-row">
     <div class="row-label">โต๊ะ</div>
-    <div class="table-grid" id="table-grid"></div>
+    <div id="table-zones"></div>
   </div>
   <div class="menu-list" id="menu-list"></div>
   <div class="cart-bar">
@@ -146,7 +147,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
       <div class="cart-badge" id="cart-count">0</div>
       <div>
         <div class="cart-total" id="cart-total">ยังไม่มีรายการ</div>
-        <div class="cart-table" id="cart-table-label">โต๊ะ 1</div>
+        <div class="cart-table" id="cart-table-label">F1</div>
       </div>
     </div>
     <button class="cart-btn" id="cart-btn" onclick="openCart()" disabled>ดูรายการ →</button>
@@ -179,7 +180,13 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </div>
 
 <script>
-let menu=[], tickets=[], orders={}, currentTable=1, ws;
+// Table IDs: F1-F4 and B25-B36 (16 tables total, same as before but relabeled)
+const TABLE_IDS = [
+  ...Array.from({length:4},(_,i)=>'F'+(i+1)),
+  ...Array.from({length:12},(_,i)=>'B'+(i+25))
+];
+
+let menu=[], tickets=[], orders={}, currentTable=TABLE_IDS[0], ws;
 
 function connect(){
   const proto=location.protocol==='https:'?'wss':'ws';
@@ -202,10 +209,19 @@ function showPage(id,btn){
 }
 
 function initTableGrid(){
-  const el=document.getElementById('table-grid');
-  el.innerHTML=Array.from({length:16},(_,i)=>i+1).map(n=>
-    `<button class="tbl-btn ${n===1?'active':''}" onclick="selectTable(${n},this)">โต๊ะ ${n}</button>`
-  ).join('');
+  const zoneF = TABLE_IDS.filter(id => id.startsWith('F'));
+  const zoneB = TABLE_IDS.filter(id => id.startsWith('B'));
+  const el = document.getElementById('table-zones');
+  el.innerHTML = `
+    <div class="zone-label">โซน F</div>
+    <div class="table-grid">
+      ${zoneF.map(id => `<button class="tbl-btn ${id===currentTable?'active':''}" onclick="selectTable('${id}',this)">${id}</button>`).join('')}
+    </div>
+    <div class="zone-label">โซน B</div>
+    <div class="table-grid">
+      ${zoneB.map(id => `<button class="tbl-btn ${id===currentTable?'active':''}" onclick="selectTable('${id}',this)">${id}</button>`).join('')}
+    </div>
+  `;
 }
 
 function allItems(){return menu.flatMap(c=>c.items)}
@@ -223,11 +239,11 @@ function initMenu(){
   `).join('');
 }
 
-function selectTable(n,btn){
-  currentTable=n;
+function selectTable(id,btn){
+  currentTable=id;
   document.querySelectorAll('.tbl-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('cart-table-label').textContent='โต๊ะ '+n;
+  document.getElementById('cart-table-label').textContent=id;
   updateCartBar();
 }
 
@@ -254,7 +270,7 @@ function updateCartBar(){
 }
 
 function openCart(){
-  document.getElementById('sheet-title').textContent='ออเดอร์ – โต๊ะ '+currentTable;
+  document.getElementById('sheet-title').textContent='ออเดอร์ – '+currentTable;
   renderSheetItems();
   document.getElementById('overlay').classList.add('show');
 }
@@ -308,7 +324,7 @@ function renderKDS(){
     const act=t.status==='new'?`<button class="t-btn t-cook" onclick="setStatus(${t.num},'cooking')">▶ เริ่มทำ</button>`:t.status==='cooking'?`<button class="t-btn t-done" onclick="setStatus(${t.num},'done')">✓ เสร็จแล้ว</button>`:'';
     return `<div class="ticket s-${t.status}">
       <div class="t-top">
-        <div><div class="t-table">โต๊ะ ${t.table}</div><div class="t-meta"><span class="t-num">#${t.num}</span>${srcTag}</div></div>
+        <div><div class="t-table">${t.table}</div><div class="t-meta"><span class="t-num">#${t.num}</span>${srcTag}</div></div>
         <div class="t-right"><span class="t-status ${stClass}">${stText}</span><span class="t-time">${t.time}</span></div>
       </div>
       <hr class="t-divider">
@@ -329,4 +345,5 @@ initTableGrid();
 connect();
 </script>
 </body>
-</html>
+        </html>
+  
