@@ -187,6 +187,16 @@ function getTableStatus(list){
   return 'ready';
 }
 
+// Sort table IDs like F1, F2, B25, B26 naturally (zone letter, then number)
+function sortTableIds(a, b){
+  const za = a.match(/^[A-Za-z]+/)?.[0] || '';
+  const zb = b.match(/^[A-Za-z]+/)?.[0] || '';
+  if(za !== zb) return za.localeCompare(zb);
+  const na = parseInt(a.replace(/^[A-Za-z]+/, '')) || 0;
+  const nb = parseInt(b.replace(/^[A-Za-z]+/, '')) || 0;
+  return na - nb;
+}
+
 function renderTables(){
   const q=(document.getElementById('search').value||'').trim();
   const el=document.getElementById('tables-scroll');
@@ -197,8 +207,8 @@ function renderTables(){
     activeTables[t.table].push(t);
   });
 
-  let tableNums = Object.keys(activeTables).map(Number).sort((a,b)=>a-b);
-  if(q) tableNums = tableNums.filter(n => String(n).includes(q));
+  let tableNums = Object.keys(activeTables).sort(sortTableIds);
+  if(q) tableNums = tableNums.filter(n => n.toLowerCase().includes(q.toLowerCase()));
 
   document.getElementById('s-tables').textContent = Object.keys(activeTables).length;
   document.getElementById('s-pending').textContent = tickets.filter(t=>!t.tableCleared && (t.status==='new'||t.status==='cooking')).length;
@@ -237,7 +247,7 @@ function renderTables(){
       </div>
       <div class="tc-orders">${ordersHtml}</div>
       <div class="tc-actions">
-        <button class="tc-btn clear" onclick="clearTable(${n})">🧾 เช็กบิล / เคลียร์โต๊ะ</button>
+        <button class="tc-btn clear" onclick="clearTable('${n}')">🧾 เช็กบิล / เคลียร์โต๊ะ</button>
       </div>
     </div>`;
   }).join('');
@@ -264,7 +274,7 @@ function renderServe(){
     });
   });
 
-  const tableNums = Object.keys(byTable).map(Number).sort((a,b)=>a-b);
+  const tableNums = Object.keys(byTable).sort(sortTableIds);
 
   if(!tableNums.length){
     el.innerHTML = '<div class="no-serve"><div class="no-serve-icon">🍽</div>ยังไม่มีเมนูที่ทำเสร็จ</div>';
@@ -370,5 +380,4 @@ function exportExcel(){
 connect();
 </script>
 </body>
-  </html>
-  
+</html>
