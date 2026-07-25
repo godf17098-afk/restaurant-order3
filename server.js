@@ -115,14 +115,14 @@ const MENU = [
     { id: 58, name: 'กิมจิ', price: 0 , image: null },
     { id: 59, name: 'ยำสาหร่าย', price: 0 , image: null },
     { id: 60, name: 'ผักดอง 3 รส', price: 0 , image: null },
-    { id: 61, name: 'เนื้อมันเนื้อ', price: 0 , image: null },
-    { id: 62, name: 'เนย', price: 0 , image: null },
-    { id: 63, name: 'ไข่', price: 0 , image: null },
+    { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null },
+    { id: 62, name: 'เนย/มาการีน', price: 0 , image: null },
+    { id: 63, name: 'ไข่ไก่ก้วย', price: 0 , image: null },
   ]},
   { cat: 'ของแปรรูป', color: '#eab308', items: [
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null },
     { id: 65, name: 'ปูอัด', price: 0 , image: null },
-    { id: 66, name: 'สามชั้นพันเบคอน', price: 0 , image: null },
+    { id: 66, name: 'สามชั้นพันธุ์เห็ดเข็มทอง', price: 0 , image: null },
   ]},
 ];
 
