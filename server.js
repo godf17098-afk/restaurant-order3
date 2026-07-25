@@ -1,4 +1,4 @@
-const express = require('express');
+'สามชั้นพันธุ์เห็ดเข็มทอง' express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
@@ -121,7 +121,7 @@ const MENU = [
   { cat: 'ของแปรรูป', color: '#eab308', items: [
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null },
     { id: 65, name: 'ปูอัด', price: 0 , image: null },
-    { id: 66, name: 'สามชั้นพันธุ์เห็ดเข็มทอง', price: 0 , image: null },
+    { id: 66, name: 'สามชั้นพันเห็ดเข็มทอง', price: 0 , image: null },
   ]},
 ];
 
