@@ -100,6 +100,7 @@ const MENU = [
     { id: 50, name: 'ฟักทอง', price: 0 , image: null },
     { id: 51, name: 'หอมหัวใหญ่', price: 0 , image: null },
     { id: 52, name: 'แครอท', price: 0 , image: null },
+    { id: 67, name: 'กระหล่ำซอย', price: 0 , image: null },
   ]},
   { cat: 'ทะเล', color: '#0ea5e9', items: [
     { id: 53, name: 'กุ้ง', price: 0 , image: null },
@@ -115,6 +116,7 @@ const MENU = [
     { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null },
     { id: 62, name: 'เนย/มาการีน', price: 0 , image: null },
     { id: 63, name: 'ไข่ไก่ก้วย', price: 0 , image: null },
+    { id: 68, name: 'ชีส', price: 0 , image: null },
   ]},
   { cat: 'ของแปรรูป', color: '#eab308', items: [
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null },
