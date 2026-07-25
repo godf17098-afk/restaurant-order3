@@ -1,4 +1,4 @@
-const express = require('express');
+priceก่ก้วย' express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
@@ -115,7 +115,7 @@ const MENU = [
     { id: 60, name: 'ผักดอง 3 รส', price: 0 , image: null },
     { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null },
     { id: 62, name: 'เนย/มาการีน', price: 0 , image: null },
-    { id: 63, name: 'ไข่ไก่ก้วย', price: 0 , image: null },
+    { id: 63, name: 'ไข่ไก่', price: 0 , image: null },
     { id: 68, name: 'ชีส', price: 0 , image: null },
   ]},
   { cat: 'ของแปรรูป', color: '#eab308', items: [
