@@ -115,13 +115,13 @@ const MENU = [
     { id: 60, name: 'ผักดอง 3 รส', price: 0 , image: null },
     { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null },
     { id: 62, name: 'เนย/มาการีน', price: 0 , image: null },
-    { id: 63, name: 'ไข่ไก่', price: 0 , image: null },
+    { id: 63, name: 'ไข่ไก่ก้วย', price: 0 , image: null },
     { id: 68, name: 'ชีส', price: 0 , image: null },
   ]},
   { cat: 'ของแปรรูป', color: '#eab308', items: [
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null },
     { id: 65, name: 'ปูอัด', price: 0 , image: null },
-    { id: 66, name: 'สามชั้นพันเห็ดเข็มทอง', price: 0 , image: null },
+    { id: 66, name: 'สามชั้นพันธุ์เห็ดเข็มทอง', price: 0 , image: null },
   ]},
 ];
 
@@ -370,4 +370,6 @@ app.get('/api/report/excel', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅  Server running at http://localhost:${PORT}'สามชั้นพันธุ์เห็ดเข็มทอง'เห็ดเข็มทอง'
+  console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
+});
+     
