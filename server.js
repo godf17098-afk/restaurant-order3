@@ -1,4 +1,4 @@
-'สามชั้นพันธุ์เห็ดเข็มทอง' express = require('express');
+const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
