@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -187,7 +188,6 @@ function connect(){
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){menu=msg.menu;renderMenu();}
-    if(msg.type==='menu_updated'){menu=msg.menu;renderMenu();}
     if(msg.type==='table_updated'&&msg.table===tableId){myOrders=msg.orders;renderMyOrders();}
     if(msg.type==='table_cleared'&&msg.table===tableId){myOrders=[];renderMyOrders();}
     if(msg.type==='ticket_updated'){
@@ -216,13 +216,10 @@ function renderMenu(){
       <div class="section-title">${cat.cat}</div>
       ${cat.items.map(item=>`
         <div class="menu-item" id="item-${item.id}">
-          <div class="menu-emoji">${item.image ? `<img src="${item.image}" alt="${item.name}">` : (EMOJIS[cat.cat]||'🍽')}</div>
+          <div class="menu-emoji">${item.image ? `<img src="${item.image}">` : (EMOJIS[cat.cat]||'🍽')}</div>
           <div class="menu-name">${item.name}</div>
           <div class="item-ctrl" id="ctrl-${item.id}">
-            ${cart[item.id] ? `<button class="ctrl-btn" onclick="changeQty(${item.id},-1)" style="border-color:var(--border2)">−</button>
-              <span class="ctrl-num">${cart[item.id]}</span>
-              <button class="ctrl-btn plus" onclick="addItem(${item.id})">+</button>`
-            : `<button class="ctrl-btn plus" onclick="addItem(${item.id})">+</button>`}
+            <button class="ctrl-btn plus" onclick="addItem(${item.id})">+</button>
           </div>
         </div>
       `).join('')}
