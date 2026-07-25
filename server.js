@@ -1,4 +1,5 @@
-priceก่ก้วย' express = require('express');
+
+const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
@@ -51,7 +52,7 @@ const MENU = [
     { id: 10, name: 'กุ้งทอด', price: 0 , image: null },
     { id: 11, name: 'นักเก็ต', price: 0 , image: null },
     { id: 12, name: 'ชีสบอล', price: 0 , image: null },
-    { id: 13, name: 'หมึกทอด', price: 0 , image: null },
+    { id: 13, name: 'หมึกวงทอด', price: 0 , image: null },
     { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
@@ -115,7 +116,7 @@ const MENU = [
     { id: 60, name: 'ผักดอง 3 รส', price: 0 , image: null },
     { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null },
     { id: 62, name: 'เนย/มาการีน', price: 0 , image: null },
-    { id: 63, name: 'ไข่ไก่', price: 0 , image: null },
+    { id: 63, name: 'ไข่ไก่ก้วย', price: 0 , image: null },
     { id: 68, name: 'ชีส', price: 0 , image: null },
   ]},
   { cat: 'ของแปรรูป', color: '#eab308', items: [
@@ -372,4 +373,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-     
+    
