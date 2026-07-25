@@ -53,7 +53,7 @@ const MENU = [
     { id: 10, name: 'กุ้งทอด', price: 0 , image: null },
     { id: 11, name: 'นักเก็ต', price: 0 , image: null },
     { id: 12, name: 'ชีสบอล', price: 0 , image: null },
-    { id: 13, name: 'หมึกทอด', price: 0 , image: null },
+    { id: 13, name: 'หมึกวงทอด', price: 0 , image: null },
     { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
@@ -108,7 +108,7 @@ const MENU = [
     { id: 53, name: 'กุ้ง', price: 0 , image: null },
     { id: 54, name: 'หอย', price: 0 , image: null },
     { id: 55, name: 'ปลาดอลลี่', price: 0 , image: null },
-    { id: 56, name: 'หมึกวงทอด', price: 0 , image: null },
+    { id: 56, name: 'หมึกวง', price: 0 , image: null },
     { id: 57, name: 'หมึกหนวด', price: 0 , image: null },
   ]},
   { cat: 'เครื่องเคียง', color: '#a855f7', items: [
