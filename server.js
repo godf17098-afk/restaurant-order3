@@ -1,4 +1,4 @@
-priceวงทอด' express = require('express');
+const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
@@ -370,6 +370,4 @@ app.get('/api/report/excel', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
-});
-     
+  console.log(`\n✅  Server running at http://localhost:${PORT}'สามชั้นพันธุ์เห็ดเข็มทอง'เห็ดเข็มทอง'
