@@ -35,7 +35,6 @@ const upload = multer({
 let tickets = [];
 let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
-const SPECIAL_ITEM_NAME = 'เดี่ยวแซลมอน';
 
 const MENU = [
   { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
@@ -46,14 +45,13 @@ const MENU = [
     { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
-    { id: 6,  name: 'ผักทอด', price: 0 , image: null },
     { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null },
     { id: 8,  name: 'ปีกไก่ทอด', price: 0 , image: null },
     { id: 9,  name: 'ซาลาเปาทอด', price: 0 , image: null },
     { id: 10, name: 'กุ้งทอด', price: 0 , image: null },
     { id: 11, name: 'นักเก็ต', price: 0 , image: null },
     { id: 12, name: 'ชีสบอล', price: 0 , image: null },
-    { id: 13, name: 'หมึกวงทอด', price: 0 , image: null },
+    { id: 13, name: 'หมึกทอด', price: 0 , image: null },
     { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
@@ -69,7 +67,6 @@ const MENU = [
     { id: 22, name: 'แซลมอนซาชิมิ', price: 0 , image: null },
     { id: 23, name: 'หอยเชลล์', price: 0 , image: null },
     { id: 24, name: 'หอยแมลงภู่', price: 0 , image: null },
-    { id: 25, name: 'เดี่ยวแซลมอน', price: 0 , image: null },
   ]},
   { cat: 'เนื้อ', color: '#dc2626', items: [
     { id: 26, name: 'ลิ้นวัว', price: 0 , image: null },
@@ -108,7 +105,7 @@ const MENU = [
     { id: 53, name: 'กุ้ง', price: 0 , image: null },
     { id: 54, name: 'หอย', price: 0 , image: null },
     { id: 55, name: 'ปลาดอลลี่', price: 0 , image: null },
-    { id: 56, name: 'หมึกวง', price: 0 , image: null },
+    { id: 56, name: 'หมึกวงทอด', price: 0 , image: null },
     { id: 57, name: 'หมึกหนวด', price: 0 , image: null },
   ]},
   { cat: 'เครื่องเคียง', color: '#a855f7', items: [
@@ -117,7 +114,7 @@ const MENU = [
     { id: 60, name: 'ผักดอง 3 รส', price: 0 , image: null },
     { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null },
     { id: 62, name: 'เนย/มาการีน', price: 0 , image: null },
-    { id: 63, name: 'ไข่ไก่', price: 0 , image: null },
+    { id: 63, name: 'ไข่ไก่ก้วย', price: 0 , image: null },
   ]},
   { cat: 'ของแปรรูป', color: '#eab308', items: [
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null },
