@@ -1,4 +1,4 @@
-const express = require('express');
+priceวงทอด' express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
@@ -106,7 +106,7 @@ const MENU = [
     { id: 53, name: 'กุ้ง', price: 0 , image: null },
     { id: 54, name: 'หอย', price: 0 , image: null },
     { id: 55, name: 'ปลาดอลลี่', price: 0 , image: null },
-    { id: 56, name: 'หมึกวงทอด', price: 0 , image: null },
+    { id: 56, name: 'หมึกวง', price: 0 , image: null },
     { id: 57, name: 'หมึกหนวด', price: 0 , image: null },
   ]},
   { cat: 'เครื่องเคียง', color: '#a855f7', items: [
