@@ -195,6 +195,7 @@ function connect(){
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){menu=msg.menu;tickets=msg.tickets;initMenu();renderKDS();updateCounts();}
+    if(msg.type==='menu_updated'){menu=msg.menu;initMenu();}
     if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderKDS();updateCounts();}
     if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderKDS();updateCounts();}
     if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderKDS();updateCounts();}
@@ -230,12 +231,15 @@ function getItem(id){return allItems().find(x=>x.id==id)}
 function initMenu(){
   document.getElementById('menu-list').innerHTML=menu.map(cat=>`
     <div class="cat-head">${cat.cat}</div>
-    ${cat.items.map(item=>`
+    ${cat.items.map(item=>{
+      const soldOut = item.available === false;
+      return `
       <div class="m-item">
-        <span class="m-name">${item.name}</span>
+        <span class="m-name">${item.name}${soldOut ? ' <span style="color:var(--red);font-size:12px">(หมด)</span>' : ''}</span>
         <button class="m-add" onclick="addItem(${item.id})">+</button>
       </div>
-    `).join('')}
+    `;
+    }).join('')}
   `).join('');
 }
 
@@ -345,5 +349,4 @@ initTableGrid();
 connect();
 </script>
 </body>
-        </html>
-  
+</html>
