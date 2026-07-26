@@ -1,4 +1,3 @@
-
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
@@ -36,93 +35,94 @@ const upload = multer({
 let tickets = [];
 let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
+const SPECIAL_ITEM_NAME = 'เดี่ยวแซลมอน';
 
 const MENU = [
   { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
-    { id: 1,  name: 'ข้าวผัดกระเทียม', price: 0 , image: null },
-    { id: 2,  name: 'ข้าวผัดมันเนื้อ', price: 0 , image: null },
-    { id: 3,  name: 'ข้าวสวยญี่ปุ่น', price: 0 , image: null },
-    { id: 4,  name: 'ข้าวหน้าเนื้อตุ๋น', price: 0 , image: null },
-    { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null },
+    { id: 1,  name: 'ข้าวผัดกระเทียม', price: 0 , image: null, available: true },
+    { id: 2,  name: 'ข้าวผัดมันเนื้อ', price: 0 , image: null, available: true },
+    { id: 3,  name: 'ข้าวสวยญี่ปุ่น', price: 0 , image: null, available: true },
+    { id: 4,  name: 'ข้าวหน้าเนื้อตุ๋น', price: 0 , image: null, available: true },
+    { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
-    { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null },
-    { id: 8,  name: 'ปีกไก่ทอด', price: 0 , image: null },
-    { id: 9,  name: 'ซาลาเปาทอด', price: 0 , image: null },
-    { id: 10, name: 'กุ้งทอด', price: 0 , image: null },
-    { id: 11, name: 'นักเก็ต', price: 0 , image: null },
-    { id: 12, name: 'ชีสบอล', price: 0 , image: null },
-    { id: 13, name: 'หมึกวงทอด', price: 0 , image: null },
-    { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null },
+    { id: 6,  name: 'ผักทอด', price: 0 , image: null, available: true },
+    { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null, available: true },
+    { id: 8,  name: 'ปีกไก่ทอด', price: 0 , image: null, available: true },
+    { id: 9,  name: 'ซาลาเปาทอด', price: 0 , image: null, available: true },
+    { id: 10, name: 'กุ้งทอด', price: 0 , image: null, available: true },
+    { id: 11, name: 'นักเก็ต', price: 0 , image: null, available: true },
+    { id: 12, name: 'ชีสบอล', price: 0 , image: null, available: true },
+    { id: 13, name: 'หมึกวงทอด', price: 0 , image: null, available: true },
+    { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
-    { id: 15, name: 'แซลมอนดอง', price: 0 , image: null },
-    { id: 16, name: 'กุ้งดอง', price: 0 , image: null },
-    { id: 17, name: 'ไข่ดอง', price: 0 , image: null },
-    { id: 18, name: 'จุ๊เนื้อ', price: 0 , image: null },
-    { id: 19, name: 'ยำเนื้อเย็น', price: 0 , image: null },
+    { id: 15, name: 'แซลมอนดอง', price: 0 , image: null, available: true },
+    { id: 16, name: 'กุ้งดอง', price: 0 , image: null, available: true },
+    { id: 17, name: 'ไข่ดอง', price: 0 , image: null, available: true },
+    { id: 18, name: 'จุ๊เนื้อ', price: 0 , image: null, available: true },
+    { id: 19, name: 'ยำเนื้อเย็น', price: 0 , image: null, available: true },
   ]},
   { cat: 'อื่นๆ', color: '#f87171', items: [
-    { id: 20, name: 'ถั่วแระ', price: 0 , image: null },
-    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null },
-    { id: 22, name: 'แซลมอนซาชิมิ', price: 0 , image: null },
-    { id: 23, name: 'หอยเชลล์', price: 0 , image: null },
-    { id: 24, name: 'หอยแมลงภู่', price: 0 , image: null },
+    { id: 20, name: 'ถั่วแระ', price: 0 , image: null, available: true },
+    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null, available: true },
+    { id: 22, name: 'แซลมอนซาชิมิ', price: 0 , image: null, available: true },
+    { id: 23, name: 'หอยเชลล์อบเนยชีส', price: 0 , image: null, available: true },
+    { id: 24, name: 'หอยแมลงภู่อบเนยชีส', price: 0 , image: null, available: true },
+    { id: 25, name: 'เดี่ยวแซลมอน', price: 0 , image: null, available: true },
   ]},
   { cat: 'เนื้อ', color: '#dc2626', items: [
-    { id: 26, name: 'ลิ้นวัว', price: 0 , image: null },
-    { id: 27, name: 'ริบอาย', price: 0 , image: null },
-    { id: 28, name: 'น่องลาย', price: 0 , image: null },
-    { id: 29, name: 'ตับเนื้อ', price: 0 , image: null },
-    { id: 30, name: 'เนื้อหมัก', price: 0 , image: null },
-    { id: 31, name: 'พิคานย่า', price: 0 , image: null },
-    { id: 32, name: 'สันสะโพก', price: 0 , image: null },
-    { id: 33, name: 'ติดมัน', price: 0 , image: null },
-    { id: 34, name: 'ใบพาย', price: 0 , image: null },
-    { id: 35, name: 'ปลาช่อน', price: 0 , image: null },
-    { id: 36, name: 'เนื้อบริสเก็ต (เสือร้องไห้)', price: 0 , image: null },
-    { id: 37, name: 'รูบิค', price: 0 , image: null },
-    { id: 38, name: 'สันคอ (เนื้อ)', price: 0 , image: null },
+    { id: 26, name: 'ลิ้นวัว', price: 0 , image: null, available: true },
+    { id: 27, name: 'ริบอาย', price: 0 , image: null, available: true },
+    { id: 28, name: 'น่องลาย', price: 0 , image: null, available: true },
+    { id: 29, name: 'ตับเนื้อ', price: 0 , image: null, available: true },
+    { id: 30, name: 'เนื้อหมัก', price: 0 , image: null, available: true },
+    { id: 31, name: 'พิคานย่า', price: 0 , image: null, available: true },
+    { id: 32, name: 'สันสะโพก', price: 0 , image: null, available: true },
+    { id: 33, name: 'ติดมัน', price: 0 , image: null, available: true },
+    { id: 34, name: 'ใบพาย', price: 0 , image: null, available: true },
+    { id: 35, name: 'ปลาช่อน', price: 0 , image: null, available: true },
+    { id: 36, name: 'เนื้อบริสเก็ต (เสือร้องไห้)', price: 0 , image: null, available: true },
+    { id: 37, name: 'รูบิค', price: 0 , image: null, available: true },
+    { id: 38, name: 'สันคอ (เนื้อ)', price: 0 , image: null, available: true },
   ]},
   { cat: 'หมู', color: '#f472b6', items: [
-    { id: 39, name: 'สามชั้น', price: 0 , image: null },
-    { id: 40, name: 'สันนอก', price: 0 , image: null },
-    { id: 41, name: 'สันคอ (หมู)', price: 0 , image: null },
-    { id: 42, name: 'หมูสามชั้นเกาหลี', price: 0 , image: null },
-    { id: 43, name: 'หมูหมัก', price: 0 , image: null },
+    { id: 39, name: 'สามชั้น', price: 0 , image: null, available: true },
+    { id: 40, name: 'สันนอก', price: 0 , image: null, available: true },
+    { id: 41, name: 'สันคอ (หมู)', price: 0 , image: null, available: true },
+    { id: 42, name: 'หมูสามชั้นเกาหลี', price: 0 , image: null, available: true },
+    { id: 43, name: 'หมูหมัก', price: 0 , image: null, available: true },
   ]},
   { cat: 'ผัก', color: '#22c55e', items: [
-    { id: 44, name: 'ผักกาดหอม', price: 0 , image: null },
-    { id: 45, name: 'ผักกาดขาว', price: 0 , image: null },
-    { id: 46, name: 'เห็ดเข็มทอง', price: 0 , image: null },
-    { id: 47, name: 'เห็ดออรินจิ', price: 0 , image: null },
-    { id: 48, name: 'ข้าวโพดอ่อน', price: 0 , image: null },
-    { id: 49, name: 'ผักบุ้ง', price: 0 , image: null },
-    { id: 50, name: 'ฟักทอง', price: 0 , image: null },
-    { id: 51, name: 'หอมหัวใหญ่', price: 0 , image: null },
-    { id: 52, name: 'แครอท', price: 0 , image: null },
-    { id: 67, name: 'กระหล่ำซอย', price: 0 , image: null },
+    { id: 44, name: 'ผักกาดหอม', price: 0 , image: null, available: true },
+    { id: 45, name: 'ผักกาดขาว', price: 0 , image: null, available: true },
+    { id: 46, name: 'เห็ดเข็มทอง', price: 0 , image: null, available: true },
+    { id: 47, name: 'เห็ดออรินจิ', price: 0 , image: null, available: true },
+    { id: 48, name: 'ข้าวโพดอ่อน', price: 0 , image: null, available: true },
+    { id: 49, name: 'ผักบุ้ง', price: 0 , image: null, available: true },
+    { id: 50, name: 'ฟักทอง', price: 0 , image: null, available: true },
+    { id: 51, name: 'หอมหัวใหญ่', price: 0 , image: null, available: true },
+    { id: 52, name: 'แครอท', price: 0 , image: null, available: true },
   ]},
   { cat: 'ทะเล', color: '#0ea5e9', items: [
-    { id: 53, name: 'กุ้ง', price: 0 , image: null },
-    { id: 54, name: 'หอย', price: 0 , image: null },
-    { id: 55, name: 'ปลาดอลลี่', price: 0 , image: null },
-    { id: 56, name: 'หมึกวง', price: 0 , image: null },
-    { id: 57, name: 'หมึกหนวด', price: 0 , image: null },
+    { id: 53, name: 'กุ้ง', price: 0 , image: null, available: true },
+    { id: 54, name: 'หอย', price: 0 , image: null, available: true },
+    { id: 55, name: 'ปลาดอลลี่', price: 0 , image: null, available: true },
+    { id: 56, name: 'หมึกวง', price: 0 , image: null, available: true },
+    { id: 57, name: 'หมึกหนวด', price: 0 , image: null, available: true },
   ]},
   { cat: 'เครื่องเคียง', color: '#a855f7', items: [
-    { id: 58, name: 'กิมจิ', price: 0 , image: null },
-    { id: 59, name: 'ยำสาหร่าย', price: 0 , image: null },
-    { id: 60, name: 'ผักดอง 3 รส', price: 0 , image: null },
-    { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null },
-    { id: 62, name: 'เนย/มาการีน', price: 0 , image: null },
-    { id: 63, name: 'ไข่ไก่ก้วย', price: 0 , image: null },
-    { id: 68, name: 'ชีส', price: 0 , image: null },
+    { id: 58, name: 'กิมจิ', price: 0 , image: null, available: true },
+    { id: 59, name: 'ยำสาหร่าย', price: 0 , image: null, available: true },
+    { id: 60, name: 'ผักดอง 3 รส', price: 0 , image: null, available: true },
+    { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null, available: true },
+    { id: 62, name: 'เนย/มาการีน', price: 0 , image: null, available: true },
+    { id: 63, name: 'ไข่ไก่', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของแปรรูป', color: '#eab308', items: [
-    { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null },
-    { id: 65, name: 'ปูอัด', price: 0 , image: null },
-    { id: 66, name: 'สามชั้นพันธุ์เห็ดเข็มทอง', price: 0 , image: null },
+    { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
+    { id: 65, name: 'ปูอัด', price: 0 , image: null, available: true },
+    { id: 66, name: 'เห็ดเข็มทองพันเบคอน', price: 0 , image: null, available: true },
   ]},
 ];
 
@@ -142,6 +142,17 @@ function findMenuItem(id) {
 // API: get full menu (with image info) — used by menu image manager page
 app.get('/api/menu', (req, res) => {
   res.json({ menu: MENU });
+});
+
+// API: toggle menu item availability (open/close menu)
+app.post('/api/menu/:id/availability', express.json(), (req, res) => {
+  const id = parseInt(req.params.id);
+  const item = findMenuItem(id);
+  if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
+
+  item.available = req.body.available !== undefined ? !!req.body.available : !item.available;
+  broadcast({ type: 'menu_updated', menu: MENU });
+  res.json({ ok: true, available: item.available });
 });
 
 // API: upload image for a menu item
@@ -203,10 +214,17 @@ wss.on('connection', (ws) => {
     }
 
     if (msg.type === 'new_order') {
+      // filter out items that are currently marked unavailable (safety check)
+      const validItems = msg.items.filter(i => {
+        const menuItem = findMenuItem(parseInt(i.id));
+        return !menuItem || menuItem.available !== false;
+      });
+      if (!validItems.length) return; // nothing valid to order
+
       const ticket = {
         num: ticketCounter++,
         table: msg.table,
-        items: msg.items.map(i => ({ ...i, done: false })),
+        items: validItems.map(i => ({ ...i, done: false })),
         note: msg.note || '',
         time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' }),
         status: 'new',
@@ -373,4 +391,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-    
+     
