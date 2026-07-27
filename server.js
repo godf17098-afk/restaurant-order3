@@ -1,395 +1,256 @@
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
-const path = require('path');
-const fs = require('fs');
-const ExcelJS = require('exceljs');
-const multer = require('multer');
 
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>เสิร์ฟอาหาร</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--muted:#a1a1aa;--muted2:#71717a;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-border:rgba(74,222,128,0.2);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.1);--amber-border:rgba(251,191,36,0.2);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--blue-border:rgba(96,165,250,0.2);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.2);
+  --orange:#fb923c;--orange-dim:rgba(251,146,60,0.1);--orange-border:rgba(251,146,60,0.2);
+  --r:10px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('/', (req, res) => res.redirect('/staff.html'));
+.select-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px;gap:16px}
+.select-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:8px;text-align:center}
+.select-sub{font-size:14px;color:var(--muted);margin-bottom:24px;text-align:center}
+.station-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
+.station-card{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s}
+.station-card:hover{border-color:var(--surface3);background:var(--surface2)}
+.station-icon{font-size:32px;flex-shrink:0}
+.station-name{font-family:'Kanit',sans-serif;font-size:17px;font-weight:500}
+.station-card.fry .station-name{color:var(--orange)}
+.station-card.fish .station-name{color:var(--blue)}
+.station-card.rice .station-name{color:var(--amber)}
+.station-card.meat .station-name{color:#dc2626}
+.station-card.veggie .station-name{color:#22c55e}
 
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+.serve-screen{display:none;flex-direction:column;height:100%}
+.serve-screen.show{display:flex}
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname) || '.jpg';
-    cb(null, `menu-${req.params.id}-${Date.now()}${ext}`);
-  },
-});
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-  fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) return cb(new Error('ไฟล์ต้องเป็นรูปภาพเท่านั้น'));
-    cb(null, true);
-  },
-});
+.topbar{border-bottom:1px solid var(--border);padding:0 14px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.station-tag{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.back-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;font-family:'Sarabun',sans-serif}
+.pending-count{font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
 
+.serve-scroll{flex:1;overflow-y:auto;padding:16px}
+.serve-scroll::-webkit-scrollbar{display:none}
+.serve-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.serve-head{font-family:'Kanit',sans-serif;font-size:17px;font-weight:600;margin-bottom:10px}
+.serve-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.serve-item:last-child{border:none}
+.serve-name{flex:1;font-size:15px;font-weight:500;color:var(--green)}
+.serve-qty{color:var(--muted);font-size:13px;margin-right:4px}
+.serve-btn{background:var(--green);color:#052e16;border:none;border-radius:8px;padding:8px 16px;font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+.serve-btn:hover{opacity:.85}
+.no-serve{text-align:center;padding:80px 20px;color:var(--muted2);font-size:14px}
+.no-serve-icon{font-size:52px;margin-bottom:16px;opacity:.3}
+</style>
+</head>
+<body>
+
+<div class="select-screen" id="select-screen">
+  <div class="select-title">🍽 เลือกสถานีเสิร์ฟ</div>
+  <div class="select-sub">กดเลือกตำแหน่งของคุณ</div>
+  <div class="station-cards">
+    <div class="station-card fry" onclick="selectStation('fry')">
+      <div class="station-icon">🍟</div>
+      <div class="station-name">สถานีทอด</div>
+    </div>
+    <div class="station-card fish" onclick="selectStation('fish')">
+      <div class="station-icon">🐟</div>
+      <div class="station-name">สถานีปลา</div>
+    </div>
+    <div class="station-card meat" onclick="selectStation('meat')">
+      <div class="station-icon">🥩</div>
+      <div class="station-name">สถานีเนื้อ</div>
+    </div>
+    <div class="station-card veggie" onclick="selectStation('veggie')">
+      <div class="station-icon">🥬</div>
+      <div class="station-name">สถานีผัก / ทะเล</div>
+    </div>
+    <div class="station-card rice" onclick="selectStation('rice')">
+      <div class="station-icon">🍚</div>
+      <div class="station-name">สถานีข้าว</div>
+    </div>
+  </div>
+</div>
+
+<div class="serve-screen" id="serve-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="goBack()">← เปลี่ยน</button>
+      <div class="station-tag"><div class="live-dot"></div><span id="station-label">สถานีทอด</span></div>
+    </div>
+    <span class="pending-count" id="pending-count">0 รอเสิร์ฟ</span>
+  </div>
+  <div class="serve-scroll" id="serve-scroll">
+    <div class="no-serve"><div class="no-serve-icon">🍽</div>ยังไม่มีเมนูที่ทำเสร็จ</div>
+  </div>
+</div>
+
+<script>
+// Must stay identical to the station item lists in kitchen-2.html
+const STATIONS = {
+  fry: { label: '🍟 สถานีทอด', items: ['ผักทอด','เฟรนฟราย','ปีกไก่ทอด','ซาลาเปาทอด','กุ้งทอด','นักเก็ต','ชีสบอล','หมึกวงทอด','ไก่ป็อบ','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง'] },
+  fish: { label: '🐟 สถานีปลา', items: ['แซลมอนซาชิมิ','แซลมอนดอง','กุ้งดอง'] },
+  meat: { label: '🥩 สถานีเนื้อ', items: [
+    'ลิ้นวัว','ริบอาย','น่องลาย','ตับเนื้อ','เนื้อหมัก','พิคานย่า','สันสะโพก','ติดมัน','ใบพาย','ปลาช่อน','เนื้อบริสเก็ต (เสือร้องไห้)','รูบิค','สันคอ (เนื้อ)',
+    'สามชั้น','สันนอก','สันคอ (หมู)','หมูสามชั้นเกาหลี','หมูหมัก',
+    'ไส้กรอกชีส'
+  ] },
+  veggie: { label: '🥬 สถานีผัก / ทะเล', items: [
+    'ผักกาดหอม','ผักกาดขาว','เห็ดเข็มทอง','เห็ดออรินจิ','ข้าวโพดอ่อน','ผักบุ้ง','ฟักทอง','หอมหัวใหญ่','แครอท','กระหล่ำปลีซอย','ข้าวโพดหวาน',
+    'กุ้ง','หอย','ปลาดอลลี่','หมึกวง','หมึกหนวด','ปูอัด','เห็ดเข็มทองพันเบคอน',
+    'กิมจิ','ยำสาหร่าย','ผักดอง 3 รส','เนยมันเนื้อ','เนย/มาการีน','ไข่ไก่'
+  ] },
+  rice: { label: '🍚 สถานีข้าว', items: ['ข้าวสวยญี่ปุ่น','ข้าวหน้าเนื้อตุ๋น','อุด้งเนื้อตุ๋น','ถั่วแระ','ไข่ดอง','หอยเชลล์อบเนยชีส','หอยแมลงภู่อบเนยชีส','จุ๊เนื้อ','ยำเนื้อเย็น','ชีส'] }
+};
+
+let currentStation = null;
 let tickets = [];
-let ticketCounter = 1001;
-let billHistory = []; // stores cleared table bills for reporting
+let ws;
+let audioCtx = null;
 
-const MENU = [
-  { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
-    { id: 1,  name: 'ข้าวผัดกระเทียม', price: 0 , image: null, available: true },
-    { id: 2,  name: 'ข้าวผัดมันเนื้อ', price: 0 , image: null, available: true },
-    { id: 3,  name: 'ข้าวสวยญี่ปุ่น', price: 0 , image: null, available: true },
-    { id: 4,  name: 'ข้าวหน้าเนื้อตุ๋น', price: 0 , image: null, available: true },
-    { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null, available: true },
-    { id: 67, name: 'ชีส', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'ของทอด', color: '#4f8ef7', items: [
-    { id: 6,  name: 'ผักทอด', price: 0 , image: null, available: true },
-    { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null, available: true },
-    { id: 8,  name: 'ปีกไก่ทอด', price: 0 , image: null, available: true },
-    { id: 9,  name: 'ซาลาเปาทอด', price: 0 , image: null, available: true },
-    { id: 10, name: 'กุ้งทอด', price: 0 , image: null, available: true },
-    { id: 11, name: 'นักเก็ต', price: 0 , image: null, available: true },
-    { id: 12, name: 'ชีสบอล', price: 0 , image: null, available: true },
-    { id: 13, name: 'หมึกวงทอด', price: 0 , image: null, available: true },
-    { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null, available: true },
-    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
-    { id: 15, name: 'แซลมอนดอง', price: 0 , image: null, available: true },
-    { id: 16, name: 'กุ้งดอง', price: 0 , image: null, available: true },
-    { id: 17, name: 'ไข่ดอง', price: 0 , image: null, available: true },
-    { id: 18, name: 'จุ๊เนื้อ', price: 0 , image: null, available: true },
-    { id: 19, name: 'ยำเนื้อเย็น', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'อื่นๆ', color: '#f87171', items: [
-    { id: 20, name: 'ถั่วแระ', price: 0 , image: null, available: true },
-    { id: 22, name: 'แซลมอนซาชิมิ', price: 0 , image: null, available: true },
-    { id: 23, name: 'หอยเชลล์อบเนยชีส', price: 0 , image: null, available: true },
-    { id: 24, name: 'หอยแมลงภู่อบเนยชีส', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'เนื้อ', color: '#dc2626', items: [
-    { id: 26, name: 'ลิ้นวัว', price: 0 , image: null, available: true },
-    { id: 27, name: 'ริบอาย', price: 0 , image: null, available: true },
-    { id: 28, name: 'น่องลาย', price: 0 , image: null, available: true },
-    { id: 29, name: 'ตับเนื้อ', price: 0 , image: null, available: true },
-    { id: 30, name: 'เนื้อหมัก', price: 0 , image: null, available: true },
-    { id: 31, name: 'พิคานย่า', price: 0 , image: null, available: true },
-    { id: 32, name: 'สันสะโพก', price: 0 , image: null, available: true },
-    { id: 33, name: 'ติดมัน', price: 0 , image: null, available: true },
-    { id: 34, name: 'ใบพาย', price: 0 , image: null, available: true },
-    { id: 35, name: 'ปลาช่อน', price: 0 , image: null, available: true },
-    { id: 36, name: 'เนื้อบริสเก็ต (เสือร้องไห้)', price: 0 , image: null, available: true },
-    { id: 37, name: 'รูบิค', price: 0 , image: null, available: true },
-    { id: 38, name: 'สันคอ (เนื้อ)', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'หมู', color: '#f472b6', items: [
-    { id: 39, name: 'สามชั้น', price: 0 , image: null, available: true },
-    { id: 40, name: 'สันนอก', price: 0 , image: null, available: true },
-    { id: 41, name: 'สันคอ (หมู)', price: 0 , image: null, available: true },
-    { id: 42, name: 'หมูสามชั้นเกาหลี', price: 0 , image: null, available: true },
-    { id: 43, name: 'หมูหมัก', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'ผัก', color: '#22c55e', items: [
-    { id: 44, name: 'ผักกาดหอม', price: 0 , image: null, available: true },
-    { id: 45, name: 'ผักกาดขาว', price: 0 , image: null, available: true },
-    { id: 46, name: 'เห็ดเข็มทอง', price: 0 , image: null, available: true },
-    { id: 47, name: 'เห็ดออรินจิ', price: 0 , image: null, available: true },
-    { id: 48, name: 'ข้าวโพดอ่อน', price: 0 , image: null, available: true },
-    { id: 49, name: 'ผักบุ้ง', price: 0 , image: null, available: true },
-    { id: 50, name: 'ฟักทอง', price: 0 , image: null, available: true },
-    { id: 51, name: 'หอมหัวใหญ่', price: 0 , image: null, available: true },
-    { id: 52, name: 'แครอท', price: 0 , image: null, available: true },
-    { id: 65, name: 'ปูอัด', price: 0 , image: null, available: true },
-    { id: 66, name: 'เห็ดเข็มทองพันเบคอน', price: 0 , image: null, available: true },
-    { id: 68, name: 'กระหล่ำปลีซอย', price: 0 , image: null, available: true },
-    { id: 69, name: 'ข้าวโพดหวาน', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'ทะเล', color: '#0ea5e9', items: [
-    { id: 53, name: 'กุ้ง', price: 0 , image: null, available: true },
-    { id: 54, name: 'หอย', price: 0 , image: null, available: true },
-    { id: 55, name: 'ปลาดอลลี่', price: 0 , image: null, available: true },
-    { id: 56, name: 'หมึกวง', price: 0 , image: null, available: true },
-    { id: 57, name: 'หมึกหนวด', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'เครื่องเคียง', color: '#a855f7', items: [
-    { id: 58, name: 'กิมจิ', price: 0 , image: null, available: true },
-    { id: 59, name: 'ยำสาหร่าย', price: 0 , image: null, available: true },
-    { id: 60, name: 'ผักดอง 3 รส', price: 0 , image: null, available: true },
-    { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null, available: true },
-    { id: 62, name: 'เนย/มาการีน', price: 0 , image: null, available: true },
-    { id: 63, name: 'ไข่ไก่', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'ของแปรรูป', color: '#eab308', items: [
-    { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
-  ]},
-];
-
-function broadcast(data) {
-  const msg = JSON.stringify(data);
-  wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
+function selectStation(station){
+  currentStation = station;
+  document.getElementById('select-screen').style.display = 'none';
+  document.getElementById('serve-screen').classList.add('show');
+  document.getElementById('station-label').textContent = STATIONS[station].label;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+  connect();
 }
 
-function findMenuItem(id) {
-  for (const cat of MENU) {
-    const item = cat.items.find(i => i.id === id);
-    if (item) return item;
-  }
-  return null;
+function goBack(){
+  currentStation = null;
+  document.getElementById('select-screen').style.display = 'flex';
+  document.getElementById('serve-screen').classList.remove('show');
+  if (ws) ws.close();
 }
 
-// API: get full menu (with image info) — used by menu image manager page
-app.get('/api/menu', (req, res) => {
-  res.json({ menu: MENU });
-});
+// Simple beep sound using Web Audio API — no external file needed
+function playAlertSound(){
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    [0, 0.15].forEach((delay, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = i === 0 ? 660 : 880;
+      gain.gain.setValueAtTime(0.0001, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.3, now + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.25);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.3);
+    });
+  } catch (e) { /* audio not available, ignore */ }
+}
 
-// API: toggle menu item availability (open/close menu)
-app.post('/api/menu/:id/availability', express.json(), (req, res) => {
-  const id = parseInt(req.params.id);
-  const item = findMenuItem(id);
-  if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
+function connect(){
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+  ws.onclose = () => { if (currentStation) setTimeout(connect, 2000); };
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'init') { tickets = msg.tickets; renderServe(); }
+    if (msg.type === 'ticket_added') { tickets.unshift(msg.ticket); renderServe(); }
+    if (msg.type === 'ticket_updated') {
+      const i = tickets.findIndex(t => t.num === msg.ticket.num);
+      if (i >= 0) {
+        const oldItems = tickets[i].items;
+        const newItems = msg.ticket.items;
+        const stationNames = STATIONS[currentStation]?.items || [];
+        const hasNewlyDone = newItems.some((item, idx) =>
+          item.done && !item.served && stationNames.includes(item.name) &&
+          !(oldItems[idx] && oldItems[idx].done)
+        );
+        if (hasNewlyDone) playAlertSound();
+        tickets[i] = msg.ticket;
+      }
+      renderServe();
+    }
+    if (msg.type === 'ticket_deleted') { tickets = tickets.filter(t => t.num !== msg.num); renderServe(); }
+    if (msg.type === 'table_cleared') { tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; }); renderServe(); }
+  };
+}
 
-  item.available = req.body.available !== undefined ? !!req.body.available : !item.available;
-  broadcast({ type: 'menu_updated', menu: MENU });
-  res.json({ ok: true, available: item.available });
-});
-
-// API: upload image for a menu item
-app.post('/api/menu/:id/image', upload.single('image'), (req, res) => {
-  const id = parseInt(req.params.id);
-  const item = findMenuItem(id);
-  if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
-  if (!req.file) return res.status(400).json({ error: 'ไม่พบไฟล์ที่อัปโหลด' });
-
-  // remove old image file if exists
-  if (item.image) {
-    const oldPath = path.join(__dirname, 'public', item.image);
-    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+function serveItem(num, itemIndex){
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'serve_item', num, itemIndex }));
   }
+}
 
-  item.image = `/uploads/${req.file.filename}`;
-  broadcast({ type: 'menu_updated', menu: MENU });
-  res.json({ ok: true, image: item.image });
-});
+// Sort table IDs like F1, F2, B25, B26 naturally (zone letter, then number)
+function sortTableIds(a, b){
+  const za = a.match(/^[A-Za-z]+/)?.[0] || '';
+  const zb = b.match(/^[A-Za-z]+/)?.[0] || '';
+  if (za !== zb) return za.localeCompare(zb);
+  const na = parseInt(a.replace(/^[A-Za-z]+/, '')) || 0;
+  const nb = parseInt(b.replace(/^[A-Za-z]+/, '')) || 0;
+  return na - nb;
+}
 
-// API: delete image for a menu item
-app.delete('/api/menu/:id/image', (req, res) => {
-  const id = parseInt(req.params.id);
-  const item = findMenuItem(id);
-  if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
+function renderServe(){
+  const el = document.getElementById('serve-scroll');
+  const stationNames = STATIONS[currentStation].items;
 
-  if (item.image) {
-    const filePath = path.join(__dirname, 'public', item.image);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    item.image = null;
-  }
-
-  broadcast({ type: 'menu_updated', menu: MENU });
-  res.json({ ok: true });
-});
-
-// Error handler for multer (file too large, wrong type, etc.)
-app.use((err, req, res, next) => {
-  if (err) return res.status(400).json({ error: err.message });
-  next();
-});
-
-// API: get orders for a specific table (used by customer.html "My Orders" tab)
-app.get('/api/table/:id/orders', (req, res) => {
-  const tableId = req.params.id;
-  const orders = tickets.filter(t => t.table === tableId && !t.tableCleared);
-  res.json({ orders });
-});
-
-wss.on('connection', (ws) => {
-  ws.send(JSON.stringify({ type: 'init', tickets, menu: MENU }));
-
-  ws.on('message', (raw) => {
-    let msg;
-    try { msg = JSON.parse(raw); } catch { return; }
-
-    if (msg.type === 'join_table') {
-      ws.tableNum = msg.table;
-    }
-
-    if (msg.type === 'new_order') {
-      // filter out items that are currently marked unavailable (safety check)
-      const validItems = msg.items.filter(i => {
-        const menuItem = findMenuItem(parseInt(i.id));
-        return !menuItem || menuItem.available !== false;
-      });
-      if (!validItems.length) return; // nothing valid to order
-
-      const ticket = {
-        num: ticketCounter++,
-        table: msg.table,
-        items: validItems.map(i => ({ ...i, done: false })),
-        note: msg.note || '',
-        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' }),
-        status: 'new',
-        source: msg.source || 'staff',
-        staffName: msg.staffName || '',
-        tableCleared: false,
-      };
-      tickets.unshift(ticket);
-      broadcast({ type: 'ticket_added', ticket });
-      broadcast({ type: 'table_updated', table: msg.table, orders: tickets.filter(t => t.table === msg.table && !t.tableCleared) });
-    }
-
-    if (msg.type === 'toggle_item') {
-      const t = tickets.find(x => x.num === msg.num);
-      if (t) {
-        const item = t.items[msg.itemIndex];
-        if (item) {
-          item.done = !item.done;
-          if (item.done && t.status === 'new') t.status = 'cooking';
-          const allDone = t.items.every(i => i.done);
-          if (allDone) t.status = 'done';
-          else if (t.status === 'done') t.status = 'cooking';
-          broadcast({ type: 'ticket_updated', ticket: t });
-        }
-      }
-    }
-
-    // mark an item as served (removes it from the "ready to serve" list)
-    if (msg.type === 'serve_item') {
-      const t = tickets.find(x => x.num === msg.num);
-      if (t) {
-        const item = t.items[msg.itemIndex];
-        if (item) {
-          item.served = true;
-          broadcast({ type: 'ticket_updated', ticket: t });
-        }
-      }
-    }
-
-    if (msg.type === 'set_status') {
-      const t = tickets.find(x => x.num === msg.num);
-      if (t) {
-        t.status = msg.status;
-        broadcast({ type: 'ticket_updated', ticket: t });
-      }
-    }
-
-    if (msg.type === 'delete_ticket') {
-      tickets = tickets.filter(x => x.num !== msg.num);
-      broadcast({ type: 'ticket_deleted', num: msg.num });
-    }
-
-    if (msg.type === 'clear_table') {
-      const tableOrders = tickets.filter(t => t.table === msg.table && !t.tableCleared);
-      const now = new Date();
-      const bangkokTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
-      const dateStr = bangkokTime.toISOString().slice(0, 10);
-      const timeStr = bangkokTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
-
-      const peopleCount = msg.peopleCount || null;
-      const pricePerPerson = msg.pricePerPerson || null;
-      const totalPrice = msg.totalPrice || null;
-
-      // One summary row per table checkout (with price), plus item detail per ticket
-      if (tableOrders.length) {
-        billHistory.push({
-          date: dateStr,
-          time: timeStr,
-          table: msg.table,
-          ticketNum: tableOrders.map(t => t.num).join(', '),
-          items: tableOrders.flatMap(t => t.items.map(i => `${i.name} x${i.qty}`)).join(', '),
-          itemCount: tableOrders.reduce((s, t) => s + t.items.reduce((s2, i) => s2 + i.qty, 0), 0),
-          source: tableOrders[0].source,
-          staffName: tableOrders[0].staffName || '',
-          peopleCount,
-          pricePerPerson,
-          totalPrice,
-        });
-      }
-
-      tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; });
-      broadcast({ type: 'table_cleared', table: msg.table });
-    }
-  });
-});
-
-// API: download today's sales report as Excel
-app.get('/api/report/excel', async (req, res) => {
-  const dateParam = req.query.date || new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-  const dayBills = billHistory.filter(b => b.date === dateParam);
-
-  const workbook = new ExcelJS.Workbook();
-
-  // Sheet 1: Summary
-  const summarySheet = workbook.addWorksheet('สรุปยอด');
-  summarySheet.columns = [
-    { header: 'รายการ', key: 'label', width: 25 },
-    { header: 'ค่า', key: 'value', width: 20 },
-  ];
-  const totalBills = dayBills.length;
-  const totalItems = dayBills.reduce((s, b) => s + b.itemCount, 0);
-  const totalRevenue = dayBills.reduce((s, b) => s + (b.totalPrice || 0), 0);
-  const totalPeople = dayBills.reduce((s, b) => s + (b.peopleCount || 0), 0);
-
-  const menuCount = {};
-  dayBills.forEach(b => {
-    b.items.split(', ').forEach(entry => {
-      const match = entry.match(/^(.+) x(\d+)$/);
-      if (match) {
-        const name = match[1];
-        const qty = parseInt(match[2]);
-        menuCount[name] = (menuCount[name] || 0) + qty;
+  const byTable = {};
+  let totalPending = 0;
+  tickets.filter(t => !t.tableCleared).forEach(t => {
+    t.items.forEach((item, idx) => {
+      if (item.done && !item.served && stationNames.includes(item.name)) {
+        if (!byTable[t.table]) byTable[t.table] = [];
+        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: item.qty });
+        totalPending++;
       }
     });
   });
-  const topItems = Object.entries(menuCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-  summarySheet.addRow({ label: 'วันที่', value: dateParam });
-  summarySheet.addRow({ label: 'จำนวนบิลทั้งหมด', value: totalBills });
-  summarySheet.addRow({ label: 'จำนวนลูกค้ารวม', value: totalPeople + ' คน' });
-  summarySheet.addRow({ label: 'ยอดขายรวม', value: '฿' + totalRevenue.toLocaleString() });
-  summarySheet.addRow({ label: 'จำนวนรายการอาหารรวม', value: totalItems });
-  summarySheet.addRow({});
-  summarySheet.addRow({ label: 'เมนูขายดี Top 5', value: '' });
-  topItems.forEach(([name, qty]) => summarySheet.addRow({ label: name, value: qty + ' รายการ' }));
+  document.getElementById('pending-count').textContent = totalPending + ' รอเสิร์ฟ';
 
-  summarySheet.getRow(1).font = { bold: true };
-  summarySheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
+  const tableNums = Object.keys(byTable).sort(sortTableIds);
 
-  // Sheet 2: Bill details
-  const detailSheet = workbook.addWorksheet('รายละเอียดบิล');
-  detailSheet.columns = [
-    { header: 'เวลา', key: 'time', width: 12 },
-    { header: 'โต๊ะ', key: 'table', width: 10 },
-    { header: 'จำนวนคน', key: 'peopleCount', width: 10 },
-    { header: 'ราคา/คน', key: 'pricePerPerson', width: 12 },
-    { header: 'ยอดรวม', key: 'totalPrice', width: 14 },
-    { header: 'เลขออเดอร์', key: 'ticketNum', width: 16 },
-    { header: 'รายการอาหาร', key: 'items', width: 60 },
-    { header: 'ที่มา', key: 'source', width: 12 },
-  ];
-  dayBills.forEach(b => {
-    detailSheet.addRow({
-      time: b.time,
-      table: b.table,
-      peopleCount: b.peopleCount || '-',
-      pricePerPerson: b.pricePerPerson ? '฿' + b.pricePerPerson : '-',
-      totalPrice: b.totalPrice ? '฿' + b.totalPrice.toLocaleString() : '-',
-      ticketNum: b.ticketNum,
-      items: b.items,
-      source: b.source === 'customer' ? 'ลูกค้า' : 'พนักงาน',
-    });
-  });
-  detailSheet.getRow(1).font = { bold: true };
-  detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
+  if (!tableNums.length) {
+    el.innerHTML = '<div class="no-serve"><div class="no-serve-icon">🍽</div>ยังไม่มีเมนูที่ทำเสร็จ</div>';
+    return;
+  }
 
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; filename="sales-report-${dateParam}.xlsx"`);
-  await workbook.xlsx.write(res);
-  res.end();
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
-});
-    
+  el.innerHTML = tableNums.map(n => {
+    const items = byTable[n];
+    return `<div class="serve-card">
+      <div class="serve-head">โต๊ะ ${n}</div>
+      ${items.map(i => `
+        <div class="serve-item">
+          <span class="serve-name">${i.name}</span>
+          <span class="serve-qty">×${i.qty}</span>
+          <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟแล้ว</button>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
+  
