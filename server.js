@@ -37,7 +37,7 @@ let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
 
 const MENU = [
-  { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
+  { cat: 'ข้าว/ชีส', color: '#f59e0b', items: [
     { id: 1,  name: 'ข้าวผัดกระเทียม', price: 0 , image: null, available: true },
     { id: 2,  name: 'ข้าวผัดมันเนื้อ', price: 0 , image: null, available: true },
     { id: 3,  name: 'ข้าวสวยญี่ปุ่น', price: 0 , image: null, available: true },
@@ -46,7 +46,6 @@ const MENU = [
     { id: 67, name: 'ชีส', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
-    { id: 6,  name: 'ผักทอด', price: 0 , image: null, available: true },
     { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null, available: true },
     { id: 8,  name: 'ปีกไก่ทอด', price: 0 , image: null, available: true },
     { id: 9,  name: 'ซาลาเปาทอด', price: 0 , image: null, available: true },
@@ -92,7 +91,7 @@ const MENU = [
     { id: 42, name: 'หมูสามชั้นเกาหลี', price: 0 , image: null, available: true },
     { id: 43, name: 'หมูหมัก', price: 0 , image: null, available: true },
   ]},
-  { cat: 'ผัก', color: '#22c55e', items: [
+  { cat: 'ผัก/ของแปรรูป', color: '#22c55e', items: [
     { id: 44, name: 'ผักกาดหอม', price: 0 , image: null, available: true },
     { id: 45, name: 'ผักกาดขาว', price: 0 , image: null, available: true },
     { id: 46, name: 'เห็ดเข็มทอง', price: 0 , image: null, available: true },
@@ -106,6 +105,8 @@ const MENU = [
     { id: 66, name: 'เห็ดเข็มทองพันเบคอน', price: 0 , image: null, available: true },
     { id: 68, name: 'กระหล่ำปลีซอย', price: 0 , image: null, available: true },
     { id: 69, name: 'ข้าวโพดหวาน', price: 0 , image: null, available: true },
+    { id: 70, name: 'กระเทียมสด', price: 0 , image: null, available: true },
+    { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
   ]},
   { cat: 'ทะเล', color: '#0ea5e9', items: [
     { id: 53, name: 'กุ้ง', price: 0 , image: null, available: true },
@@ -121,9 +122,6 @@ const MENU = [
     { id: 61, name: 'เนยมันเนื้อ', price: 0 , image: null, available: true },
     { id: 62, name: 'เนย/มาการีน', price: 0 , image: null, available: true },
     { id: 63, name: 'ไข่ไก่', price: 0 , image: null, available: true },
-  ]},
-  { cat: 'ของแปรรูป', color: '#eab308', items: [
-    { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
   ]},
 ];
 
@@ -396,4 +394,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-  
+    
