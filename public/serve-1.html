@@ -218,9 +218,10 @@ function renderServe(){
   let totalPending = 0;
   tickets.filter(t => !t.tableCleared).forEach(t => {
     t.items.forEach((item, idx) => {
-      if (item.done && !item.served && stationNames.includes(item.name)) {
+      const remaining = item.qty - (item.servedQty || 0);
+      if (item.done && !item.served && remaining > 0 && stationNames.includes(item.name)) {
         if (!byTable[t.table]) byTable[t.table] = [];
-        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: item.qty });
+        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: remaining });
         totalPending++;
       }
     });
@@ -243,7 +244,7 @@ function renderServe(){
         <div class="serve-item">
           <span class="serve-name">${i.name}</span>
           <span class="serve-qty">×${i.qty}</span>
-          <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟแล้ว</button>
+          <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟ 1 จาน</button>
         </div>
       `).join('')}
     </div>`;
@@ -252,3 +253,4 @@ function renderServe(){
 </script>
 </body>
 </html>
+
