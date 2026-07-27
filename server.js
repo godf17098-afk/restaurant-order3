@@ -35,7 +35,6 @@ const upload = multer({
 let tickets = [];
 let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
-const SPECIAL_ITEM_NAME = 'เดี่ยวแซลมอน';
 
 const MENU = [
   { cat: 'ข้าว / ก๋วยเตี๋ยว', color: '#f59e0b', items: [
@@ -44,6 +43,7 @@ const MENU = [
     { id: 3,  name: 'ข้าวสวยญี่ปุ่น', price: 0 , image: null, available: true },
     { id: 4,  name: 'ข้าวหน้าเนื้อตุ๋น', price: 0 , image: null, available: true },
     { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null, available: true },
+    { id: 67, name: 'ชีส', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
     { id: 6,  name: 'ผักทอด', price: 0 , image: null, available: true },
@@ -55,6 +55,7 @@ const MENU = [
     { id: 12, name: 'ชีสบอล', price: 0 , image: null, available: true },
     { id: 13, name: 'หมึกวงทอด', price: 0 , image: null, available: true },
     { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null, available: true },
+    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
     { id: 15, name: 'แซลมอนดอง', price: 0 , image: null, available: true },
@@ -65,11 +66,9 @@ const MENU = [
   ]},
   { cat: 'อื่นๆ', color: '#f87171', items: [
     { id: 20, name: 'ถั่วแระ', price: 0 , image: null, available: true },
-    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null, available: true },
     { id: 22, name: 'แซลมอนซาชิมิ', price: 0 , image: null, available: true },
     { id: 23, name: 'หอยเชลล์อบเนยชีส', price: 0 , image: null, available: true },
     { id: 24, name: 'หอยแมลงภู่อบเนยชีส', price: 0 , image: null, available: true },
-    { id: 25, name: 'เดี่ยวแซลมอน', price: 0 , image: null, available: true },
   ]},
   { cat: 'เนื้อ', color: '#dc2626', items: [
     { id: 26, name: 'ลิ้นวัว', price: 0 , image: null, available: true },
@@ -103,6 +102,10 @@ const MENU = [
     { id: 50, name: 'ฟักทอง', price: 0 , image: null, available: true },
     { id: 51, name: 'หอมหัวใหญ่', price: 0 , image: null, available: true },
     { id: 52, name: 'แครอท', price: 0 , image: null, available: true },
+    { id: 65, name: 'ปูอัด', price: 0 , image: null, available: true },
+    { id: 66, name: 'เห็ดเข็มทองพันเบคอน', price: 0 , image: null, available: true },
+    { id: 68, name: 'กระหล่ำปลีซอย', price: 0 , image: null, available: true },
+    { id: 69, name: 'ข้าวโพดหวาน', price: 0 , image: null, available: true },
   ]},
   { cat: 'ทะเล', color: '#0ea5e9', items: [
     { id: 53, name: 'กุ้ง', price: 0 , image: null, available: true },
@@ -121,8 +124,6 @@ const MENU = [
   ]},
   { cat: 'ของแปรรูป', color: '#eab308', items: [
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
-    { id: 65, name: 'ปูอัด', price: 0 , image: null, available: true },
-    { id: 66, name: 'เห็ดเข็มทองพันเบคอน', price: 0 , image: null, available: true },
   ]},
 ];
 
@@ -391,4 +392,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-     
+    
