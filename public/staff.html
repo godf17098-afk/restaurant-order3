@@ -196,7 +196,7 @@ function connect(){
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){menu=msg.menu;tickets=msg.tickets;initMenu();renderKDS();updateCounts();}
     if(msg.type==='menu_updated'){menu=msg.menu;initMenu();}
-    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderKDS();updateCounts();}
+    if(msg.type==='ticket_added'){tickets.push(msg.ticket);renderKDS();updateCounts();}
     if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderKDS();updateCounts();}
     if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderKDS();updateCounts();}
   };
