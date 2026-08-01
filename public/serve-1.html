@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -115,7 +114,7 @@ const STATIONS = {
     'ไส้กรอกชีส'
   ] },
   veggie: { label: '🥬 สถานีผัก / ทะเล', items: [
-    'ผักกาดหอม','ผักกาดขาว','เห็ดเข็มทอง','เห็ดออรินจิ','ข้าวโพดอ่อน','ผักบุ้ง','ฟักทอง','หอมหัวใหญ่','แครอท','กระหล่ำปลีซอย','ข้าวโพดหวาน','กระเทียมสด',
+    'ผักกาดหอม','ผักกาดขาว','เห็ดเข็มทอง','เห็ดออรินจิ','ข้าวโพดอ่อน','ผักบุ้ง','ฟักทอง','หอมหัวใหญ่','แครอท','กระหล่ำปลีซอย','ข้าวโพดหวาน','กระเทียมสด','สาหร่ายแผ่น',
     'กุ้ง','หอย','ปลาดอลลี่','หมึกวง','หมึกหนวด','ปูอัด','เห็ดเข็มทองพันเบคอน',
     'กิมจิ','ยำสาหร่าย','ผักดอง 3 รส','เนยมันเนื้อ','เนย/มาการีน','ไข่ไก่'
   ] },
@@ -174,7 +173,7 @@ function connect(){
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.type === 'init') { tickets = msg.tickets; renderServe(); }
-    if (msg.type === 'ticket_added') { tickets.unshift(msg.ticket); renderServe(); }
+    if (msg.type === 'ticket_added') { tickets.push(msg.ticket); renderServe(); }
     if (msg.type === 'ticket_updated') {
       const i = tickets.findIndex(t => t.num === msg.ticket.num);
       if (i >= 0) {
