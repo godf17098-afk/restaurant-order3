@@ -106,6 +106,7 @@ const MENU = [
     { id: 68, name: 'กระหล่ำปลีซอย', price: 0 , image: null, available: true },
     { id: 69, name: 'ข้าวโพดหวาน', price: 0 , image: null, available: true },
     { id: 70, name: 'กระเทียมสด', price: 0 , image: null, available: true },
+    { id: 71, name: 'สาหร่ายแผ่น', price: 0 , image: null, available: true },
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
   ]},
   { cat: 'ทะเล', color: '#0ea5e9', items: [
@@ -231,7 +232,7 @@ wss.on('connection', (ws) => {
         staffName: msg.staffName || '',
         tableCleared: false,
       };
-      tickets.unshift(ticket);
+      tickets.push(ticket);
       broadcast({ type: 'ticket_added', ticket });
       broadcast({ type: 'table_updated', table: msg.table, orders: tickets.filter(t => t.table === msg.table && !t.tableCleared) });
     }
@@ -394,4 +395,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-  
+                                 
