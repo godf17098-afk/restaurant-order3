@@ -65,14 +65,19 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .t-time{font-size:11px;color:var(--muted2)}
 .t-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
 
-.check-item{display:flex;align-items:center;gap:10px;padding:9px 4px;border-radius:8px;cursor:pointer;transition:background .12s}
-.check-item:active{background:var(--surface2)}
+.check-item{display:flex;align-items:center;gap:10px;padding:9px 4px;border-radius:8px;transition:background .12s}
 .check-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .check-box.checked{background:var(--green);border-color:var(--green)}
 .check-box.checked::after{content:'✓';color:#000;font-size:14px;font-weight:700}
 .check-name{flex:1;font-size:15px;transition:color .15s,text-decoration .15s}
 .check-item.done .check-name{color:var(--muted2);text-decoration:line-through}
 .check-qty{color:var(--muted);font-size:13px}
+.made-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.made-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'Sarabun',sans-serif}
+.made-btn:active{background:var(--surface3)}
+.made-btn:disabled{opacity:.3;cursor:not-allowed}
+.made-count{min-width:46px;text-align:center;font-family:'Kanit',sans-serif;font-size:14px;font-weight:600;color:var(--muted)}
+.check-item.done .made-count{color:var(--green)}
 
 .t-note{font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:6px;padding:5px 8px;margin-top:8px}
 .no-tickets{text-align:center;padding:70px 20px;color:var(--muted2);font-size:14px}
@@ -89,7 +94,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
       <div class="station-icon">🍟</div>
       <div>
         <div class="station-name">สถานีทอด</div>
-        <div class="station-desc">เฟรนฟราย, ปีกไก่, กุ้งทอด, หมึกวงทอด, ชีสบอล, ซาลาเปา, นักเก็ต, ไก่ป็อบ, ข้าวผัดมันเนื้อ, ข้าวผัดกระเทียม, ไส้กรอกแดง</div>
+        <div class="station-desc">เฟรนฟราย, ปีกไก่, กุ้งทอด, หมึกวงทอด, ชีสบอล, ซาลาเปา, นักเก็ต, ไก่ป็อบ, ข้าวผัดมันเนื้อ, ข้าวผัดกระเทียม</div>
       </div>
     </div>
     <div class="station-card fish" onclick="selectStation('fish')">
@@ -110,7 +115,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
       <div class="station-icon">🥬</div>
       <div>
         <div class="station-name">สถานีผัก / ทะเล</div>
-        <div class="station-desc">ผักทุกชนิด, กุ้ง, หอย, ปลาดอลลี่, หมึกวง, หมึกหนวด, กิมจิ, ยำสาหร่าย, ผักดอง, เนยมันเนื้อ, เนย/มาการีน, ไข่ไก่</div>
+        <div class="station-desc">ผักทุกชนิด, กุ้ง, หอย, ปลาดอลลี่, หมึกวง, หมึกหนวด, ไส้กรอกแดง, กิมจิ, ยำสาหร่าย, ผักดอง, เนยมันเนื้อ, เนย/มาการีน, ไข่ไก่</div>
       </div>
     </div>
     <div class="station-card rice" onclick="selectStation('rice')">
@@ -141,16 +146,16 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 
 <script>
 const STATIONS = {
-  fry: { label: '🍟 สถานีทอด', items: ['เฟรนฟราย','ปีกไก่ทอด','ซาลาเปาทอด','กุ้งทอด','นักเก็ต','ชีสบอล','หมึกวงทอด','ไก่ป็อบ','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง'] },
+  fry: { label: '🍟 สถานีทอด', items: ['เฟรนฟราย','ปีกไก่ทอด','ซาลาเปาทอด','กุ้งทอด','นักเก็ต','ชีสบอล','หมึกวงทอด','ไก่ป็อบ','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม'] },
   fish: { label: '🐟 สถานีปลา', items: ['แซลมอนซาชิมิ','แซลมอนดอง','กุ้งดอง'] },
   meat: { label: '🥩 สถานีเนื้อ', items: [
     'ลิ้นวัว','ริบอาย','น่องลาย','ตับเนื้อ','เนื้อหมัก','พิคานย่า','สันสะโพก','ติดมัน','ใบพาย','ปลาช่อน','เนื้อบริสเก็ต (เสือร้องไห้)','รูบิค','สันคอ (เนื้อ)',
-    'สามชั้น','สันนอก','สันคอ (หมู)','หมูสามชั้นเกาหลี','หมูหมัก',
+    'หมูสามชั้น','หมูสันนอก','หมูสันคอ','หมูสามชั้นเกาหลี','หมูหมัก',
     'ไส้กรอกชีส'
   ] },
   veggie: { label: '🥬 สถานีผัก / ทะเล', items: [
     'ผักกาดหอม','ผักกาดขาว','เห็ดเข็มทอง','เห็ดออรินจิ','ข้าวโพดอ่อน','ผักบุ้ง','ฟักทอง','หอมหัวใหญ่','แครอท','กระหล่ำปลีซอย','ข้าวโพดหวาน','กระเทียมสด','สาหร่ายแผ่น',
-    'กุ้ง','หอย','ปลาดอลลี่','หมึกวง','หมึกหนวด','ปูอัด','เห็ดเข็มทองพันเบคอน',
+    'กุ้ง','หอย','ปลาดอลลี่','หมึกวง','หมึกหนวด','ปูอัด','เห็ดเข็มทองพันเบคอน','ไส้กรอกแดง',
     'กิมจิ','ยำสาหร่าย','ผักดอง 3 รส','เนยมันเนื้อ','เนย/มาการีน','ไข่ไก่'
   ] },
   rice: { label: '🍚 สถานีข้าว', items: ['ข้าวสวยญี่ปุ่น','ข้าวหน้าเนื้อตุ๋น','อุด้งเนื้อตุ๋น','ถั่วแระ','ไข่ดอง','หอยเชลล์อบเนยชีส','หอยแมลงภู่อบเนยชีส','จุ๊เนื้อ','ยำเนื้อเย็น','ชีส'] }
@@ -237,9 +242,15 @@ function getStationItems(ticket) {
     .filter(item => stationNames.includes(item.name));
 }
 
-function toggleItem(num, itemIndex) {
+function incItem(num, itemIndex) {
   if (ws && ws.readyState === 1) {
-    ws.send(JSON.stringify({ type: 'toggle_item', num, itemIndex }));
+    ws.send(JSON.stringify({ type: 'increment_made', num, itemIndex }));
+  }
+}
+
+function decItem(num, itemIndex) {
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'decrement_made', num, itemIndex }));
   }
 }
 
@@ -267,12 +278,17 @@ function renderTickets() {
     const ticketClass = allStationDone ? 's-done' : (t.status === 'cooking' ? 's-cooking' : 's-new');
 
     const itemsHtml = t.stationItems.map(item => {
+      const made = item.madeQty || 0;
       const checkedClass = item.done ? 'checked' : '';
       const doneClass = item.done ? 'done' : '';
-      return `<div class="check-item ${doneClass}" onclick="toggleItem(${t.num},${item.idx})">
+      return `<div class="check-item ${doneClass}">
         <div class="check-box ${checkedClass}"></div>
         <span class="check-name">${item.name}</span>
-        <span class="check-qty">×${item.qty}</span>
+        <div class="made-ctrl">
+          <button class="made-btn" onclick="decItem(${t.num},${item.idx})" ${made <= 0 ? 'disabled' : ''}>−</button>
+          <span class="made-count">${made}/${item.qty}</span>
+          <button class="made-btn" onclick="incItem(${t.num},${item.idx})" ${made >= item.qty ? 'disabled' : ''}>+</button>
+        </div>
       </div>`;
     }).join('');
 
