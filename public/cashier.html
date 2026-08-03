@@ -195,15 +195,19 @@ function connect(){
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){tickets=msg.tickets;renderTables();renderServe();}
-    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderTables();renderServe();}
+    if(msg.type==='ticket_added'){tickets.push(msg.ticket);renderTables();renderServe();}
     if(msg.type==='ticket_updated'){
       const i=tickets.findIndex(t=>t.num===msg.ticket.num);
       // detect newly-completed items (done flipped from false/undefined to true) to trigger sound
       if(i>=0){
         const oldItems = tickets[i].items;
         const newItems = msg.ticket.items;
-        const hasNewlyDone = newItems.some((item, idx) => item.done && !item.served && !(oldItems[idx] && oldItems[idx].done));
-        if(hasNewlyDone) playAlertSound();
+        const hasNewlyReady = newItems.some((item, idx) => {
+          const oldRemaining = ((oldItems[idx]?.madeQty) || 0) - ((oldItems[idx]?.servedQty) || 0);
+          const newRemaining = (item.madeQty || 0) - (item.servedQty || 0);
+          return newRemaining > oldRemaining;
+        });
+        if(hasNewlyReady) playAlertSound();
         tickets[i]=msg.ticket;
       }
       renderTables();renderServe();
@@ -307,9 +311,10 @@ function renderServe(){
   const byTable = {};
   tickets.filter(t => !t.tableCleared).forEach(t => {
     t.items.forEach((item, idx) => {
-      if(item.done && !item.served){
+      const remaining = (item.madeQty || 0) - (item.servedQty || 0);
+      if(remaining > 0){
         if(!byTable[t.table]) byTable[t.table] = [];
-        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: item.qty });
+        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: remaining });
       }
     });
   });
@@ -403,15 +408,4 @@ function confirmCheckout(){
 
   if(ws && ws.readyState === 1){
     ws.send(JSON.stringify({
-      type:'clear_table',
-      table: checkoutTable,
-      peopleCount: people,
-      pricePerPerson: pricePerPerson,
-      totalPrice: total
-    }));
-  }
-  closeCheckout();
-}
-
-function exportExcel(){
-  window.location.href = '/api/report/exc
+      type:'clear_ta
