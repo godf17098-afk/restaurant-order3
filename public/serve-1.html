@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -191,6 +192,7 @@ function connect(){
       renderServe();
     }
     if (msg.type === 'ticket_deleted') { tickets = tickets.filter(t => t.num !== msg.num); renderServe(); }
+    if (msg.type === 'all_tickets_deleted') { tickets = []; renderServe(); }
     if (msg.type === 'table_cleared') { tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; }); renderServe(); }
   };
 }
@@ -254,4 +256,3 @@ function renderServe(){
 </script>
 </body>
 </html>
-
