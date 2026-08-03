@@ -54,7 +54,6 @@ const MENU = [
     { id: 12, name: 'ชีสบอล', price: 0 , image: null, available: true },
     { id: 13, name: 'หมึกวงทอด', price: 0 , image: null, available: true },
     { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null, available: true },
-    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
     { id: 15, name: 'แซลมอนดอง', price: 0 , image: null, available: true },
@@ -85,9 +84,9 @@ const MENU = [
     { id: 38, name: 'สันคอ (เนื้อ)', price: 0 , image: null, available: true },
   ]},
   { cat: 'หมู', color: '#f472b6', items: [
-    { id: 39, name: 'สามชั้น', price: 0 , image: null, available: true },
-    { id: 40, name: 'สันนอก', price: 0 , image: null, available: true },
-    { id: 41, name: 'สันคอ (หมู)', price: 0 , image: null, available: true },
+    { id: 39, name: 'หมูสามชั้น', price: 0 , image: null, available: true },
+    { id: 40, name: 'หมูสันนอก', price: 0 , image: null, available: true },
+    { id: 41, name: 'หมูสันคอ', price: 0 , image: null, available: true },
     { id: 42, name: 'หมูสามชั้นเกาหลี', price: 0 , image: null, available: true },
     { id: 43, name: 'หมูหมัก', price: 0 , image: null, available: true },
   ]},
@@ -108,6 +107,7 @@ const MENU = [
     { id: 70, name: 'กระเทียมสด', price: 0 , image: null, available: true },
     { id: 71, name: 'สาหร่ายแผ่น', price: 0 , image: null, available: true },
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
+    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null, available: true },
   ]},
   { cat: 'ทะเล', color: '#0ea5e9', items: [
     { id: 53, name: 'กุ้ง', price: 0 , image: null, available: true },
@@ -224,7 +224,7 @@ wss.on('connection', (ws) => {
       const ticket = {
         num: ticketCounter++,
         table: msg.table,
-        items: validItems.map(i => ({ ...i, done: false })),
+        items: validItems.map(i => ({ ...i, done: false, madeQty: 0, servedQty: 0 })),
         note: msg.note || '',
         time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' }),
         status: 'new',
@@ -237,16 +237,23 @@ wss.on('connection', (ws) => {
       broadcast({ type: 'table_updated', table: msg.table, orders: tickets.filter(t => t.table === msg.table && !t.tableCleared) });
     }
 
-    if (msg.type === 'toggle_item') {
+    // kitchen presses +1 / -1 for how many of this item have actually been cooked so far —
+    // no need to wait until the whole qty is ready before it can be sent out to serve
+    if (msg.type === 'increment_made' || msg.type === 'decrement_made') {
       const t = tickets.find(x => x.num === msg.num);
       if (t) {
         const item = t.items[msg.itemIndex];
         if (item) {
-          item.done = !item.done;
-          if (item.done && t.status === 'new') t.status = 'cooking';
+          const delta = msg.type === 'increment_made' ? 1 : -1;
+          item.madeQty = Math.max(0, Math.min(item.qty, (item.madeQty || 0) + delta));
+          item.done = item.madeQty >= item.qty;
+
+          const anyStarted = t.items.some(i => (i.madeQty || 0) > 0);
           const allDone = t.items.every(i => i.done);
           if (allDone) t.status = 'done';
-          else if (t.status === 'done') t.status = 'cooking';
+          else if (anyStarted) t.status = 'cooking';
+          else t.status = 'new';
+
           broadcast({ type: 'ticket_updated', ticket: t });
         }
       }
@@ -395,4 +402,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-                                 
+    
