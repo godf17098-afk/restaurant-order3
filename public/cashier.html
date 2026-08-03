@@ -50,14 +50,9 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .ob-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .ob-num{font-size:12px;color:var(--muted2)}
 .ob-status{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500}
-.ob-item{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;padding:4px 0;color:var(--text)}
-.ob-item-left{flex:1;display:flex;justify-content:space-between;padding-right:4px}
+.ob-item{display:flex;justify-content:space-between;font-size:14px;padding:2px 0;color:var(--text)}
 .ob-qty{color:var(--muted);font-size:13px}
-.ob-del{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red);border-radius:6px;width:26px;height:26px;flex-shrink:0;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.ob-del:hover{background:rgba(248,113,113,.25)}
 .ob-note{font-size:12px;color:var(--amber);margin-top:4px}
-.ob-del-all{width:100%;margin-top:8px;background:transparent;border:1px dashed var(--red-border);color:var(--red);border-radius:8px;padding:7px;font-family:'Sarabun',sans-serif;font-size:12px;cursor:pointer}
-.ob-del-all:hover{background:var(--red-dim)}
 .tc-actions{display:flex;gap:8px;margin-top:12px}
 .tc-btn{flex:1;padding:11px;border-radius:10px;border:none;font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;text-align:center}
 .tc-btn.clear{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
@@ -163,6 +158,35 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 <script>
 let tickets = [];
 let ws;
+let audioCtx = null;
+
+// Simple beep sound using Web Audio API — no external file needed
+function playAlertSound(){
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    [0, 0.15].forEach((delay, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = i === 0 ? 660 : 880;
+      gain.gain.setValueAtTime(0.0001, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.3, now + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.25);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.3);
+    });
+  } catch (e) { /* audio not available, ignore */ }
+}
+
+function unlockAudio(){
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
 
 function connect(){
   const proto=location.protocol==='https:'?'wss':'ws';
@@ -171,8 +195,19 @@ function connect(){
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){tickets=msg.tickets;renderTables();renderServe();}
-    if(msg.type==='ticket_added'){tickets.push(msg.ticket);renderTables();renderServe();}
-    if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderTables();renderServe();}
+    if(msg.type==='ticket_added'){tickets.unshift(msg.ticket);renderTables();renderServe();}
+    if(msg.type==='ticket_updated'){
+      const i=tickets.findIndex(t=>t.num===msg.ticket.num);
+      // detect newly-completed items (done flipped from false/undefined to true) to trigger sound
+      if(i>=0){
+        const oldItems = tickets[i].items;
+        const newItems = msg.ticket.items;
+        const hasNewlyDone = newItems.some((item, idx) => item.done && !item.served && !(oldItems[idx] && oldItems[idx].done));
+        if(hasNewlyDone) playAlertSound();
+        tickets[i]=msg.ticket;
+      }
+      renderTables();renderServe();
+    }
     if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderTables();renderServe();}
     if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderTables();renderServe();}
   };
@@ -240,12 +275,8 @@ function renderTables(){
           <span class="ob-num">#${t.num} · ${t.time}</span>
           <span class="ob-status" style="${stColor}">${stText}</span>
         </div>
-        ${t.items.map((i,idx)=>`<div class="ob-item">
-          <span class="ob-item-left"><span>${i.name}</span><span class="ob-qty">×${i.qty}</span></span>
-          <button class="ob-del" onclick="deleteItem(${t.num},${idx},'${i.name.replace(/'/g,"\\'")}')" title="ลบรายการนี้">✕</button>
-        </div>`).join('')}
+        ${t.items.map(i=>`<div class="ob-item"><span>${i.name}</span><span class="ob-qty">×${i.qty}</span></div>`).join('')}
         ${t.note?`<div class="ob-note">📝 ${t.note}</div>`:''}
-        <button class="ob-del-all" onclick="deleteTicket(${t.num})">🗑 ลบออเดอร์นี้ทั้งหมด</button>
       </div>`;
     }).join('');
 
@@ -262,22 +293,6 @@ function renderTables(){
   }).join('');
 }
 
-// ลบเมนู 1 รายการออกจากบิล
-function deleteItem(num, itemIndex, name){
-  if(!confirm(`ลบ "${name}" ออกจากบิลนี้?`)) return;
-  if(ws && ws.readyState === 1){
-    ws.send(JSON.stringify({ type:'delete_item', num, itemIndex }));
-  }
-}
-
-// ลบออเดอร์ทั้งใบในคลิกเดียว
-function deleteTicket(num){
-  if(!confirm(`ลบออเดอร์ #${num} ทั้งหมดออกจากบิลนี้?`)) return;
-  if(ws && ws.readyState === 1){
-    ws.send(JSON.stringify({ type:'delete_ticket', num }));
-  }
-}
-
 // ===== SERVE PAGE (เมนูที่ทำเสร็จ รอเสิร์ฟ) =====
 function serveItem(num, itemIndex){
   if(ws && ws.readyState === 1){
@@ -292,10 +307,9 @@ function renderServe(){
   const byTable = {};
   tickets.filter(t => !t.tableCleared).forEach(t => {
     t.items.forEach((item, idx) => {
-      const remaining = item.qty - (item.servedQty || 0);
-      if(item.done && !item.served && remaining > 0){
+      if(item.done && !item.served){
         if(!byTable[t.table]) byTable[t.table] = [];
-        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: remaining });
+        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: item.qty });
       }
     });
   });
@@ -315,7 +329,7 @@ function renderServe(){
         <div class="serve-item">
           <span class="serve-name">${i.name}</span>
           <span class="serve-qty">×${i.qty}</span>
-          <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟ 1 จาน</button>
+          <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟแล้ว</button>
         </div>
       `).join('')}
     </div>`;
@@ -400,4 +414,4 @@ function confirmCheckout(){
 }
 
 function exportExcel(){
-  wind
+  window.location.href = '/api/report/exc
