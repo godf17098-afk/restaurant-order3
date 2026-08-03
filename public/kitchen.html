@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -108,14 +109,14 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
       <div class="station-icon">🥩</div>
       <div>
         <div class="station-name">สถานีเนื้อ</div>
-        <div class="station-desc">เนื้อทุกชนิด, หมูทุกชนิด, ปูอัด, สามชั้นพันเห็ดเข็มทอง</div>
+        <div class="station-desc">เนื้อทุกชนิด, หมูทุกชนิด, ปูอัด</div>
       </div>
     </div>
     <div class="station-card veggie" onclick="selectStation('veggie')">
       <div class="station-icon">🥬</div>
       <div>
         <div class="station-name">สถานีผัก / ทะเล</div>
-        <div class="station-desc">ผักทุกชนิด, กุ้ง, หอย, ปลาดอลลี่, หมึกวง, หมึกหนวด, ไส้กรอกชีส, กิมจิ, ยำสาหร่าย, ผักดอง, เนยมันเนื้อ, เนย/มาการีน, ไข่ไก่</div>
+        <div class="station-desc">ผักทุกชนิด, กุ้ง, หอย, ปลาดอลลี่, หมึกวง, หมึกหนวด, ไส้กรอกชีส, สามชั้นพันเห็ดเข็มทอง, กิมจิ, ยำสาหร่าย, ผักดอง, เนยมันเนื้อ, เนย/มาการีน, ไข่ไก่</div>
       </div>
     </div>
     <div class="station-card rice" onclick="selectStation('rice')">
@@ -230,6 +231,10 @@ function connect() {
       tickets = tickets.filter(t => t.num !== msg.num);
       renderTickets();
     }
+    if (msg.type === 'all_tickets_deleted') {
+      tickets = [];
+      renderTickets();
+    }
   };
 }
 
@@ -308,4 +313,3 @@ function renderTickets() {
 </script>
 </body>
 </html>
-
