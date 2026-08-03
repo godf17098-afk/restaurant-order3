@@ -37,13 +37,12 @@ let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
 
 const MENU = [
-  { cat: 'ข้าว/ชีส', color: '#f59e0b', items: [
+  { cat: 'ข้าว/อูด้ง', color: '#f59e0b', items: [
     { id: 1,  name: 'ข้าวผัดกระเทียม', price: 0 , image: null, available: true },
     { id: 2,  name: 'ข้าวผัดมันเนื้อ', price: 0 , image: null, available: true },
     { id: 3,  name: 'ข้าวสวยญี่ปุ่น', price: 0 , image: null, available: true },
     { id: 4,  name: 'ข้าวหน้าเนื้อตุ๋น', price: 0 , image: null, available: true },
     { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null, available: true },
-    { id: 67, name: 'ชีส', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
     { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null, available: true },
@@ -54,6 +53,10 @@ const MENU = [
     { id: 12, name: 'ชีสบอล', price: 0 , image: null, available: true },
     { id: 13, name: 'หมึกวงทอด', price: 0 , image: null, available: true },
     { id: 14, name: 'ไก่ป็อบ', price: 0 , image: null, available: true },
+    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null, available: true },
+  ]},
+  { cat: 'ซาชิมิ', color: '#14b8a6', items: [
+    { id: 22, name: 'แซลมอนซาชิมิ', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
     { id: 15, name: 'แซลมอนดอง', price: 0 , image: null, available: true },
@@ -62,13 +65,13 @@ const MENU = [
     { id: 18, name: 'จุ๊เนื้อ', price: 0 , image: null, available: true },
     { id: 19, name: 'ยำเนื้อเย็น', price: 0 , image: null, available: true },
   ]},
-  { cat: 'อื่นๆ', color: '#f87171', items: [
+  { cat: 'อบเนยชีส/อื่นๆ', color: '#f87171', items: [
     { id: 20, name: 'ถั่วแระ', price: 0 , image: null, available: true },
-    { id: 22, name: 'แซลมอนซาชิมิ', price: 0 , image: null, available: true },
     { id: 23, name: 'หอยเชลล์อบเนยชีส', price: 0 , image: null, available: true },
     { id: 24, name: 'หอยแมลงภู่อบเนยชีส', price: 0 , image: null, available: true },
+    { id: 67, name: 'ชีส', price: 0 , image: null, available: true },
   ]},
-  { cat: 'เนื้อ', color: '#dc2626', items: [
+  { cat: 'เนื้อวัว', color: '#dc2626', items: [
     { id: 26, name: 'ลิ้นวัว', price: 0 , image: null, available: true },
     { id: 27, name: 'ริบอาย', price: 0 , image: null, available: true },
     { id: 28, name: 'น่องลาย', price: 0 , image: null, available: true },
@@ -83,7 +86,7 @@ const MENU = [
     { id: 37, name: 'รูบิค', price: 0 , image: null, available: true },
     { id: 38, name: 'สันคอ (เนื้อ)', price: 0 , image: null, available: true },
   ]},
-  { cat: 'หมู', color: '#f472b6', items: [
+  { cat: 'เนื้อหมู', color: '#f472b6', items: [
     { id: 39, name: 'หมูสามชั้น', price: 0 , image: null, available: true },
     { id: 40, name: 'หมูสันนอก', price: 0 , image: null, available: true },
     { id: 41, name: 'หมูสันคอ', price: 0 , image: null, available: true },
@@ -100,14 +103,13 @@ const MENU = [
     { id: 50, name: 'ฟักทอง', price: 0 , image: null, available: true },
     { id: 51, name: 'หอมหัวใหญ่', price: 0 , image: null, available: true },
     { id: 52, name: 'แครอท', price: 0 , image: null, available: true },
-    { id: 65, name: 'ปูอัด', price: 0 , image: null, available: true },
-    { id: 66, name: 'เห็ดเข็มทองพันเบคอน', price: 0 , image: null, available: true },
     { id: 68, name: 'กระหล่ำปลีซอย', price: 0 , image: null, available: true },
     { id: 69, name: 'ข้าวโพดหวาน', price: 0 , image: null, available: true },
     { id: 70, name: 'กระเทียมสด', price: 0 , image: null, available: true },
-    { id: 71, name: 'สาหร่ายแผ่น', price: 0 , image: null, available: true },
+    { id: 65, name: 'ปูอัด', price: 0 , image: null, available: true },
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
-    { id: 21, name: 'ไส้กรอกแดง', price: 0 , image: null, available: true },
+    { id: 66, name: 'สามชั้นพันเห็ดเข็มทอง', price: 0 , image: null, available: true },
+    { id: 71, name: 'สาหร่ายแผ่น', price: 0 , image: null, available: true },
   ]},
   { cat: 'ทะเล', color: '#0ea5e9', items: [
     { id: 53, name: 'กุ้ง', price: 0 , image: null, available: true },
