@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -93,6 +94,9 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .t-del{border-color:var(--border2);color:var(--muted2);flex:none;padding:8px 10px}
 .t-del:hover{border-color:var(--red-border);color:var(--red)}
 .no-tickets{text-align:center;padding:60px 20px;color:var(--muted2);font-size:14px}
+.kds-toolbar{padding:10px 14px 0;flex-shrink:0}
+.clear-all-btn{width:100%;padding:10px;border-radius:var(--r);border:1px solid var(--red-border);background:var(--red-dim);color:var(--red);font-family:'Sarabun',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
+.clear-all-btn:hover{background:rgba(248,113,113,0.18)}
 
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;backdrop-filter:blur(2px)}
 .overlay.show{display:flex}
@@ -155,6 +159,9 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </div>
 
 <div class="page" id="page-kds">
+  <div class="kds-toolbar" id="kds-toolbar" style="display:none">
+    <button class="clear-all-btn" onclick="deleteAllTickets()">🗑 ลบออเดอร์ทั้งหมดวันนี้</button>
+  </div>
   <div class="kds-body" id="kds-body"><div class="no-tickets">ยังไม่มีออเดอร์</div></div>
 </div>
 
@@ -199,6 +206,7 @@ function connect(){
     if(msg.type==='ticket_added'){tickets.push(msg.ticket);renderKDS();updateCounts();}
     if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderKDS();updateCounts();}
     if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderKDS();updateCounts();}
+    if(msg.type==='all_tickets_deleted'){tickets=[];renderKDS();updateCounts();}
   };
 }
 
@@ -317,11 +325,19 @@ function sendOrder(){
 
 function setStatus(num,status){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'set_status',num,status}));}
 function deleteTicket(num){if(!confirm('ลบออเดอร์นี้?'))return;if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'delete_ticket',num}));}
+function deleteAllTickets(){
+  if(!tickets.length)return;
+  if(!confirm('ลบออเดอร์ทั้งหมดของวันนี้ทุกรายการ? ทำแล้วกู้คืนไม่ได้'))return;
+  if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'delete_all_tickets'}));
+}
 
 function renderKDS(){
   const el=document.getElementById('kds-body');
+  document.getElementById('kds-toolbar').style.display=tickets.length?'block':'none';
   if(!tickets.length){el.innerHTML='<div class="no-tickets">ยังไม่มีออเดอร์</div>';return;}
-  el.innerHTML=tickets.map(t=>{
+  // orders that are done move to the bottom; order within each group stays chronological (oldest first)
+  const sorted=[...tickets].sort((a,b)=>(a.status==='done'?1:0)-(b.status==='done'?1:0));
+  el.innerHTML=sorted.map(t=>{
     const stClass=t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
     const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
     const srcTag=t.source==='customer'?`<span class="src-tag src-c">ลูกค้า</span>`:`<span class="src-tag src-s">พนักงาน</span>`;
@@ -349,5 +365,4 @@ initTableGrid();
 connect();
 </script>
 </body>
-  </html>
-
+</html>
