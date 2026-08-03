@@ -290,6 +290,11 @@ wss.on('connection', (ws) => {
       broadcast({ type: 'ticket_deleted', num: msg.num });
     }
 
+    if (msg.type === 'delete_all_tickets') {
+      tickets = [];
+      broadcast({ type: 'all_tickets_deleted' });
+    }
+
     if (msg.type === 'clear_table') {
       const tableOrders = tickets.filter(t => t.table === msg.table && !t.tableCleared);
       const now = new Date();
@@ -404,4 +409,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
-    
