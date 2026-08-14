@@ -326,6 +326,26 @@ wss.on('connection', (ws) => {
       tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; });
       broadcast({ type: 'table_cleared', table: msg.table });
     }
+
+    // move all active (uncleared) orders from one table to another —
+    // e.g. staff physically moves a party to a different table mid-meal
+    if (msg.type === 'move_table') {
+      const fromTable = msg.fromTable;
+      const toTable = msg.toTable;
+      if (!fromTable || !toTable || fromTable === toTable) return;
+
+      const moved = tickets.filter(t => t.table === fromTable && !t.tableCleared);
+      if (!moved.length) return;
+
+      moved.forEach(t => { t.table = toTable; });
+
+      // update every existing client's copy of each moved ticket (kitchen/serve/staff/cashier)
+      moved.forEach(t => broadcast({ type: 'ticket_updated', ticket: t }));
+      // keep any customer.html tabs still open on either table number in sync
+      broadcast({ type: 'table_updated', table: fromTable, orders: tickets.filter(t => t.table === fromTable && !t.tableCleared) });
+      broadcast({ type: 'table_updated', table: toTable, orders: tickets.filter(t => t.table === toTable && !t.tableCleared) });
+      broadcast({ type: 'table_moved', fromTable, toTable, count: moved.length });
+    }
   });
 });
 
@@ -409,3 +429,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
+    
