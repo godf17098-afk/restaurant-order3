@@ -57,8 +57,6 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 .tc-btn{flex:1;padding:11px;border-radius:10px;border:none;font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;text-align:center}
 .tc-btn.clear{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
 .tc-btn.clear:hover{background:rgba(248,113,113,.2)}
-.tc-btn.move{background:var(--blue-dim);border:1px solid var(--blue-border);color:var(--blue)}
-.tc-btn.move:hover{background:rgba(96,165,250,.2)}
 .no-tables{text-align:center;padding:80px 20px;color:var(--muted2);font-size:14px}
 .no-tables-icon{font-size:52px;margin-bottom:16px;opacity:.3}
 
@@ -157,19 +155,6 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
   </div>
 </div>
 
-<div class="overlay" id="move-overlay" onclick="closeMoveIfOut(event)">
-  <div class="sheet">
-    <div class="sheet-title" id="move-title">ย้ายโต๊ะ 1</div>
-    <div class="sheet-sub">ออเดอร์ที่ค้างอยู่ทั้งหมดของโต๊ะนี้จะย้ายไปโต๊ะใหม่ด้วย</div>
-    <span class="field-label">โต๊ะปลายทาง</span>
-    <input class="field-input" id="move-target" placeholder="เช่น F5" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
-    <div class="modal-actions">
-      <button class="modal-btn cancel" onclick="closeMove()">ยกเลิก</button>
-      <button class="modal-btn confirm" onclick="confirmMove()">🔀 ย้ายโต๊ะ</button>
-    </div>
-  </div>
-</div>
-
 <script>
 let tickets = [];
 let ws;
@@ -185,7 +170,6 @@ function connect(){
     if(msg.type==='ticket_updated'){const i=tickets.findIndex(t=>t.num===msg.ticket.num);if(i>=0)tickets[i]=msg.ticket;renderTables();renderServe();}
     if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderTables();renderServe();}
     if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderTables();renderServe();}
-    if(msg.type==='table_moved'){renderTables();renderServe();}
   };
 }
 
@@ -263,7 +247,6 @@ function renderTables(){
       </div>
       <div class="tc-orders">${ordersHtml}</div>
       <div class="tc-actions">
-        <button class="tc-btn move" onclick="openMoveTable('${n}')">🔀 ย้ายโต๊ะ</button>
         <button class="tc-btn clear" onclick="clearTable('${n}')">🧾 เช็กบิล / เคลียร์โต๊ะ</button>
       </div>
     </div>`;
@@ -318,42 +301,6 @@ const BUFFET_PRICE_SALMON = 448;
 const SALMON_NAME = 'ปลาแซลมอน';
 
 let checkoutTable = null;
-let moveFromTable = null;
-
-function openMoveTable(n){
-  moveFromTable = n;
-  document.getElementById('move-title').textContent = `ย้ายโต๊ะ ${n}`;
-  document.getElementById('move-target').value = '';
-  document.getElementById('move-overlay').classList.add('show');
-  setTimeout(() => document.getElementById('move-target').focus(), 50);
-}
-
-function closeMove(){
-  document.getElementById('move-overlay').classList.remove('show');
-  moveFromTable = null;
-}
-
-function closeMoveIfOut(e){
-  if(e.target === document.getElementById('move-overlay')) closeMove();
-}
-
-function confirmMove(){
-  if(moveFromTable === null) return;
-  const target = (document.getElementById('move-target').value || '').trim().toUpperCase();
-  if(!target){ alert('กรุณาระบุโต๊ะปลายทาง'); return; }
-  if(target === moveFromTable){ alert('โต๊ะปลายทางต้องไม่ใช่โต๊ะเดิม'); return; }
-
-  const destHasOrders = tickets.some(t => t.table === target && !t.tableCleared);
-  const warnMsg = destHasOrders
-    ? `โต๊ะ ${target} มีออเดอร์ค้างอยู่แล้ว\nต้องการรวมออเดอร์จากโต๊ะ ${moveFromTable} เข้ากับโต๊ะ ${target} หรือไม่?`
-    : `ย้ายออเดอร์ที่ค้างอยู่ทั้งหมดจากโต๊ะ ${moveFromTable} ไปโต๊ะ ${target}?`;
-  if(!confirm(warnMsg)) return;
-
-  if(ws && ws.readyState === 1){
-    ws.send(JSON.stringify({ type:'move_table', fromTable: moveFromTable, toTable: target }));
-  }
-  closeMove();
-}
 
 function hasExtraSalmon(list, people){
   // count total salmon across ALL orders in the table
@@ -400,4 +347,38 @@ function updatePricePreview(){
     <div class="pp-row"><span>จำนวนคน</span><span>${people} คน</span></div>
     <div class="pp-row"><span>ปลาแซลมอนที่สั่งรวม</span><span>${totalSalmonCount} จาน</span></div>
     <div class="pp-row total"><span>ยอดรวม</span><span class="pp-total-num">฿${total.toLocaleString()}</span></div>
-    ${extraSalmon ? `<div class="pp-note">🐟 สั่งปลาแซลมอนรวม ${totalSalmonCount} จาน มากกว่าจำนวนคน (${people} คน) → ปรับราคาเป็น 448/คน</div>` :
+    ${extraSalmon ? `<div class="pp-note">🐟 สั่งปลาแซลมอนรวม ${totalSalmonCount} จาน มากกว่าจำนวนคน (${people} คน) → ปรับราคาเป็น 448/คน</div>` : ''}
+  `;
+}
+
+function confirmCheckout(){
+  if(checkoutTable === null) return;
+  const people = Math.max(1, parseInt(document.getElementById('people-count').value) || 1);
+  const list = tickets.filter(t => t.table === checkoutTable && !t.tableCleared);
+  const extraSalmon = hasExtraSalmon(list, people);
+  const pricePerPerson = extraSalmon ? BUFFET_PRICE_SALMON : BUFFET_PRICE_NORMAL;
+  const total = pricePerPerson * people;
+
+  if(!confirm(`ยืนยันเช็กบิลโต๊ะ ${checkoutTable}\nจำนวน ${people} คน · รวม ฿${total.toLocaleString()}\n\nเคลียร์โต๊ะนี้?`)) return;
+
+  if(ws && ws.readyState === 1){
+    ws.send(JSON.stringify({
+      type:'clear_table',
+      table: checkoutTable,
+      peopleCount: people,
+      pricePerPerson: pricePerPerson,
+      totalPrice: total
+    }));
+  }
+  closeCheckout();
+}
+
+function exportExcel(){
+  window.location.href = '/api/report/excel';
+}
+
+connect();
+</script>
+</body>
+</html>
+
