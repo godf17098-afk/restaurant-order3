@@ -45,7 +45,7 @@ const MENU = [
     { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
-    { id: 7,  name: 'เฟรนฟราย(3 ชิ้น)', price: 0 , image: null, available: true },
+    { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null, available: true },
     { id: 8,  name: 'ปีกไก่ทอด(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 9,  name: 'ซาลาเปาทอด(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 10, name: 'กุ้งทอด(3 ชิ้น)', price: 0 , image: null, available: true },
@@ -56,7 +56,7 @@ const MENU = [
     { id: 21, name: 'ไส้กรอกแดง(3 ชิ้น)', price: 0 , image: null, available: true },
   ]},
   { cat: 'ซาชิมิ', color: '#14b8a6', items: [
-    { id: 22, name: 'แซลมอนซาชิมิ', price: 0 , image: null, available: true },
+    { id: 22, name: 'แซลมอนซาชิมิ(8 ชิ้น)', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของดอง / ยำ', color: '#2dd4a0', items: [
     { id: 15, name: 'แซลมอนดอง', price: 0 , image: null, available: true },
