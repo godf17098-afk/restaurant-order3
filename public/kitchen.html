@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -21,7 +20,7 @@
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
 
-.select-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px;gap:16px}
+.select-screen{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;flex:1;padding:32px;padding-top:24px;gap:16px}
 .select-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:500;margin-bottom:8px;text-align:center}
 .select-sub{font-size:14px;color:var(--muted);margin-bottom:24px;text-align:center}
 .station-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
@@ -88,8 +87,6 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 <body>
 
 <div class="select-screen" id="select-screen">
-  <div class="select-title">🍳 เลือกสถานีครัว</div>
-  <div class="select-sub">กดเลือกตำแหน่งของคุณ</div>
   <div class="station-cards">
     <div class="station-card fry" onclick="selectStation('fry')">
       <div class="station-icon">🍟</div>
@@ -147,7 +144,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 
 <script>
 const STATIONS = {
-  fry: { label: '🍟 สถานีทอด', items: ['เฟรนฟราย','ปีกไก่ทอด(3 ชิ้น)','ซาลาเปาทอด(3 ชิ้น)','กุ้งทอด(3 ชิ้น)','นักเก็ต(3 ชิ้น)','ชีสบอล(3 ชิ้น)','หมึกวงทอด(3 ชิ้น)','ไก่ป็อบ(5 ชิ้น)','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง(3 ชิ้น)'] },
+  fry: { label: '🍟 สถานีทอด', items: ['เฟรนฟราย(3 ชิ้น)','ปีกไก่ทอด(3 ชิ้น)','ซาลาเปาทอด(3 ชิ้น)','กุ้งทอด(3 ชิ้น)','นักเก็ต(3 ชิ้น)','ชีสบอล(3 ชิ้น)','หมึกวงทอด(3 ชิ้น)','ไก่ป็อบ(5 ชิ้น)','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง(3 ชิ้น)'] },
   fish: { label: '🐟 สถานีปลา', items: ['แซลมอนซาชิมิ(8 ชิ้น)','แซลมอนดอง','กุ้งดอง'] },
   meat: { label: '🥩 สถานีเนื้อ', items: [
     'ลิ้นวัว','ริบอาย','น่องลาย','ตับเนื้อ','เนื้อหมัก','พิคานย่า','สันสะโพก','ติดมัน','ใบพาย','ปลาช่อน','เนื้อบริสเก็ต (เสือร้องไห้)','รูบิค','สันคอ (เนื้อ)',
