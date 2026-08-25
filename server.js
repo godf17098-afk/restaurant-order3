@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const https = require('https');
 const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
@@ -36,6 +37,37 @@ let tickets = [];
 let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
 
+// Discord webhook — posts a message to a Discord channel whenever a new order comes in,
+// so staff get a phone/desktop notification (with sound) even if the KDS tab isn't open
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1541771736331321437/B75dd0Mf24hf2pvoWMF4JyRP-vh2ONytlYlfKwYli83SZ2CH3MOlSbwOUFt_QCavIN-W';
+
+function notifyDiscordNewOrder(ticket) {
+  if (!DISCORD_WEBHOOK_URL) return;
+  try {
+    const itemsText = ticket.items.map(i => `• ${i.name} x${i.qty}`).join('\n') || '(ไม่มีรายการ)';
+    const payload = JSON.stringify({
+      embeds: [{
+        title: `🔔 ออเดอร์ใหม่ #${ticket.num} — โต๊ะ ${ticket.table}`,
+        description: itemsText,
+        color: 0xfbbf24,
+        footer: { text: `เวลา ${ticket.time}${ticket.note ? ' · โน้ต: ' + ticket.note : ''}` }
+      }]
+    });
+    const url = new URL(DISCORD_WEBHOOK_URL);
+    const req = https.request({
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
+    }, (res) => { res.on('data', () => {}); });
+    req.on('error', (err) => console.error('Discord webhook error:', err.message));
+    req.write(payload);
+    req.end();
+  } catch (err) {
+    console.error('Discord webhook error:', err.message);
+  }
+}
+
 const MENU = [
   { cat: 'ข้าว/อูด้ง', color: '#f59e0b', items: [
     { id: 1,  name: 'ข้าวผัดกระเทียม', price: 0 , image: null, available: true },
@@ -45,7 +77,7 @@ const MENU = [
     { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
-    { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null, available: true },
+    { id: 7,  name: 'เฟรนฟราย(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 8,  name: 'ปีกไก่ทอด(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 9,  name: 'ซาลาเปาทอด(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 10, name: 'กุ้งทอด(3 ชิ้น)', price: 0 , image: null, available: true },
@@ -237,6 +269,7 @@ wss.on('connection', (ws) => {
       tickets.push(ticket);
       broadcast({ type: 'ticket_added', ticket });
       broadcast({ type: 'table_updated', table: msg.table, orders: tickets.filter(t => t.table === msg.table && !t.tableCleared) });
+      notifyDiscordNewOrder(ticket);
     }
 
     // kitchen presses +1 / -1 for how many of this item have actually been cooked so far —
@@ -420,13 +453,4 @@ app.get('/api/report/excel', async (req, res) => {
   detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
 
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; filename="sales-report-${dateParam}.xlsx"`);
-  await workbook.xlsx.write(res);
-  res.end();
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
-});
-     
+  res.setHeader('Content-Disposition', `attachment; 
