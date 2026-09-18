@@ -160,7 +160,6 @@ const MENU = [
     { id: 63, name: 'ไข่ไก่', price: 0 , image: null, available: true },
   ]},
 ];
-
 function broadcast(data) {
   const msg = JSON.stringify(data);
   wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
@@ -323,7 +322,6 @@ wss.on('connection', (ws) => {
       tickets = tickets.filter(x => x.num !== msg.num);
       broadcast({ type: 'ticket_deleted', num: msg.num });
     }
-
     if (msg.type === 'delete_all_tickets') {
       tickets = [];
       broadcast({ type: 'all_tickets_deleted' });
@@ -451,30 +449,29 @@ app.get('/api/report/excel', async (req, res) => {
     { header: 'เลขออเดอร์', key: 'ticketNum', width: 16 },
     { header: 'รายการอาหาร', key: 'items', width: 60 },
     { header: 'ที่มา', key: 'source', width: 12 },
-‎  ];
-‎  dayBills.forEach(b => {
-‎    detailSheet.addRow({
-‎      time: b.time,
-‎      table: b.table,
-‎      peopleCount: b.peopleCount || '-',
-‎      pricePerPerson: b.pricePerPerson ? '฿' + b.pricePerPerson : '-',
-‎      totalPrice: b.totalPrice ? '฿' + b.totalPrice.toLocaleString() : '-',
-‎      ticketNum: b.ticketNum,
-‎      items: b.items,
-‎      source: b.source === 'customer' ? 'ลูกค้า' : 'พนักงาน',
-‎    });
-‎  });
-‎  detailSheet.getRow(1).font = { bold: true };
-‎  detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
-‎
-‎  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-‎  res.setHeader('Content-Disposition', `attachment; filename="sales-report-${dateParam}.xlsx"`);
-‎  await workbook.xlsx.write(res);
-‎  res.end();
-‎});
-‎
-‎const PORT = process.env.PORT || 3000;
-‎server.listen(PORT, '0.0.0.0', () => {
-‎  console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
-‎});
-‎
+  ];
+  dayBills.forEach(b => {
+    detailSheet.addRow({
+      time: b.time,
+      table: b.table,
+      peopleCount: b.peopleCount || '-',
+      pricePerPerson: b.pricePerPerson ? '฿' + b.pricePerPerson : '-',
+      totalPrice: b.totalPrice ? '฿' + b.totalPrice.toLocaleString() : '-',
+      ticketNum: b.ticketNum,
+      items: b.items,
+      source: b.source === 'customer' ? 'ลูกค้า' : 'พนักงาน',
+    });
+  });
+  detailSheet.getRow(1).font = { bold: true };
+  detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="sales-report-${dateParam}.xlsx"`);
+  await workbook.xlsx.write(res);
+  res.end();
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
+});
