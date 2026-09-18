@@ -36,6 +36,7 @@ const upload = multer({
 let tickets = [];
 let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
+let closedSalmonTables = []; // table IDs where staff has manually closed further salmon orders
 
 // Discord webhook — posts a message to a Discord channel whenever a new order comes in,
 // so staff get a phone/desktop notification (with sound) even if the KDS tab isn't open
@@ -237,7 +238,7 @@ app.get('/api/table/:id/orders', (req, res) => {
 });
 
 wss.on('connection', (ws) => {
-  ws.send(JSON.stringify({ type: 'init', tickets, menu: MENU }));
+  ws.send(JSON.stringify({ type: 'init', tickets, menu: MENU, closedSalmonTables }));
 
   ws.on('message', (raw) => {
     let msg;
@@ -357,7 +358,21 @@ wss.on('connection', (ws) => {
       }
 
       tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; });
+      closedSalmonTables = closedSalmonTables.filter(t => t !== msg.table);
       broadcast({ type: 'table_cleared', table: msg.table });
+      broadcast({ type: 'salmon_status_updated', closedSalmonTables });
+    }
+
+    // staff toggles whether a table can still order the salmon sashimi (buffet quota control)
+    if (msg.type === 'set_salmon_status') {
+      const table = msg.table;
+      if (!table) return;
+      if (msg.closed) {
+        if (!closedSalmonTables.includes(table)) closedSalmonTables.push(table);
+      } else {
+        closedSalmonTables = closedSalmonTables.filter(t => t !== table);
+      }
+      broadcast({ type: 'salmon_status_updated', closedSalmonTables });
     }
 
     // move all active (uncleared) orders from one table to another —
@@ -435,22 +450,4 @@ app.get('/api/report/excel', async (req, res) => {
     { header: 'ยอดรวม', key: 'totalPrice', width: 14 },
     { header: 'เลขออเดอร์', key: 'ticketNum', width: 16 },
     { header: 'รายการอาหาร', key: 'items', width: 60 },
-    { header: 'ที่มา', key: 'source', width: 12 },
-  ];
-  dayBills.forEach(b => {
-    detailSheet.addRow({
-      time: b.time,
-      table: b.table,
-      peopleCount: b.peopleCount || '-',
-      pricePerPerson: b.pricePerPerson ? '฿' + b.pricePerPerson : '-',
-      totalPrice: b.totalPrice ? '฿' + b.totalPrice.toLocaleString() : '-',
-      ticketNum: b.ticketNum,
-      items: b.items,
-      source: b.source === 'customer' ? 'ลูกค้า' : 'พนักงาน',
-    });
-  });
-  detailSheet.getRow(1).font = { bold: true };
-  detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
-
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; 
+    { header: 'ที่มา', key:
