@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ปิดแซลมอนรายโต๊ะ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--muted:#a1a1aa;--muted2:#71717a;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-border:rgba(74,222,128,0.2);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.2);
+  --r:10px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
+
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.brand{font-family:'Kanit',sans-serif;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.hint{padding:12px 16px;font-size:13px;color:var(--muted);flex-shrink:0;line-height:1.5}
+.hint b{color:var(--text)}
+
+.add-row{display:flex;gap:8px;padding:0 16px 12px;flex-shrink:0}
+.add-input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Kanit',sans-serif;font-size:15px;text-transform:uppercase}
+.add-input::placeholder{color:var(--muted2);text-transform:none}
+.add-input:focus{outline:none;border-color:var(--blue,#60a5fa)}
+.add-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:0 18px;font-family:'Kanit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+
+.list-scroll{flex:1;overflow-y:auto;padding:0 16px 24px}
+.list-scroll::-webkit-scrollbar{display:none}
+.section-label{font-size:12px;color:var(--muted2);font-weight:600;letter-spacing:.03em;margin:10px 0 8px}
+
+.table-row{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.table-row.closed{border-color:var(--red-border);background:var(--red-dim)}
+.tr-name{font-family:'Kanit',sans-serif;font-size:17px;font-weight:600}
+.tr-status{font-size:12px;margin-top:2px}
+.tr-status.open{color:var(--green)}
+.tr-status.closed{color:var(--red)}
+
+.switch{position:relative;width:48px;height:28px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--surface3);border-radius:999px;transition:.15s}
+.slider::before{content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+input:checked + .slider{background:var(--red)}
+input:checked + .slider::before{transform:translateX(20px)}
+
+.no-tables{text-align:center;padding:50px 20px;color:var(--muted2);font-size:14px}
+
+.toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:var(--green-dim);border:1px solid var(--green-border);color:var(--green);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="live-dot"></span>🐟 ปิดแซลมอนรายโต๊ะ</div>
+</div>
+
+<div class="hint">เปิดสวิตช์เพื่อ<b>ปิด</b>ไม่ให้โต๊ะนั้นสั่งแซลมอนซาชิมิเพิ่มได้อีก (ใช้คุมโควตาบุฟเฟ่ต์) — ระบบจะเปิดให้อัตโนมัติเมื่อโต๊ะนั้นเช็กบิล</div>
+
+<div class="add-row">
+  <input class="add-input" id="new-table" placeholder="เพิ่มโต๊ะ เช่น F5" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')addManualTable()">
+  <button class="add-btn" onclick="addManualTable()">+ เพิ่มโต๊ะ</button>
+</div>
+
+<div class="list-scroll" id="list-scroll">
+  <div class="no-tables">ยังไม่มีโต๊ะที่เปิดอยู่</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let ws;
+let tickets = [];
+let closedSalmonTables = [];
+let manualTables = []; // tables added manually that have no active orders yet
+
+function connect(){
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${proto}//${location.host}`);
+
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+
+    if (msg.type === 'init') {
+      tickets = msg.tickets || [];
+      closedSalmonTables = msg.closedSalmonTables || [];
+      renderList();
+    }
+    if (msg.type === 'ticket_added') { tickets.push(msg.ticket); renderList(); }
+    if (msg.type === 'ticket_updated') {
+      const i = tickets.findIndex(t => t.num === msg.ticket.num);
+      if (i >= 0) tickets[i] = msg.ticket; else tickets.push(msg.ticket);
+      renderList();
+    }
+    if (msg.type === 'ticket_deleted') { tickets = tickets.filter(t => t.num !== msg.num); renderList(); }
+    if (msg.type === 'all_tickets_deleted') { tickets = []; renderList(); }
+    if (msg.type === 'table_cleared') {
+      tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; });
+      renderList();
+    }
+    if (msg.type === 'table_moved') { renderList(); }
+    if (msg.type === 'salmon_status_updated') {
+      closedSalmonTables = msg.closedSalmonTables || [];
+      renderList();
+    }
+  };
+
+  ws.onclose = () => { setTimeout(connect, 1500); };
+}
+connect();
+
+function sortTableIds(a, b){
+  const pa = String(a).match(/^([A-Za-z]*)(\d*)$/) || [, '', ''];
+  const pb = String(b).match(/^([A-Za-z]*)(\d*)$/) || [, '', ''];
+  if (pa[1] !== pb[1]) return pa[1].localeCompare(pb[1]);
+  return (parseInt(pa[2]) || 0) - (parseInt(pb[2]) || 0);
+}
+
+function getAllTableIds(){
+  const openTables = new Set(tickets.filter(t => !t.tableCleared).map(t => t.table));
+  manualTables.forEach(t => openTables.add(t));
+  closedSalmonTables.forEach(t => openTables.add(t)); // keep showing a closed table even if bill got cleared elsewhere
+  return Array.from(openTables).sort(sortTableIds);
+}
+
+function renderList(){
+  const el = document.getElementById('list-scroll');
+  const allTables = getAllTableIds();
+  if (!allTables.length) {
+    el.innerHTML = '<div class="no-tables">ยังไม่มีโต๊ะที่เปิดอยู่</div>';
+    return;
+  }
+  el.innerHTML = `<div class="section-label">โต๊ะ (${allTables.length})</div>` + allTables.map(n => {
+    const closed = closedSalmonTables.includes(n);
+    return `
+    <div class="table-row ${closed ? 'closed' : ''}">
+      <div>
+        <div class="tr-name">โต๊ะ ${n}</div>
+        <div class="tr-status ${closed ? 'closed' : 'open'}">${closed ? '🔒 ปิดรับแซลมอนแล้ว' : '🟢 สั่งแซลมอนได้ปกติ'}</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" ${closed ? 'checked' : ''} onchange="toggleSalmon('${n}', this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+}
+
+function toggleSalmon(table, closed){
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'set_salmon_status', table, closed }));
+  }
+  showToast(closed ? `ปิดรับแซลมอนโต๊ะ ${table} แล้ว` : `เปิดรับแซลมอนโต๊ะ ${table} แล้ว`);
+}
+
+function addManualTable(){
+  const input = document.getElementById('new-table');
+  const t = input.value.trim().toUpperCase();
+  if (!t) return;
+  if (!manualTables.includes(t)) manualTables.push(t);
+  input.value = '';
+  renderList();
+}
+
+function showToast(text){
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
