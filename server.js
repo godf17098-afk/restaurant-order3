@@ -78,7 +78,7 @@ const MENU = [
     { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
-    { id: 7,  name: 'เฟรนฟราย(3 ชิ้น)', price: 0 , image: null, available: true },
+    { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null, available: true },
     { id: 8,  name: 'ปีกไก่ทอด(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 9,  name: 'ซาลาเปาทอด(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 10, name: 'กุ้งทอด(3 ชิ้น)', price: 0 , image: null, available: true },
