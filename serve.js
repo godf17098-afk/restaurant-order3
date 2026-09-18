@@ -450,7 +450,7 @@ app.get('/api/report/excel', async (req, res) => {
     { header: 'ยอดรวม', key: 'totalPrice', width: 14 },
     { header: 'เลขออเดอร์', key: 'ticketNum', width: 16 },
     { header: 'รายการอาหาร', key: 'items', width: 60 },
-    { header: 'ที่มา', key: 'source'อาหาร', width: 12 },
+    { header: 'ที่มา', key: 'source', width: 12 },
 ‎  ];
 ‎  dayBills.forEach(b => {
 ‎    detailSheet.addRow({
