@@ -133,6 +133,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
       <div class="station-tag"><div class="live-dot"></div><span id="station-label">สถานีทอด</span></div>
     </div>
     <div class="stats">
+      <button class="back-btn" onclick="location.reload()" title="รีเฟรชหน้า">🔄</button>
       <span class="stat stat-w" id="sw">0 รอ</span>
       <span class="stat stat-c" id="sc">0 ทำ</span>
     </div>
@@ -144,7 +145,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 
 <script>
 const STATIONS = {
-  fry: { label: '🍟 สถานีทอด', items: ['เฟรนฟราย','ปีกไก่ทอด(3 ชิ้น)','ซาลาเปาทอด(3 ชิ้น)','กุ้งทอด(3 ชิ้น)','นักเก็ต(3 ชิ้น)','ชีสบอล(3 ชิ้น)','หมึกวงทอด(3 ชิ้น)','ไก่ป็อบ(5 ชิ้น)','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง(3 ชิ้น)'] },
+  fry: { label: '🍟 สถานีทอด', items: ['เฟรนฟราย(3 ชิ้น)','ปีกไก่ทอด(3 ชิ้น)','ซาลาเปาทอด(3 ชิ้น)','กุ้งทอด(3 ชิ้น)','นักเก็ต(3 ชิ้น)','ชีสบอล(3 ชิ้น)','หมึกวงทอด(3 ชิ้น)','ไก่ป็อบ(5 ชิ้น)','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง(3 ชิ้น)'] },
   fish: { label: '🐟 สถานีปลา', items: ['แซลมอนซาชิมิ(8 ชิ้น)','แซลมอนดอง','กุ้งดอง'] },
   meat: { label: '🥩 สถานีเนื้อ', items: [
     'ลิ้นวัว','ริบอาย','น่องลาย','ตับเนื้อ','เนื้อหมัก','พิคานย่า','สันสะโพก','ติดมัน','ใบพาย','ปลาช่อน','เนื้อบริสเก็ต (เสือร้องไห้)','รูบิค','สันคอ (เนื้อ)',
@@ -165,6 +166,7 @@ let audioCtx = null;
 
 function selectStation(station) {
   currentStation = station;
+  localStorage.setItem('kitchenStation', station);
   document.getElementById('select-screen').style.display = 'none';
   document.getElementById('kitchen-screen').classList.add('show');
   document.getElementById('station-label').textContent = STATIONS[station].label;
@@ -174,14 +176,33 @@ function selectStation(station) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
   } catch (e) {}
   connect();
+  startAutoRefresh();
 }
 
 function goBack() {
   currentStation = null;
+  localStorage.removeItem('kitchenStation');
   document.getElementById('select-screen').style.display = 'flex';
   document.getElementById('kitchen-screen').classList.remove('show');
   if (ws) ws.close();
+  stopAutoRefresh();
 }
+
+// auto-refresh the whole page every 30s so the kitchen display never sits on stale data
+let autoRefreshTimer = null;
+function startAutoRefresh() {
+  if (autoRefreshTimer) return;
+  autoRefreshTimer = setInterval(() => location.reload(), 30000);
+}
+function stopAutoRefresh() {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
+
+// if a station was already selected before the last refresh, jump straight back into it
+(function restoreStation(){
+  const saved = localStorage.getItem('kitchenStation');
+  if (saved && STATIONS[saved]) selectStation(saved);
+})();
 
 // Simple beep sound using Web Audio API — no external file needed
 function playAlertSound() {
