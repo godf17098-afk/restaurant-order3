@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>แคชเชียร์ (รวม)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--muted:#a1a1aa;--muted2:#71717a;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-border:rgba(74,222,128,0.2);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.1);--amber-border:rgba(251,191,36,0.2);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--blue-border:rgba(96,165,250,0.2);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.2);
+  --r:10px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column}
+
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.brand{font-family:'Kanit',sans-serif;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.export-btn{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green);border-radius:8px;padding:7px 14px;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px}
+.export-btn:hover{background:rgba(74,222,128,.2)}
+
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px;flex-shrink:0}
+.s-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+.s-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
+.s-num{font-family:'Kanit',sans-serif;font-size:22px;font-weight:600}
+.s-num.amber{color:var(--amber)}
+.s-num.blue{color:var(--blue)}
+.s-num.green{color:var(--green)}
+
+.tables-scroll{flex:1;overflow-y:auto;padding:0 16px 16px}
+.tables-scroll::-webkit-scrollbar{display:none}
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
+.tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tc-name{font-family:'Kanit',sans-serif;font-size:18px;font-weight:600}
+.tc-badge{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:500}
+.tc-badge.pending{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.tc-badge.cooking{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+.tc-badge.ready{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.tc-orders{border-top:1px solid var(--border);padding-top:10px;margin-top:2px}
+.order-block{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.order-block:last-child{border:none;margin-bottom:0;padding-bottom:0}
+.ob-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ob-num{font-size:12px;color:var(--muted2)}
+.ob-status{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500}
+.ob-item{display:flex;justify-content:space-between;font-size:14px;padding:2px 0;color:var(--text)}
+.ob-qty{color:var(--muted);font-size:13px}
+.ob-note{font-size:12px;color:var(--amber);margin-top:4px}
+.tc-actions{display:flex;gap:8px;margin-top:12px}
+.tc-btn{flex:1;padding:11px;border-radius:10px;border:none;font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;text-align:center}
+.tc-btn.clear{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
+.tc-btn.clear:hover{background:rgba(248,113,113,.2)}
+.tc-btn.move{background:var(--blue-dim);border:1px solid var(--blue-border);color:var(--blue)}
+.tc-btn.move:hover{background:rgba(96,165,250,.2)}
+.no-tables{text-align:center;padding:80px 20px;color:var(--muted2);font-size:14px}
+.no-tables-icon{font-size:52px;margin-bottom:16px;opacity:.3}
+
+.toolbar{padding:0 16px 10px;flex-shrink:0}
+.search-box{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);outline:none}
+.search-box::placeholder{color:var(--muted2)}
+.search-box:focus{border-color:var(--border2)}
+
+/* CHECKOUT MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:flex-end;backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.sheet{background:var(--surface);border-radius:18px 18px 0 0;padding:20px;width:100%;animation:up .22s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-title{font-family:'Kanit',sans-serif;font-size:17px;font-weight:600;margin-bottom:4px}
+.sheet-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+.field-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;display:block}
+.field-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;font-family:'Kanit',sans-serif;font-size:18px;font-weight:600;color:var(--text);outline:none;text-align:center;margin-bottom:16px}
+.field-input:focus{border-color:var(--green)}
+.price-preview{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.pp-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted);padding:4px 0}
+.pp-row.total{border-top:1px solid var(--border);margin-top:8px;padding-top:12px;font-size:16px;color:var(--text);font-weight:600}
+.pp-total-num{font-family:'Kanit',sans-serif;font-size:24px;font-weight:700;color:var(--green)}
+.pp-note{font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:8px;padding:8px 10px;margin-top:4px}
+.modal-actions{display:flex;gap:10px}
+.modal-btn{flex:1;padding:13px;border-radius:12px;border:none;font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;cursor:pointer}
+.modal-btn.cancel{background:var(--surface2);color:var(--muted)}
+.modal-btn.confirm{background:var(--green);color:#052e16}
+
+/* TABS */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:11px 4px;text-align:center;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--text);border-bottom-color:var(--text)}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.active{display:flex}
+
+/* SERVE PAGE */
+.serve-scroll{flex:1;overflow-y:auto;padding:12px 16px}
+.serve-scroll::-webkit-scrollbar{display:none}
+.serve-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
+.serve-head{font-family:'Kanit',sans-serif;font-size:17px;font-weight:600;margin-bottom:10px}
+.serve-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.serve-item:last-child{border:none}
+.serve-name{flex:1;font-size:15px;font-weight:500;color:var(--green)}
+.serve-qty{color:var(--muted);font-size:13px;margin-right:4px}
+.serve-btn{background:var(--green);color:#052e16;border:none;border-radius:8px;padding:8px 16px;font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+.serve-btn:hover{opacity:.85}
+.no-serve{text-align:center;padding:80px 20px;color:var(--muted2);font-size:14px}
+.no-serve-icon{font-size:52px;margin-bottom:16px;opacity:.3}
+
+/* SALMON TAB */
+.salmon-hint{padding:12px 16px;font-size:13px;color:var(--muted);flex-shrink:0;line-height:1.5}
+.salmon-hint b{color:var(--text)}
+.salmon-add-row{display:flex;gap:8px;padding:0 16px 10px;flex-shrink:0}
+.salmon-add-input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Kanit',sans-serif;font-size:15px;text-transform:uppercase}
+.salmon-add-input::placeholder{color:var(--muted2);text-transform:none}
+.salmon-add-input:focus{outline:none;border-color:var(--blue)}
+.salmon-add-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:0 18px;font-family:'Kanit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.salmon-scroll{flex:1;overflow-y:auto;padding:0 16px 16px}
+.salmon-scroll::-webkit-scrollbar{display:none}
+.salmon-row{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.salmon-row.closed{border-color:var(--red-border);background:var(--red-dim)}
+.sr-name{font-family:'Kanit',sans-serif;font-size:17px;font-weight:600}
+.sr-status{font-size:12px;margin-top:2px}
+.sr-status.open{color:var(--green)}
+.sr-status.closed{color:var(--red)}
+.switch{position:relative;width:48px;height:28px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--surface3);border-radius:999px;transition:.15s}
+.slider::before{content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+input:checked + .slider{background:var(--red)}
+input:checked + .slider::before{transform:translateX(20px)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><div class="live-dot"></div>💰 แคชเชียร์</div>
+  <button class="export-btn" onclick="exportExcel()">📊 สรุปยอดวันนี้</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showPage('bills',this)">🧾 บิล/โต๊ะ</button>
+  <button class="tab" onclick="showPage('serve',this)">🍽 เสิร์ฟอาหาร</button>
+  <button class="tab" onclick="showPage('salmon',this)">🐟 แซลมอน</button>
+</div>
+
+<div class="page active" id="page-bills">
+<div class="summary">
+  <div class="s-card"><div class="s-label">โต๊ะเปิดอยู่</div><div class="s-num" id="s-tables">0</div></div>
+  <div class="s-card"><div class="s-label">ออเดอร์รอ/ทำ</div><div class="s-num amber" id="s-pending">0</div></div>
+  <div class="s-card"><div class="s-label">เสร็จแล้ว</div><div class="s-num green" id="s-done">0</div></div>
+</div>
+
+<div class="toolbar">
+  <input class="search-box" id="search" placeholder="🔍 ค้นหาโต๊ะ..." oninput="renderTables()">
+</div>
+
+<div class="tables-scroll" id="tables-scroll">
+  <div class="no-tables"><div class="no-tables-icon">🧾</div>ยังไม่มีโต๊ะที่เปิดอยู่</div>
+</div>
+</div>
+
+<div class="page" id="page-serve">
+  <div class="serve-scroll" id="serve-scroll">
+    <div class="no-serve"><div class="no-serve-icon">🍽</div>ยังไม่มีเมนูที่ทำเสร็จ</div>
+  </div>
+</div>
+
+<div class="page" id="page-salmon">
+  <div class="salmon-hint">เปิดสวิตช์เพื่อ<b>ปิด</b>ไม่ให้โต๊ะนั้นสั่งแซลมอนซาชิมิเพิ่มได้อีก (คุมโควตาบุฟเฟ่ต์) — ระบบเปิดให้อัตโนมัติเมื่อโต๊ะนั้นเช็กบิล</div>
+  <div class="salmon-add-row">
+    <input class="salmon-add-input" id="salmon-new-table" placeholder="เพิ่มโต๊ะ เช่น F5" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')addManualSalmonTable()">
+    <button class="salmon-add-btn" onclick="addManualSalmonTable()">+ เพิ่มโต๊ะ</button>
+  </div>
+  <div class="salmon-scroll" id="salmon-scroll">
+    <div class="no-tables"><div class="no-tables-icon">🐟</div>ยังไม่มีโต๊ะที่เปิดอยู่</div>
+  </div>
+</div>
+
+<div class="overlay" id="checkout-overlay" onclick="closeCheckoutIfOut(event)">
+  <div class="sheet">
+    <div class="sheet-title" id="checkout-title">เช็กบิล โต๊ะ 1</div>
+    <div class="sheet-sub">ระบุจำนวนคนเพื่อคำนวณราคาบุฟเฟ่ต์</div>
+    <span class="field-label">จำนวนคน</span>
+    <input class="field-input" id="people-count" type="number" min="1" value="1" inputmode="numeric" oninput="updatePricePreview()">
+    <div class="price-preview" id="price-preview"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeCheckout()">ยกเลิก</button>
+      <button class="modal-btn confirm" onclick="confirmCheckout()">✓ ยืนยันเช็กบิล</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="move-overlay" onclick="closeMoveIfOut(event)">
+  <div class="sheet">
+    <div class="sheet-title" id="move-title">ย้ายโต๊ะ 1</div>
+    <div class="sheet-sub">ออเดอร์ที่ค้างอยู่ทั้งหมดของโต๊ะนี้จะย้ายไปโต๊ะใหม่ด้วย</div>
+    <span class="field-label">โต๊ะปลายทาง</span>
+    <input class="field-input" id="move-target" placeholder="เช่น F5" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeMove()">ยกเลิก</button>
+      <button class="modal-btn confirm" onclick="confirmMove()">🔀 ย้ายโต๊ะ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let tickets = [];
+let ws;
+let audioCtx = null;
+let closedSalmonTables = [];
+let manualSalmonTables = []; // tables added manually that have no active orders yet
+
+// Simple beep sound using Web Audio API — no external file needed
+function playAlertSound(){
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    [0, 0.15].forEach((delay, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = i === 0 ? 660 : 880;
+      gain.gain.setValueAtTime(0.0001, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.3, now + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.25);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.3);
+    });
+  } catch (e) { /* audio not available, ignore */ }
+}
+
+function unlockAudio(){
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+
+function connect(){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(`${proto}://${location.host}`);
+  ws.onclose=()=>setTimeout(connect,2000);
+  ws.onmessage=(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.type==='init'){tickets=msg.tickets;closedSalmonTables=msg.closedSalmonTables||[];renderTables();renderServe();renderSalmonList();}
+    if(msg.type==='ticket_added'){tickets.push(msg.ticket);renderTables();renderServe();renderSalmonList();}
+    if(msg.type==='ticket_updated'){
+      const i=tickets.findIndex(t=>t.num===msg.ticket.num);
+      // detect newly-completed items (done flipped from false/undefined to true) to trigger sound
+      if(i>=0){
+        const oldItems = tickets[i].items;
+        const newItems = msg.ticket.items;
+        const hasNewlyReady = newItems.some((item, idx) => {
+          const oldRemaining = ((oldItems[idx]?.madeQty) || 0) - ((oldItems[idx]?.servedQty) || 0);
+          const newRemaining = (item.madeQty || 0) - (item.servedQty || 0);
+          return newRemaining > oldRemaining;
+        });
+        if(hasNewlyReady) playAlertSound();
+        tickets[i]=msg.ticket;
+      }
+      renderTables();renderServe();
+    }
+    if(msg.type==='ticket_deleted'){tickets=tickets.filter(t=>t.num!==msg.num);renderTables();renderServe();renderSalmonList();}
+    if(msg.type==='all_tickets_deleted'){tickets=[];renderTables();renderServe();renderSalmonList();}
+    if(msg.type==='table_cleared'){tickets.forEach(t=>{if(t.table===msg.table)t.tableCleared=true;});renderTables();renderServe();renderSalmonList();}
+    if(msg.type==='table_moved'){renderTables();renderServe();renderSalmonList();}
+    if(msg.type==='salmon_status_updated'){closedSalmonTables=msg.closedSalmonTables||[];renderSalmonList();}
+  };
+}
+
+function showPage(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id === 'serve') renderServe();
+  if(id === 'salmon') renderSalmonList();
+}
+
+function getTableStatus(list){
+  if(list.some(t=>t.status==='new'))return 'pending';
+  if(list.some(t=>t.status==='cooking'))return 'cooking';
+  return 'ready';
+}
+
+// Sort table IDs like F1, F2, B25, B26 naturally (zone letter, then number)
+function sortTableIds(a, b){
+  const za = a.match(/^[A-Za-z]+/)?.[0] || '';
+  const zb = b.match(/^[A-Za-z]+/)?.[0] || '';
+  if(za !== zb) return za.localeCompare(zb);
+  const na = parseInt(a.replace(/^[A-Za-z]+/, '')) || 0;
+  const nb = parseInt(b.replace(/^[A-Za-z]+/, '')) || 0;
+  return na - nb;
+}
+
+function renderTables(){
+  const q=(document.getElementById('search').value||'').trim();
+  const el=document.getElementById('tables-scroll');
+
+  const activeTables = {};
+  tickets.filter(t=>!t.tableCleared).forEach(t=>{
+    if(!activeTables[t.table]) activeTables[t.table]=[];
+    activeTables[t.table].push(t);
+  });
+
+  let tableNums = Object.keys(activeTables).sort(sortTableIds);
+  if(q) tableNums = tableNums.filter(n => n.toLowerCase().includes(q.toLowerCase()));
+
+  document.getElementById('s-tables').textContent = Object.keys(activeTables).length;
+  document.getElementById('s-pending').textContent = tickets.filter(t=>!t.tableCleared && (t.status==='new'||t.status==='cooking')).length;
+  document.getElementById('s-done').textContent = tickets.filter(t=>!t.tableCleared && t.status==='done').length;
+
+  if(!tableNums.length){
+    el.innerHTML = '<div class="no-tables"><div class="no-tables-icon">🧾</div>ยังไม่มีโต๊ะที่เปิดอยู่</div>';
+    return;
+  }
+
+  el.innerHTML = tableNums.map(n => {
+    const list = activeTables[n];
+    const status = getTableStatus(list);
+    const badgeText = status==='pending'?'มีรอทำ':status==='cooking'?'กำลังทำ':'พร้อมเสิร์ฟครบ';
+    const badgeClass = status;
+
+    const ordersHtml = list.map(t => {
+      const stColor = t.status==='new'?'background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)':
+                      t.status==='cooking'?'background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)':
+                      'background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)';
+      const stText = t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
+      return `<div class="order-block">
+        <div class="ob-head">
+          <span class="ob-num">#${t.num} · ${t.time}</span>
+          <span class="ob-status" style="${stColor}">${stText}</span>
+        </div>
+        ${t.items.map(i=>`<div class="ob-item"><span>${i.name}</span><span class="ob-qty">×${i.qty}</span></div>`).join('')}
+        ${t.note?`<div class="ob-note">📝 ${t.note}</div>`:''}
+      </div>`;
+    }).join('');
+
+    return `<div class="table-card">
+      <div class="tc-head">
+        <div class="tc-name">โต๊ะ ${n}</div>
+        <span class="tc-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="tc-orders">${ordersHtml}</div>
+      <div class="tc-actions">
+        <button class="tc-btn move" onclick="openMoveTable('${n}')">🔀 ย้ายโต๊ะ</button>
+        <button class="tc-btn clear" onclick="clearTable('${n}')">🧾 เช็กบิล / เคลียร์โต๊ะ</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== SERVE PAGE (เมนูที่ทำเสร็จ รอเสิร์ฟ) =====
+function serveItem(num, itemIndex){
+  if(ws && ws.readyState === 1){
+    ws.send(JSON.stringify({ type:'serve_item', num, itemIndex }));
+  }
+}
+
+function renderServe(){
+  const el = document.getElementById('serve-scroll');
+
+  // group ready-to-serve items by table
+  const byTable = {};
+  tickets.filter(t => !t.tableCleared).forEach(t => {
+    t.items.forEach((item, idx) => {
+      const remaining = (item.madeQty || 0) - (item.servedQty || 0);
+      if(remaining > 0){
+        if(!byTable[t.table]) byTable[t.table] = [];
+        byTable[t.table].push({ ticketNum: t.num, itemIndex: idx, name: item.name, qty: remaining });
+      }
+    });
+  });
+
+  const tableNums = Object.keys(byTable).sort(sortTableIds);
+
+  if(!tableNums.length){
+    el.innerHTML = '<div class="no-serve"><div class="no-serve-icon">🍽</div>ยังไม่มีเมนูที่ทำเสร็จ</div>';
+    return;
+  }
+
+  el.innerHTML = tableNums.map(n => {
+    const items = byTable[n];
+    return `<div class="serve-card">
+      <div class="serve-head">โต๊ะ ${n}</div>
+      ${items.map(i => `
+        <div class="serve-item">
+          <span class="serve-name">${i.name}</span>
+          <span class="serve-qty">×${i.qty}</span>
+          <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟแล้ว</button>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+}
+
+const BUFFET_PRICE_NORMAL = 399;
+const BUFFET_PRICE_SALMON = 448;
+const SALMON_NAME = 'แซลมอนซาชิมิ(8 ชิ้น)';
+
+let checkoutTable = null;
+let moveFromTable = null;
+
+function openMoveTable(n){
+  moveFromTable = n;
+  document.getElementById('move-title').textContent = `ย้ายโต๊ะ ${n}`;
+  document.getElementById('move-target').value = '';
+  document.getElementById('move-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('move-target').focus(), 50);
+}
+
+function closeMove(){
+  document.getElementById('move-overlay').classList.remove('show');
+  moveFromTable = null;
+}
+
+function closeMoveIfOut(e){
+  if(e.target === document.getElementById('move-overlay')) closeMove();
+}
+
+function confirmMove(){
+  if(moveFromTable === null) return;
+  const target = (document.getElementById('move-target').value || '').trim().toUpperCase();
+  if(!target){ alert('กรุณาระบุโต๊ะปลายทาง'); return; }
+  if(target === moveFromTable){ alert('โต๊ะปลายทางต้องไม่ใช่โต๊ะเดิม'); return; }
+
+  const destHasOrders = tickets.some(t => t.table === target && !t.tableCleared);
+  const warnMsg = destHasOrders
+    ? `โต๊ะ ${target} มีออเดอร์ค้างอยู่แล้ว\nต้องการรวมออเดอร์จากโต๊ะ ${moveFromTable} เข้ากับโต๊ะ ${target} หรือไม่?`
+    : `ย้ายออเดอร์ที่ค้างอยู่ทั้งหมดจากโต๊ะ ${moveFromTable} ไปโต๊ะ ${target}?`;
+  if(!confirm(warnMsg)) return;
+
+  if(ws && ws.readyState === 1){
+    ws.send(JSON.stringify({ type:'move_table', fromTable: moveFromTable, toTable: target }));
+  }
+  closeMove();
+}
+
+// ===== SALMON TAB (open/close salmon ordering per table — buffet quota control) =====
+function getAllSalmonTableIds(){
+  const openTables = new Set(tickets.filter(t => !t.tableCleared).map(t => t.table));
+  manualSalmonTables.forEach(t => openTables.add(t));
+  closedSalmonTables.forEach(t => openTables.add(t)); // keep showing a closed table even if its bill got cleared elsewhere
+  return Array.from(openTables).sort(sortTableIds);
+}
+
+function renderSalmonList(){
+  const el = document.getElementById('salmon-scroll');
+  if(!el) return;
+  const allTables = getAllSalmonTableIds();
+  if(!allTables.length){
+    el.innerHTML = '<div class="no-tables"><div class="no-tables-icon">🐟</div>ยังไม่มีโต๊ะที่เปิดอยู่</div>';
+    return;
+  }
+  el.innerHTML = allTables.map(n => {
+    const closed = closedSalmonTables.includes(n);
+    return `
+    <div class="salmon-row ${closed ? 'closed' : ''}">
+      <div>
+        <div class="sr-name">โต๊ะ ${n}</div>
+        <div class="sr-status ${closed ? 'closed' : 'open'}">${closed ? '🔒 ปิดรับแซลมอนแล้ว' : '🟢 สั่งแซลมอนได้ปกติ'}</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" ${closed ? 'checked' : ''} onchange="toggleSalmonTable('${n}', this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+}
+
+function toggleSalmonTable(table, closed){
+  if(ws && ws.readyState === 1){
+    ws.send(JSON.stringify({ type: 'set_salmon_status', table, closed }));
+  }
+}
+
+function addManualSalmonTable(){
+  const input = document.getElementById('salmon-new-table');
+  const t = input.value.trim().toUpperCase();
+  if(!t) return;
+  if(!manualSalmonTables.includes(t)) manualSalmonTables.push(t);
+  input.value = '';
+  renderSalmonList();
+}
+
+function hasExtraSalmon(list, people){
+  // count total salmon across ALL orders in the table
+  const totalSalmon = list.reduce((sum, t) => {
+    const salmonItem = t.items.find(i => i.name === SALMON_NAME);
+    return sum + (salmonItem ? salmonItem.qty : 0);
+  }, 0);
+  // if total salmon exceeds number of people, someone had more than 1 plate
+  return totalSalmon > people;
+}
+
+function clearTable(n){
+  checkoutTable = n;
+  document.getElementById('checkout-title').textContent = `เช็กบิล โต๊ะ ${n}`;
+  document.getElementById('people-count').value = 1;
+  updatePricePreview();
+  document.getElementById('checkout-overlay').classList.add('show');
+}
+
+function closeCheckout(){
+  document.getElementById('checkout-overlay').classList.remove('show');
+  checkoutTable = null;
+}
+
+function closeCheckoutIfOut(e){
+  if(e.target === document.getElementById('checkout-overlay')) closeCheckout();
+}
+
+function updatePricePreview(){
+  if(checkoutTable === null) return;
+  const list = tickets.filter(t => t.table === checkoutTable && !t.tableCleared);
+  const people = Math.max(1, parseInt(document.getElementById('people-count').value) || 1);
+  const extraSalmon = hasExtraSalmon(list, people);
+  const pricePerPerson = extraSalmon ? BUFFET_PRICE_SALMON : BUFFET_PRICE_NORMAL;
+  const total = pricePerPerson * people;
+
+  const totalSalmonCount = list.reduce((sum, t) => {
+    const s = t.items.find(i => i.name === SALMON_NAME);
+    return sum + (s ? s.qty : 0);
+  }, 0);
+
+  document.getElementById('price-preview').innerHTML = `
+    <div class="pp-row"><span>ราคาต่อคน</span><span>฿${pricePerPerson.toLocaleString()}</span></div>
+    <div class="pp-row"><span>จำนวนคน</span><span>${people} คน</span></div>
+    <div class="pp-row"><span>ปลาแซลมอนที่สั่งรวม</span><span>${totalSalmonCount} จาน</span></div>
+    <div class="pp-row total"><span>ยอดรวม</span><span class="pp-total-num">฿${total.toLocaleString()}</span></div>
+    ${extraSalmon ? `<div class="pp-note">🐟 สั่งปลาแซลมอนรวม ${totalSalmonCount} จาน มากกว่าจำนวนคน (${people} คน) → ปรับราคาเป็น 448/คน</div>` : ''}
+  `;
+}
+
+function confirmCheckout(){
+  if(checkoutTable === null) return;
+  const people = Math.max(1, parseInt(document.getElementById('people-count').value) || 1);
+  const list = tickets.filter(t => t.table === checkoutTable && !t.tableCleared);
+  const extraSalmon = hasExtraSalmon(list, people);
+  const pricePerPerson = extraSalmon ? BUFFET_PRICE_SALMON : BUFFET_PRICE_NORMAL;
+  const total = pricePerPerson * people;
+
+  if(!confirm(`ยืนยันเช็กบิลโต๊ะ ${checkoutTable}\nจำนวน ${people} คน · รวม ฿${total.toLocaleString()}\n\nเคลียร์โต๊ะนี้?`)) return;
+
+  if(ws && ws.readyState === 1){
+    ws.send(JSON.stringify({
+      type:'clear_table',
+      table: checkoutTable,
+      peopleCount: people,
+      pricePerPerson: pricePerPerson,
+      totalPrice: total
+    }));
+  }
+  closeCheckout();
+}
+
+function exportExcel(){
+  window.location.href = '/api/report/excel';
+}
+
+document.addEventListener('click', unlockAudio, { once: true });
+connect();
+</script>
+</body>
+</html>
