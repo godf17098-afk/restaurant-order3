@@ -151,7 +151,10 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
       </div>
     </div>
     <div class="sheet-ft">
-      <button class="confirm-btn" onclick="confirmOrder()">ยืนยันการสั่ง</button>
+      <button class="confirm-btn" id="confirm-order-btn" onclick="confirmOrder()">ยืนยันการสั่ง</button>
+      <div class="order-error" id="order-error" style="display:none;color:#f87171;font-size:13px;text-align:center;margin-top:8px">
+        ส่งออเดอร์ไม่สำเร็จ อินเทอร์เน็ตอาจไม่เสถียร กรุณากดส่งอีกครั้ง
+      </div>
     </div>
   </div>
 </div>
@@ -188,6 +191,20 @@ function connect(){
   ws.onmessage=(e)=>{
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){menu=msg.menu;closedSalmonTables=msg.closedSalmonTables||[];renderMenu();}
+    if(msg.type==='menu_updated'){
+      menu=msg.menu;
+      renderMenu();
+      // if an item just got closed while sitting in the cart, drop it so it can't be ordered
+      let cartChanged=false;
+      Object.keys(cart).forEach(id=>{
+        const item=getItem(id);
+        if(item&&item.available===false){delete cart[id];cartChanged=true;}
+      });
+      if(cartChanged){
+        updateCartBar();
+        if(!Object.keys(cart).length)closeCart();else renderCartItems();
+      }
+    }
     if(msg.type==='salmon_status_updated'){
       closedSalmonTables=msg.closedSalmonTables||[];
       renderMenu();
@@ -223,17 +240,21 @@ function renderMenu(){
   menuEl.innerHTML=menu.map(cat=>`
     <div class="menu-section" id="sec-${cat.cat}">
       <div class="section-title">${cat.cat}</div>
-      ${cat.items.map(item=>`
-        <div class="menu-item" id="item-${item.id}">
+      ${cat.items.map(item=>{
+        const closed=item.available===false;
+        return `
+        <div class="menu-item ${closed?'item-closed':''}" id="item-${item.id}" style="${closed?'opacity:.5':''}">
           <div class="menu-emoji">${EMOJIS[cat.cat]||'🍽'}</div>
           <div class="menu-name">${item.name}</div>
           <div class="item-ctrl" id="ctrl-${item.id}">
-            ${item.name===SALMON_NAME&&isSalmonClosed()
-              ? `<span style="font-size:12px;color:var(--muted,#a1a1aa)">ปิดรับออเดอร์เพิ่ม</span>`
-              : `<button class="ctrl-btn plus" onclick="addItem(${item.id})">+</button>`}
+            ${closed
+              ? `<span style="font-size:12px;color:var(--muted,#a1a1aa)">หมดแล้ว</span>`
+              : (item.name===SALMON_NAME&&isSalmonClosed()
+                ? `<span style="font-size:12px;color:var(--muted,#a1a1aa)">ปิดรับออเดอร์เพิ่ม</span>`
+                : `<button class="ctrl-btn plus" onclick="addItem(${item.id})">+</button>`)}
           </div>
         </div>
-      `).join('')}
+      `;}).join('')}
     </div>
   `).join('');
 }
@@ -246,6 +267,7 @@ function scrollToSec(cat,btn){
 
 function addItem(id){
   const item=getItem(id);
+  if(item&&item.available===false)return;
   if(item&&item.name===SALMON_NAME&&isSalmonClosed())return;
   cart[id]=(cart[id]||0)+1;updateCtrl(id);updateCartBar();
 }
@@ -289,17 +311,59 @@ function renderCartItems(){
 function closeCart(){document.getElementById('cart-overlay').classList.remove('show');}
 function closeIfOutside(e){if(e.target===document.getElementById('cart-overlay'))closeCart();}
 
-function confirmOrder(){
+async function confirmOrder(){
   const keys=Object.keys(cart);
-  if(!keys.length||!ws||ws.readyState!==1)return;
-  ws.send(JSON.stringify({
-    type:'new_order',table:tableId,
+  if(!keys.length) return;
+
+  const btn=document.getElementById('confirm-order-btn');
+  const errEl=document.getElementById('order-error');
+  errEl.style.display='none';
+  btn.disabled=true;
+  btn.textContent='กำลังส่ง...';
+
+  const payload={
+    table:tableId,
     items:keys.map(id=>({id,name:getItem(id)?.name||'',qty:cart[id]})),
     note:document.getElementById('cart-note').value.trim(),
     source:'customer'
-  }));
-  closeCart();
-  document.getElementById('success').classList.add('show');
+  };
+
+  const ok = await sendOrderWithRetry(payload);
+
+  btn.disabled=false;
+  btn.textContent='ยืนยันการสั่ง';
+
+  if(ok){
+    closeCart();
+    document.getElementById('success').classList.add('show');
+  } else {
+    // keep the cart intact so nothing the customer picked gets lost — just let them retry
+    errEl.style.display='block';
+  }
+}
+
+// Tries the request a few times over plain HTTP (more reliable than a raw ws.send on a
+// weak connection, since fetch gives a real success/failure result instead of silently
+// dropping the message). A short per-attempt timeout keeps a stalled request from hanging.
+async function sendOrderWithRetry(payload, maxAttempts=3){
+  for(let attempt=1; attempt<=maxAttempts; attempt++){
+    try{
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(), 7000);
+      const res=await fetch('/api/order', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload),
+        signal:controller.signal
+      });
+      clearTimeout(timeout);
+      if(res.ok) return true;
+    }catch(e){
+      // network error or timeout — fall through to retry
+    }
+    if(attempt<maxAttempts) await new Promise(r=>setTimeout(r, 1000*attempt));
+  }
+  return false;
 }
 
 function resetOrder(){
@@ -339,17 +403,4 @@ function renderMyOrders(){
     return `<div class="order-group">
       <div class="og-head">
         <div class="og-num">ออเดอร์ #${t.num}</div>
-        <span class="og-status ${stClass}">${stText}</span>
-      </div>
-      ${t.items.map(i=>`<div class="og-item"><span>${i.name}</span><span class="og-qty">×${i.qty}</span></div>`).join('')}
-      ${t.note?`<div class="og-note">📝 ${t.note}</div>`:''}
-      <div class="og-time">${t.time}</div>
-    </div>`;
-  }).join('');
-}
-
-connect();
-</script>
-</body>
-</html>
-
+        <span cla
