@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) return cb(new Error('ไฟล์ต้องเป็นรูปภาพเท่านั้น'));
     cb(null, true);
@@ -35,12 +35,11 @@ const upload = multer({
 
 let tickets = [];
 let ticketCounter = 1001;
-let billHistory = []; // stores cleared table bills for reporting
-let closedSalmonTables = []; // table IDs where staff has manually closed further salmon orders
+let billHistory = [];
+let closedSalmonTables = [];
 
-// Discord webhook — posts a message to a Discord channel whenever a new order comes in,
-// so staff get a phone/desktop notification (with sound) even if the KDS tab isn't open
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1541771736331321437/B75dd0Mf24hf2pvoWMF4JyRP-vh2ONytlYlfKwYli83SZ2CH3MOlSbwOUFt_QCavIN-W';
+// ใส่ URL ใหม่ใน environment variable DISCORD_WEBHOOK_URL (อย่าเขียนลงในโค้ด)
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 
 function notifyDiscordNewOrder(ticket) {
   if (!DISCORD_WEBHOOK_URL) return;
@@ -171,12 +170,10 @@ function findMenuItem(id) {
   return null;
 }
 
-// API: get full menu (with image info) — used by menu image manager page
 app.get('/api/menu', (req, res) => {
   res.json({ menu: MENU });
 });
 
-// API: toggle menu item availability (open/close menu)
 app.post('/api/menu/:id/availability', express.json(), (req, res) => {
   const id = parseInt(req.params.id);
   const item = findMenuItem(id);
@@ -187,14 +184,12 @@ app.post('/api/menu/:id/availability', express.json(), (req, res) => {
   res.json({ ok: true, available: item.available });
 });
 
-// API: upload image for a menu item
 app.post('/api/menu/:id/image', upload.single('image'), (req, res) => {
   const id = parseInt(req.params.id);
   const item = findMenuItem(id);
   if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
   if (!req.file) return res.status(400).json({ error: 'ไม่พบไฟล์ที่อัปโหลด' });
 
-  // remove old image file if exists
   if (item.image) {
     const oldPath = path.join(__dirname, 'public', item.image);
     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -205,7 +200,6 @@ app.post('/api/menu/:id/image', upload.single('image'), (req, res) => {
   res.json({ ok: true, image: item.image });
 });
 
-// API: delete image for a menu item
 app.delete('/api/menu/:id/image', (req, res) => {
   const id = parseInt(req.params.id);
   const item = findMenuItem(id);
@@ -221,17 +215,46 @@ app.delete('/api/menu/:id/image', (req, res) => {
   res.json({ ok: true });
 });
 
-// Error handler for multer (file too large, wrong type, etc.)
 app.use((err, req, res, next) => {
   if (err) return res.status(400).json({ error: err.message });
   next();
 });
 
-// API: get orders for a specific table (used by customer.html "My Orders" tab)
 app.get('/api/table/:id/orders', (req, res) => {
   const tableId = req.params.id;
   const orders = tickets.filter(t => t.table === tableId && !t.tableCleared);
   res.json({ orders });
+});
+// สร้างออเดอร์ — ใช้ร่วมกันทั้ง WebSocket (staff) และ HTTP /api/order (customer)
+function createOrder(msg) {
+  const validItems = (msg.items || []).filter(i => {
+    const menuItem = findMenuItem(parseInt(i.id));
+    return !menuItem || menuItem.available !== false;
+  });
+  if (!validItems.length || !msg.table) return null;
+
+  const ticket = {
+    num: ticketCounter++,
+    table: msg.table,
+    items: validItems.map(i => ({ ...i, done: false, madeQty: 0, servedQty: 0 })),
+    note: msg.note || '',
+    time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' }),
+    status: 'new',
+    source: msg.source || 'staff',
+    staffName: msg.staffName || '',
+    tableCleared: false,
+  };
+  tickets.push(ticket);
+  broadcast({ type: 'ticket_added', ticket });
+  broadcast({ type: 'table_updated', table: msg.table, orders: tickets.filter(t => t.table === msg.table && !t.tableCleared) });
+  notifyDiscordNewOrder(ticket);
+  return ticket;
+}
+
+app.post('/api/order', express.json(), (req, res) => {
+  const ticket = createOrder(req.body || {});
+  if (!ticket) return res.status(400).json({ error: 'ไม่มีรายการที่สั่งได้' });
+  res.json({ ok: true, num: ticket.num });
 });
 
 wss.on('connection', (ws) => {
@@ -246,32 +269,9 @@ wss.on('connection', (ws) => {
     }
 
     if (msg.type === 'new_order') {
-      // filter out items that are currently marked unavailable (safety check)
-      const validItems = msg.items.filter(i => {
-        const menuItem = findMenuItem(parseInt(i.id));
-        return !menuItem || menuItem.available !== false;
-      });
-      if (!validItems.length) return; // nothing valid to order
-
-      const ticket = {
-        num: ticketCounter++,
-        table: msg.table,
-        items: validItems.map(i => ({ ...i, done: false, madeQty: 0, servedQty: 0 })),
-        note: msg.note || '',
-        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' }),
-        status: 'new',
-        source: msg.source || 'staff',
-        staffName: msg.staffName || '',
-        tableCleared: false,
-      };
-      tickets.push(ticket);
-      broadcast({ type: 'ticket_added', ticket });
-      broadcast({ type: 'table_updated', table: msg.table, orders: tickets.filter(t => t.table === msg.table && !t.tableCleared) });
-      notifyDiscordNewOrder(ticket);
+      createOrder(msg);
     }
 
-    // kitchen presses +1 / -1 for how many of this item have actually been cooked so far —
-    // no need to wait until the whole qty is ready before it can be sent out to serve
     if (msg.type === 'increment_made' || msg.type === 'decrement_made') {
       const t = tickets.find(x => x.num === msg.num);
       if (t) {
@@ -292,7 +292,6 @@ wss.on('connection', (ws) => {
       }
     }
 
-    // mark an item as served (removes it from the "ready to serve" list)
     if (msg.type === 'serve_item') {
       const t = tickets.find(x => x.num === msg.num);
       if (t) {
@@ -336,7 +335,6 @@ wss.on('connection', (ws) => {
       const pricePerPerson = msg.pricePerPerson || null;
       const totalPrice = msg.totalPrice || null;
 
-      // One summary row per table checkout (with price), plus item detail per ticket
       if (tableOrders.length) {
         billHistory.push({
           date: dateStr,
@@ -359,7 +357,6 @@ wss.on('connection', (ws) => {
       broadcast({ type: 'salmon_status_updated', closedSalmonTables });
     }
 
-    // staff toggles whether a table can still order the salmon sashimi (buffet quota control)
     if (msg.type === 'set_salmon_status') {
       const table = msg.table;
       if (!table) return;
@@ -371,8 +368,6 @@ wss.on('connection', (ws) => {
       broadcast({ type: 'salmon_status_updated', closedSalmonTables });
     }
 
-    // move all active (uncleared) orders from one table to another —
-    // e.g. staff physically moves a party to a different table mid-meal
     if (msg.type === 'move_table') {
       const fromTable = msg.fromTable;
       const toTable = msg.toTable;
@@ -383,9 +378,7 @@ wss.on('connection', (ws) => {
 
       moved.forEach(t => { t.table = toTable; });
 
-      // update every existing client's copy of each moved ticket (kitchen/serve/staff/cashier)
       moved.forEach(t => broadcast({ type: 'ticket_updated', ticket: t }));
-      // keep any customer.html tabs still open on either table number in sync
       broadcast({ type: 'table_updated', table: fromTable, orders: tickets.filter(t => t.table === fromTable && !t.tableCleared) });
       broadcast({ type: 'table_updated', table: toTable, orders: tickets.filter(t => t.table === toTable && !t.tableCleared) });
       broadcast({ type: 'table_moved', fromTable, toTable, count: moved.length });
@@ -393,14 +386,12 @@ wss.on('connection', (ws) => {
   });
 });
 
-// API: download today's sales report as Excel
 app.get('/api/report/excel', async (req, res) => {
   const dateParam = req.query.date || new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
   const dayBills = billHistory.filter(b => b.date === dateParam);
 
   const workbook = new ExcelJS.Workbook();
 
-  // Sheet 1: Summary
   const summarySheet = workbook.addWorksheet('สรุปยอด');
   summarySheet.columns = [
     { header: 'รายการ', key: 'label', width: 25 },
@@ -436,7 +427,6 @@ app.get('/api/report/excel', async (req, res) => {
   summarySheet.getRow(1).font = { bold: true };
   summarySheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
 
-  // Sheet 2: Bill details
   const detailSheet = workbook.addWorksheet('รายละเอียดบิล');
   detailSheet.columns = [
     { header: 'เวลา', key: 'time', width: 12 },
@@ -453,23 +443,21 @@ app.get('/api/report/excel', async (req, res) => {
       time: b.time,
       table: b.table,
       peopleCount: b.peopleCount || '-',
-      pricePerPerson: b.pricePerPerson ? '฿' + b.pricePerPerson : '-',
-      totalPrice: b.totalPrice ? '฿' + b.totalPrice.toLocaleString() : '-',
+      pricePerPerson: b.pricePerPerson || '-',
+      totalPrice: b.totalPrice || '-',
       ticketNum: b.ticketNum,
       items: b.items,
-      source: b.source === 'customer' ? 'ลูกค้า' : 'พนักงาน',
+      source: b.source,
     });
   });
   detailSheet.getRow(1).font = { bold: true };
   detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
 
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; filename="sales-report-${dateParam}.xlsx"`);
+  res.setHeader('Content-Disposition', `attachment; filename="sales-${dateParam}.xlsx"`);
   await workbook.xlsx.write(res);
   res.end();
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
-});
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
