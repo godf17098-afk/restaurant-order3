@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>สั่งอาหาร</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafafa;--surface:#fff;--surface2:#f4f4f5;--surface3:#e4e4e7;
+  --border:#e4e4e7;--border2:#d4d4d8;
+  --text:#09090b;--muted:#71717a;--muted2:#a1a1aa;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
+  --r:8px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:50}
+.brand{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.table-badge{font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;color:var(--muted);font-weight:500}
+.ws-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s}
+.ws-dot.ok{background:var(--green)}
+
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:11px 4px;text-align:center;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--text);border-bottom-color:var(--text)}
+
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.active{display:flex}
+
+.cat-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;background:var(--surface)}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{flex-shrink:0;padding:11px 14px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.cat-tab.active{color:var(--text);border-bottom-color:var(--text)}
+.menu-scroll{flex:1;overflow-y:auto;background:var(--bg)}
+.menu-scroll::-webkit-scrollbar{display:none}
+.menu-section{padding:14px 16px}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.menu-item{display:flex;align-items:center;gap:12px;padding:11px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:4px}
+.menu-emoji{width:34px;height:34px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.menu-name{flex:1;font-size:14px;font-weight:500}
+.item-ctrl{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ctrl-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .1s}
+.ctrl-btn.plus{border-color:var(--text);background:var(--text);color:var(--bg)}
+.ctrl-num{font-size:14px;font-weight:600;min-width:20px;text-align:center}
+
+.orders-scroll{flex:1;overflow-y:auto;padding:14px 16px}
+.orders-scroll::-webkit-scrollbar{display:none}
+.order-group{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.og-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.og-num{font-size:13px;font-weight:500;color:var(--muted)}
+.og-status{font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px}
+.ogs-new{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.ogs-cooking{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
+.ogs-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.og-item{display:flex;justify-content:space-between;font-size:14px;padding:3px 0}
+.og-qty{color:var(--muted);font-size:13px}
+.og-time{font-size:11px;color:var(--muted2);margin-top:6px}
+.og-note{font-size:12px;color:var(--amber);margin-top:4px}
+.no-orders{text-align:center;padding:50px 20px;color:var(--muted);font-size:14px}
+
+.cart-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.cart-left{display:flex;align-items:center;gap:8px;flex:1}
+.cart-badge{background:var(--text);color:var(--bg);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.cart-label{font-size:14px;font-weight:500}
+.view-cart-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:10px 18px;cursor:pointer;white-space:nowrap}
+.view-cart-btn:disabled{opacity:.3;cursor:not-allowed}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.sheet{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:up .22s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:32px;height:3px;background:var(--surface3);border-radius:2px;margin:12px auto 0}
+.sheet-hd{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sheet-title{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500}
+.sheet-close{background:var(--surface2);border:none;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px}
+.sheet-body{flex:1;overflow-y:auto;padding:12px 16px}
+.sheet-body::-webkit-scrollbar{display:none}
+.c-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.c-item:last-child{border:none}
+.c-name{flex:1;font-size:14px;font-weight:500}
+.c-ctrl{display:flex;align-items:center;gap:6px}
+.c-btn{width:26px;height:26px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.c-num{font-size:14px;font-weight:600;min-width:20px;text-align:center}
+.note-wrap{padding:10px 0 4px}
+.note-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.note-input{width:100%;border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;height:40px}
+.note-input::placeholder{color:var(--muted2)}
+.sheet-ft{padding:12px 16px;border-top:1px solid var(--border)}
+.confirm-btn{width:100%;background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;padding:13px;cursor:pointer}
+
+.success-screen{display:none;position:fixed;inset:0;background:var(--surface);z-index:300;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
+.success-screen.show{display:flex}
+.success-icon{width:64px;height:64px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px}
+.success-title{font-family:'Kanit',sans-serif;font-size:20px;font-weight:500;margin-bottom:8px}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px}
+.success-actions{display:flex;gap:10px}
+.back-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;padding:11px 24px;cursor:pointer}
+.view-orders-btn{background:transparent;color:var(--text);border:1px solid var(--border2);border-radius:var(--r);font-family:'Kanit',sans-serif;font-size:14px;padding:11px 24px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">🍽 สั่งอาหาร</div>
+  <div class="topbar-right">
+    <div class="ws-dot" id="ws-dot"></div>
+    <span class="table-badge" id="table-badge">โต๊ะ –</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showPage('menu',this)">เมนู</button>
+  <button class="tab" onclick="showPage('myorders',this);loadMyOrders()">รายการของฉัน</button>
+</div>
+
+<div class="page active" id="page-menu">
+  <div class="cat-tabs" id="cat-tabs"></div>
+  <div class="menu-scroll" id="menu-scroll"></div>
+  <div class="cart-bar">
+    <div class="cart-left">
+      <div class="cart-badge" id="cart-count">0</div>
+      <div class="cart-label">รายการในตะกร้า</div>
+    </div>
+    <button class="view-cart-btn" id="view-cart-btn" onclick="openCart()" disabled>ดูตะกร้า →</button>
+  </div>
+</div>
+
+<div class="page" id="page-myorders">
+  <div class="orders-scroll" id="orders-scroll">
+    <div class="no-orders">กำลังโหลด...</div>
+  </div>
+</div>
+
+<div class="overlay" id="cart-overlay" onclick="closeIfOutside(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hd">
+      <div class="sheet-title">ตะกร้าของคุณ</div>
+      <button class="sheet-close" onclick="closeCart()">×</button>
+    </div>
+    <div class="sheet-body">
+      <div id="cart-items"></div>
+      <div class="note-wrap">
+        <span class="note-label">หมายเหตุ</span>
+        <input class="note-input" id="cart-note" placeholder="เช่น ไม่เผ็ด, ไม่ใส่ผักชี...">
+      </div>
+    </div>
+    <div class="sheet-ft">
+      <button class="confirm-btn" id="confirm-order-btn" onclick="confirmOrder()">ยืนยันการสั่ง</button>
+      <div class="order-error" id="order-error" style="display:none;color:#f87171;font-size:13px;text-align:center;margin-top:8px">
+        ส่งออเดอร์ไม่สำเร็จ อินเทอร์เน็ตอาจไม่เสถียร กรุณากดส่งอีกครั้ง
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="success-screen" id="success">
+  <div class="success-icon">✓</div>
+  <div class="success-title">สั่งอาหารสำเร็จ!</div>
+  <div class="success-sub">ทางร้านได้รับออเดอร์แล้ว<br>กรุณารอสักครู่</div>
+  <div class="success-actions">
+    <button class="view-orders-btn" onclick="goToOrders()">ดูรายการที่สั่ง</button>
+    <button class="back-btn" onclick="resetOrder()">สั่งเพิ่ม</button>
+  </div>
+</div>
+
+<script>
+const EMOJIS={'ข้าว / ก๋วยเตี๋ยว':'🍚','ของทอด':'🍟','ของดอง / ยำ':'🥗','อื่นๆ':'🍽','เนื้อ':'🥩','หมู':'🐷','ผัก':'🥬','ทะเล':'🦐'};
+const params=new URLSearchParams(location.search);
+// Table can now be alphanumeric like F1, B25 etc. Fallback to F1 if missing.
+const tableId=(params.get('table')||'F1').toUpperCase();
+document.getElementById('table-badge').textContent='โต๊ะ '+tableId;
+
+let menu=[],cart={},ws,myOrders=[];
+const SALMON_NAME='แซลมอนซาชิมิ(8 ชิ้น)';
+let closedSalmonTables=[];
+
+function connect(){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(`${proto}://${location.host}`);
+  ws.onopen=()=>{
+    document.getElementById('ws-dot').classList.add('ok');
+    ws.send(JSON.stringify({type:'join_table',table:tableId}));
+  };
+  ws.onclose=()=>{document.getElementById('ws-dot').classList.remove('ok');setTimeout(connect,2000);};
+  ws.onmessage=(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.type==='init'){menu=msg.menu;closedSalmonTables=msg.closedSalmonTables||[];renderMenu();}
+    if(msg.type==='menu_updated'){
+      menu=msg.menu;
+      renderMenu();
+      // if an item just got closed while sitting in the cart, drop it so it can't be ordered
+      let cartChanged=false;
+      Object.keys(cart).forEach(id=>{
+        const item=getItem(id);
+        if(item&&item.available===false){delete cart[id];cartChanged=true;}
+      });
+      if(cartChanged){
+        updateCartBar();
+        if(!Object.keys(cart).length)closeCart();else renderCartItems();
+      }
+    }
+    if(msg.type==='salmon_status_updated'){
+      closedSalmonTables=msg.closedSalmonTables||[];
+      renderMenu();
+      if(isSalmonClosed()){
+        const salmonItem=allItems().find(i=>i.name===SALMON_NAME);
+        if(salmonItem&&cart[salmonItem.id]){delete cart[salmonItem.id];updateCartBar();if(!Object.keys(cart).length)closeCart();else renderCartItems();}
+      }
+    }
+    if(msg.type==='table_updated'&&msg.table===tableId){myOrders=msg.orders;renderMyOrders();}
+    if(msg.type==='table_cleared'&&msg.table===tableId){myOrders=[];renderMyOrders();}
+    if(msg.type==='ticket_updated'){
+      const i=myOrders.findIndex(t=>t.num===msg.ticket.num);
+      if(i>=0){myOrders[i]=msg.ticket;renderMyOrders();}
+    }
+  };
+}
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function allItems(){return menu.flatMap(c=>c.items)}
+function getItem(id){return allItems().find(x=>x.id==id)}
+function isSalmonClosed(){return closedSalmonTables.includes(tableId);}
+
+function renderMenu(){
+  const catEl=document.getElementById('cat-tabs');
+  const menuEl=document.getElementById('menu-scroll');
+  catEl.innerHTML=menu.map((c,i)=>`<button class="cat-tab ${i===0?'active':''}" onclick="scrollToSec('${c.cat}',this)">${c.cat}</button>`).join('');
+  menuEl.innerHTML=menu.map(cat=>`
+    <div class="menu-section" id="sec-${cat.cat}">
+      <div class="section-title">${cat.cat}</div>
+      ${cat.items.map(item=>{
+        const closed=item.available===false;
+        return `
+        <div class="menu-item ${closed?'item-closed':''}" id="item-${item.id}" style="${closed?'opacity:.5':''}">
+          <div class="menu-emoji" style="overflow:hidden">${item.image ? `<img src="${item.image}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : (EMOJIS[cat.cat]||'🍽')}</div>
+          <div class="menu-name">${item.name}</div>
+          <div class="item-ctrl" id="ctrl-${item.id}">
+            ${closed
+              ? `<span style="font-size:12px;color:var(--muted,#a1a1aa)">หมดแล้ว</span>`
+              : (item.name===SALMON_NAME&&isSalmonClosed()
+                ? `<span style="font-size:12px;color:var(--muted,#a1a1aa)">ปิดรับออเดอร์เพิ่ม</span>`
+                : `<button class="ctrl-btn plus" onclick="addItem(${item.id})">+</button>`)}
+          </div>
+        </div>
+      `;}).join('')}
+    </div>
+  `).join('');
+}
+
+function scrollToSec(cat,btn){
+  document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sec-'+cat)?.scrollIntoView({behavior:'smooth'});
+}
+
+function addItem(id){
+  const item=getItem(id);
+  if(item&&item.available===false)return;
+  if(item&&item.name===SALMON_NAME&&isSalmonClosed())return;
+  cart[id]=(cart[id]||0)+1;updateCtrl(id);updateCartBar();
+}
+function changeQty(id,d){
+  const next=(cart[id]||0)+d;
+  if(next<=0)delete cart[id];else cart[id]=next;
+  updateCtrl(id);updateCartBar();
+  if(!Object.keys(cart).length)closeCart();
+  else renderCartItems();
+}
+
+function updateCtrl(id){
+  const el=document.getElementById('ctrl-'+id);if(!el)return;
+  const qty=cart[id]||0;
+  el.innerHTML=qty===0?`<button class="ctrl-btn plus" onclick="addItem(${id})">+</button>`
+    :`<button class="ctrl-btn" onclick="changeQty(${id},-1)" style="border-color:var(--border2)">−</button>
+      <span class="ctrl-num">${qty}</span>
+      <button class="ctrl-btn plus" onclick="addItem(${id})">+</button>`;
+}
+
+function updateCartBar(){
+  const count=Object.values(cart).reduce((s,v)=>s+v,0);
+  document.getElementById('cart-count').textContent=count;
+  document.getElementById('view-cart-btn').disabled=count===0;
+}
+
+function openCart(){renderCartItems();document.getElementById('cart-overlay').classList.add('show');}
+function renderCartItems(){
+  document.getElementById('cart-items').innerHTML=Object.keys(cart).map(id=>{
+    const item=getItem(id);const qty=cart[id];
+    return `<div class="c-item">
+      <span class="c-name">${item?.name||''}</span>
+      <div class="c-ctrl">
+        <button class="c-btn" onclick="changeQty(${id},-1)">−</button>
+        <span class="c-num">${qty}</span>
+        <button class="c-btn" onclick="changeQty(${id},1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function closeCart(){document.getElementById('cart-overlay').classList.remove('show');}
+function closeIfOutside(e){if(e.target===document.getElementById('cart-overlay'))closeCart();}
+
+async function confirmOrder(){
+  const keys=Object.keys(cart);
+  if(!keys.length) return;
+
+  const btn=document.getElementById('confirm-order-btn');
+  const errEl=document.getElementById('order-error');
+  errEl.style.display='none';
+  btn.disabled=true;
+  btn.textContent='กำลังส่ง...';
+
+  const payload={
+    table:tableId,
+    items:keys.map(id=>({id,name:getItem(id)?.name||'',qty:cart[id]})),
+    note:document.getElementById('cart-note').value.trim(),
+    source:'customer'
+  };
+
+  const ok = await sendOrderWithRetry(payload);
+
+  btn.disabled=false;
+  btn.textContent='ยืนยันการสั่ง';
+
+  if(ok){
+    closeCart();
+    document.getElementById('success').classList.add('show');
+  } else {
+    // keep the cart intact so nothing the customer picked gets lost — just let them retry
+    errEl.style.display='block';
+  }
+}
+
+// Tries the request a few times over plain HTTP (more reliable than a raw ws.send on a
+// weak connection, since fetch gives a real success/failure result instead of silently
+// dropping the message). A short per-attempt timeout keeps a stalled request from hanging.
+async function sendOrderWithRetry(payload, maxAttempts=3){
+  for(let attempt=1; attempt<=maxAttempts; attempt++){
+    try{
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(), 7000);
+      const res=await fetch('/api/order', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload),
+        signal:controller.signal
+      });
+      clearTimeout(timeout);
+      if(res.ok) return true;
+    }catch(e){
+      // network error or timeout — fall through to retry
+    }
+    if(attempt<maxAttempts) await new Promise(r=>setTimeout(r, 1000*attempt));
+  }
+  return false;
+}
+
+function resetOrder(){
+  allItems().forEach(item=>{delete cart[item.id];updateCtrl(item.id);});
+  cart={};
+  document.getElementById('cart-note').value='';
+  document.getElementById('success').classList.remove('show');
+  updateCartBar();
+}
+
+function goToOrders(){
+  document.getElementById('success').classList.remove('show');
+  resetOrder();
+  loadMyOrders();
+  showPage('myorders',document.querySelectorAll('.tab')[1]);
+}
+
+async function loadMyOrders(){
+  try{
+    const res=await fetch(`/api/table/${encodeURIComponent(tableId)}/orders`);
+    const data=await res.json();
+    myOrders=data.orders||[];
+    renderMyOrders();
+  }catch(e){renderMyOrders();}
+}
+
+function renderMyOrders(){
+  const el=document.getElementById('orders-scroll');
+  const active=myOrders.filter(t=>!t.tableCleared);
+  if(!active.length){
+    el.innerHTML='<div class="no-orders">ยังไม่มีรายการที่สั่ง<br><span style="font-size:13px;color:var(--muted2)">สั่งอาหารได้จากแท็บ "เมนู"</span></div>';
+    return;
+  }
+  el.innerHTML=active.map(t=>{
+    const stClass=t.status==='new'?'ogs-new':t.status==='cooking'?'ogs-cooking':'ogs-done';
+    const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว ✓';
+    return `<div class="order-group">
+      <div class="og-head">
+        <div class="og-num">ออเดอร์ #${t.num}</div>
+        <span class="og-status ${stClass}">${stText}</span>
+      </div>
+      ${t.items.map(i=>`<div class="og-item"><span>${i.name}</span><span class="og-qty">×${i.qty}</span></div>`).join('')}
+      ${t.note?`<div class="og-note">📝 ${t.note}</div>`:''}
+      <div class="og-time">${t.time}</div>
+    </div>`;
+  }).join('');
+}
+
+connect();
+</script>
+</body>
+</html>
