@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -181,7 +180,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
     </div>
     <div class="sheet-ft">
       <div class="ft-info" id="ft-info">0 รายการ</div>
-      <button class="send-btn" onclick="sendOrder()">ส่งเข้าครัว →</button>
+      <button class="send-btn" id="send-order-btn" onclick="sendOrder()">ส่งเข้าครัว →</button>
     </div>
   </div>
 </div>
@@ -307,20 +306,66 @@ function renderSheetItems(){
 function closeCart(){document.getElementById('overlay').classList.remove('show');}
 function closeIfOut(e){if(e.target===document.getElementById('overlay'))closeCart();}
 
-function sendOrder(){
+async function sendOrder(){
   const tbl=orders[currentTable]||{};
   const keys=Object.keys(tbl);
-  if(!keys.length||!ws||ws.readyState!==1)return;
-  ws.send(JSON.stringify({
-    type:'new_order',table:currentTable,
+  if(!keys.length) return;
+
+  const btn=document.getElementById('send-order-btn');
+  btn.disabled=true;
+  btn.textContent='กำลังส่ง...';
+
+  const payload={
+    table:currentTable,
     items:keys.map(id=>({id,name:getItem(id)?.name||'',qty:tbl[id]})),
     note:document.getElementById('note').value.trim(),
-    source:'staff'
-  }));
-  delete orders[currentTable];
-  document.getElementById('note').value='';
-  closeCart();updateCartBar();
-  showPage('kds',document.querySelectorAll('.tab')[1]);
+    source:'staff',
+    clientOrderId:makeClientOrderId()
+  };
+
+  const ok=await sendOrderWithRetry(payload);
+  btn.disabled=false;
+  btn.textContent='ส่งเข้าครัว →';
+
+  if(ok){
+    delete orders[currentTable];
+    document.getElementById('note').value='';
+    closeCart();updateCartBar();
+    showPage('kds',document.querySelectorAll('.tab')[1]);
+  } else {
+    alert('ส่งออเดอร์ไม่สำเร็จ อินเทอร์เน็ตอาจไม่เสถียร กรุณาลองอีกครั้ง');
+  }
+}
+
+// One id per order attempt, reused across every retry of that same attempt, so the server
+// can tell "retry of the same order" apart from "a genuinely new order" and avoid duplicates.
+function makeClientOrderId(){
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 's' + Date.now() + '-' + Math.random().toString(36).slice(2);
+}
+
+// Tries the request a few times over plain HTTP (more reliable than a raw ws.send on a
+// weak connection, since fetch gives a real success/failure result instead of silently
+// dropping the message). A short per-attempt timeout keeps a stalled request from hanging.
+async function sendOrderWithRetry(payload, maxAttempts=3){
+  for(let attempt=1; attempt<=maxAttempts; attempt++){
+    try{
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(), 7000);
+      const res=await fetch('/api/order', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload),
+        signal:controller.signal
+      });
+      clearTimeout(timeout);
+      if(res.ok) return true;
+    }catch(e){
+      // network error or timeout — fall through to retry
+    }
+    if(attempt<maxAttempts) await new Promise(r=>setTimeout(r, 1000*attempt));
+  }
+  return false;
 }
 
 function setStatus(num,status){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'set_status',num,status}));}
@@ -340,29 +385,4 @@ function renderKDS(){
   el.innerHTML=sorted.map(t=>{
     const stClass=t.status==='new'?'st-new':t.status==='cooking'?'st-cooking':'st-done';
     const stText=t.status==='new'?'รอทำ':t.status==='cooking'?'กำลังทำ':'เสร็จแล้ว';
-    const srcTag=t.source==='customer'?`<span class="src-tag src-c">ลูกค้า</span>`:`<span class="src-tag src-s">พนักงาน</span>`;
-    const act=t.status==='new'?`<button class="t-btn t-cook" onclick="setStatus(${t.num},'cooking')">▶ เริ่มทำ</button>`:t.status==='cooking'?`<button class="t-btn t-done" onclick="setStatus(${t.num},'done')">✓ เสร็จแล้ว</button>`:'';
-    return `<div class="ticket s-${t.status}">
-      <div class="t-top">
-        <div><div class="t-table">${t.table}</div><div class="t-meta"><span class="t-num">#${t.num}</span>${srcTag}</div></div>
-        <div class="t-right"><span class="t-status ${stClass}">${stText}</span><span class="t-time">${t.time}</span></div>
-      </div>
-      <hr class="t-divider">
-      ${t.items.map(i=>`<div class="t-item"><span>${i.name}</span><span class="t-qty">×${i.qty}</span></div>`).join('')}
-      ${t.note?`<div class="t-note">📝 ${t.note}</div>`:''}
-      <div class="t-actions">${act}<button class="t-btn t-del" onclick="deleteTicket(${t.num})">🗑</button></div>
-    </div>`;
-  }).join('');
-}
-
-function updateCounts(){
-  document.getElementById('cw').textContent=tickets.filter(t=>t.status==='new').length+' รอ';
-  document.getElementById('cc').textContent=tickets.filter(t=>t.status==='cooking').length+' ทำ';
-  document.getElementById('cd').textContent=tickets.filter(t=>t.status==='done').length+' เสร็จ';
-}
-
-initTableGrid();
-connect();
-</script>
-</body>
-</html>
+    const srcTag=t.source==='customer'?`<s
