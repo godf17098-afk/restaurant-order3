@@ -78,7 +78,7 @@ const MENU = [
     { id: 5,  name: 'อุด้งเนื้อตุ๋น', price: 0 , image: null, available: true },
   ]},
   { cat: 'ของทอด', color: '#4f8ef7', items: [
-    { id: 7,  name: 'เฟรนฟราย(3 ชิ้น)', price: 0 , image: null, available: true },
+    { id: 7,  name: 'เฟรนฟราย', price: 0 , image: null, available: true },
     { id: 8,  name: 'ปีกไก่ทอด(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 9,  name: 'ซาลาเปาทอด(3 ชิ้น)', price: 0 , image: null, available: true },
     { id: 10, name: 'กุ้งทอด(3 ชิ้น)', price: 0 , image: null, available: true },
@@ -107,7 +107,6 @@ const MENU = [
   { cat: 'เนื้อวัว', color: '#dc2626', items: [
     { id: 26, name: 'ลิ้นวัว', price: 0 , image: null, available: true },
     { id: 27, name: 'ริบอาย', price: 0 , image: null, available: true },
-    { id: 28, name: 'น่องลาย', price: 0 , image: null, available: true },
     { id: 29, name: 'ตับเนื้อ', price: 0 , image: null, available: true },
     { id: 30, name: 'เนื้อหมัก', price: 0 , image: null, available: true },
     { id: 31, name: 'พิคานย่า', price: 0 , image: null, available: true },
@@ -142,7 +141,6 @@ const MENU = [
     { id: 65, name: 'ปูอัด', price: 0 , image: null, available: true },
     { id: 64, name: 'ไส้กรอกชีส', price: 0 , image: null, available: true },
     { id: 66, name: 'สามชั้นพันเห็ดเข็มทอง', price: 0 , image: null, available: true },
-    { id: 71, name: 'สาหร่ายแผ่น', price: 0 , image: null, available: true },
   ]},
   { cat: 'ทะเล', color: '#0ea5e9', items: [
     { id: 53, name: 'กุ้ง', price: 0 , image: null, available: true },
