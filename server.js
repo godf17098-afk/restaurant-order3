@@ -115,7 +115,6 @@ const MENU = [
     { id: 34, name: 'ใบพาย', price: 0 , image: null, available: true },
     { id: 35, name: 'ปลาช่อน', price: 0 , image: null, available: true },
     { id: 36, name: 'เนื้อบริสเก็ต (เสือร้องไห้)', price: 0 , image: null, available: true },
-    { id: 37, name: 'รูบิค', price: 0 , image: null, available: true },
     { id: 38, name: 'สันคอ (เนื้อ)', price: 0 , image: null, available: true },
   ]},
   { cat: 'เนื้อหมู', color: '#f472b6', items: [
