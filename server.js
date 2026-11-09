@@ -14,11 +14,37 @@ const wss = new WebSocket.Server({ server, maxPayload: 64 * 1024 });
 wss.on('error', (err) => console.error('WS server error:', err.message));
 let wsSeq = 0;
 
+// Persistent data directory. On Railway, mount a volume at /app/data (or set DATA_DIR)
+// so orders AND uploaded menu images survive restarts and redeploys.
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, 'data');
+const STATE_FILE = path.join(DATA_DIR, 'state.json');
+const uploadsDir = path.join(DATA_DIR, 'uploads');
+fs.mkdirSync(uploadsDir, { recursive: true });
+
+// Older versions stored images in the ephemeral public/uploads folder. Move any files
+// found there into the persistent uploads dir once, keeping the same /uploads/<name> URL.
+const legacyUploadsDir = path.join(__dirname, 'public', 'uploads');
+function migrateLegacyUploads() {
+  try {
+    if (!fs.existsSync(legacyUploadsDir)) return;
+    for (const name of fs.readdirSync(legacyUploadsDir)) {
+      const from = path.join(legacyUploadsDir, name);
+      const to = path.join(uploadsDir, name);
+      if (!fs.statSync(from).isFile() || fs.existsSync(to)) continue;
+      fs.renameSync(from, to);
+      console.log(`↪ ย้ายรูปเดิมไปเก็บถาวร: ${name}`);
+    }
+  } catch (err) {
+    console.error('ย้ายรูปเดิมไม่สำเร็จ:', err.message);
+  }
+}
+migrateLegacyUploads();
+
+app.use('/uploads', express.static(uploadsDir, { dotfiles: 'deny', maxAge: '7d' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/staff.html'));
-
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 // อนุญาตเฉพาะชนิดรูปที่เบราว์เซอร์แสดงเป็นภาพได้ — ไม่รับ SVG/HTML/JS
 const IMAGE_EXT = {
@@ -52,10 +78,6 @@ let billHistory = []; // stores cleared table bills for reporting
 let closedSalmonTables = []; // table IDs where staff has manually closed further salmon orders
 
 /* ---------------------------------------------- persistence */
-
-const DATA_DIR = path.join(__dirname, 'data');
-const STATE_FILE = path.join(DATA_DIR, 'state.json');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 let saveTimer = null;
 
@@ -108,7 +130,11 @@ function loadState() {
           const saved = raw.menu[item.id];
           if (!saved) continue;
           if (typeof saved.available === 'boolean') item.available = saved.available;
-          if (typeof saved.image === 'string' && saved.image.startsWith('/uploads/')) item.image = saved.image;
+          if (typeof saved.image === 'string' && saved.image.startsWith('/uploads/')) {
+            // only trust a bare filename, and only keep the image if the file is really there
+            const filename = path.basename(saved.image);
+            item.image = fs.existsSync(path.join(uploadsDir, filename)) ? `/uploads/${filename}` : null;
+          }
         }
       }
     }
@@ -447,7 +473,7 @@ app.post('/api/menu/:id/image', requireMenuItem, upload.single('image'), (req, r
 
   // remove old image file if exists
   if (item.image) {
-    const oldPath = path.join(__dirname, 'public', item.image);
+    const oldPath = path.join(uploadsDir, path.basename(item.image));
     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
   }
 
@@ -464,7 +490,7 @@ app.delete('/api/menu/:id/image', (req, res) => {
   if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
 
   if (item.image) {
-    const filePath = path.join(__dirname, 'public', item.image);
+    const filePath = path.join(uploadsDir, path.basename(item.image));
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     item.image = null;
     scheduleSave();

@@ -11,6 +11,7 @@ PORT=3100 node server.js
 ```bash
 node tests/fix-test.js      # validation, XSS/anti-spoof, rate limit, upload, WS
 node tests/report-test.js   # ตรวจไฟล์ Excel + Top 5
+node tests/image-test.js    # รูปถูกเก็บใน data/uploads + เสิร์ฟได้ + ลบได้
 BASE_URL=http://127.0.0.1:3000 node tests/fix-test.js   # เปลี่ยนพอร์ต
 ```
 

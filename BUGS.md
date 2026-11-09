@@ -58,6 +58,14 @@
 - ฝั่ง client: ถ้าเซิร์ฟเวอร์ตอบ 4xx (เมนูปิด/แซลมอนปิด/rate limit) จะแสดงข้อความจริงและไม่ retry ซ้ำเปล่า ๆ
 - เพิ่ม `.gitignore` (`node_modules/`, `data/`, `public/uploads/`, `.env`, `*.log`)
 
+### 11. รูปเมนูเก็บถาวร (ไม่หายเมื่อ restart/deploy)
+- ย้ายที่เก็บรูปจาก `public/uploads/` (โฟลเดอร์ชั่วคราวของ container) ไปที่ `<DATA_DIR>/uploads/`
+  ค่าเริ่มต้นคือ `data/uploads` — อยู่ที่เดียวกับ `state.json`
+- รูปเก่าที่ค้างใน `public/uploads/` ถูก **migrate อัตโนมัติ**ตอนบูต (URL `/uploads/<ชื่อไฟล์>` เดิมใช้ได้)
+- เสิร์ฟรูปผ่าน route `/uploads/<file>` พร้อม cache 7 วัน (ชื่อไฟล์มี random hex อยู่แล้ว)
+- กำหนดที่เก็บเองได้ด้วย env `DATA_DIR` และบน Railway ให้ mount volume ที่ `/app/data`
+- ตอนโหลด state จะตรวจว่าไฟล์รูปมีอยู่จริง ถ้าหายจะตั้ง `image = null` กันรูปแตก
+
 ## 🧪 วิธีตรวจสอบ
 
 มีชุดทดสอบใน `tests/` (ต้องสตาร์ทเซิร์ฟเวอร์ก่อน):
@@ -66,6 +74,7 @@
 PORT=3100 node server.js
 node tests/fix-test.js      # 38 checks — ผ่านทั้งหมด
 node tests/report-test.js   # ตรวจ Excel + Top 5
+node tests/image-test.js    # รูปเก็บใน data/uploads + เสิร์ฟ/ลบได้
 ```
 
 ทดสอบ persistence แยก: สร้างออเดอร์ → `SIGTERM` → start ใหม่ → ข้อมูลยังอยู่ (ยืนยันแล้ว)
@@ -78,12 +87,14 @@ node tests/report-test.js   # ตรวจ Excel + Top 5
 2. **Discord webhook ยังอยู่ใน git history** — ควร rotate URL ใหม่แล้วตั้งผ่าน env
    `DISCORD_WEBHOOK_URL` แทน (ค่าเก่าที่ hardcode ไว้ถือว่ารั่วแล้ว)
 3. **ไม่มีฐานข้อมูล** — ใช้ไฟล์ JSON ไฟล์เดียว จึงรองรับได้แค่ instance เดียว
-   และบน Railway ต้อง mount volume ที่ `/app/data` ไม่งั้น deploy ใหม่ข้อมูลหาย
+   และบน Railway ต้อง mount volume ที่ `/app/data` ไม่งั้น deploy ใหม่ข้อมูล **และรูปเมนู** หาย
+   (ตอนนี้รูปกับ state อยู่ใต้ `data/` แล้ว จึงรอดคราวเดียวกันเมื่อมี volume)
 4. **ไม่มี CSRF protection** — เกี่ยวเนื่องกับข้อ 1 (ยังไม่มี session/auth)
 5. **ไฟล์รูปเก่าไม่ถูกลบอัตโนมัติ** เมื่อเปลี่ยนรูปแล้วเกิด error กลางทาง
 6. **ไม่ได้ทดสอบ UI ในเบราว์เซอร์จริง** — ตรวจแค่ syntax ของ script ทุกหน้า + API/WS tests
 
 ## 📌 หมายเหตุการ deploy (Railway)
 
-- ต้องเพิ่ม **Volume** mount ที่ `/app/data` เพื่อให้ `state.json` อยู่ข้าม deploy
+- ต้องเพิ่ม **Volume** mount ที่ `/app/data` เพื่อให้ `state.json` **และรูปเมนู** (`data/uploads/`) อยู่ข้าม deploy
+- ถ้าใช้ที่เก็บอื่น ตั้ง env `DATA_DIR` ให้ชี้ไปดิสก์ถาวรนั้น
 - ตั้ง env `DISCORD_WEBHOOK_URL` (ถ้าต้องการใช้แจ้งเตือน Discord)
