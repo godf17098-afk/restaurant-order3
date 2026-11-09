@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
@@ -9,7 +10,9 @@ const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ server, maxPayload: 64 * 1024 });
+wss.on('error', (err) => console.error('WS server error:', err.message));
+let wsSeq = 0;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/staff.html'));
@@ -17,18 +20,28 @@ app.get('/', (req, res) => res.redirect('/staff.html'));
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
+// อนุญาตเฉพาะชนิดรูปที่เบราว์เซอร์แสดงเป็นภาพได้ — ไม่รับ SVG/HTML/JS
+const IMAGE_EXT = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname) || '.jpg';
-    cb(null, `menu-${req.params.id}-${Date.now()}${ext}`);
+    const ext = IMAGE_EXT[file.mimetype];
+    if (!ext) return cb(new Error('ชนิดไฟล์รูปไม่รองรับ'));
+    const id = parseInt(req.params.id, 10) || 0;
+    cb(null, `menu-${id}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`);
   },
 });
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) return cb(new Error('ไฟล์ต้องเป็นรูปภาพเท่านั้น'));
+    if (!IMAGE_EXT[file.mimetype]) return cb(new Error('ไฟล์ต้องเป็น JPG, PNG, WEBP หรือ GIF เท่านั้น'));
     cb(null, true);
   },
 });
@@ -38,9 +51,85 @@ let ticketCounter = 1001;
 let billHistory = []; // stores cleared table bills for reporting
 let closedSalmonTables = []; // table IDs where staff has manually closed further salmon orders
 
+/* ---------------------------------------------- persistence */
+
+const DATA_DIR = path.join(__dirname, 'data');
+const STATE_FILE = path.join(DATA_DIR, 'state.json');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+let saveTimer = null;
+
+function menuSnapshot() {
+  const out = {};
+  for (const cat of MENU) {
+    for (const item of cat.items) {
+      out[item.id] = { available: item.available !== false, image: item.image || null };
+    }
+  }
+  return out;
+}
+
+function saveStateNow() {
+  try {
+    const payload = JSON.stringify({
+      tickets,
+      ticketCounter,
+      billHistory,
+      closedSalmonTables,
+      menu: menuSnapshot(),
+      savedAt: new Date().toISOString(),
+    });
+    const tmp = STATE_FILE + '.tmp';
+    fs.writeFileSync(tmp, payload);
+    fs.renameSync(tmp, STATE_FILE);
+  } catch (err) {
+    console.error('บันทึก state ไม่สำเร็จ:', err.message);
+  }
+}
+
+// เขียนลงดิสก์แบบ debounce — กันเขียนถี่เกินตอนมีออเดอร์รัว ๆ
+function scheduleSave() {
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => { saveTimer = null; saveStateNow(); }, 250);
+}
+
+function loadState() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    if (Array.isArray(raw.tickets)) tickets = raw.tickets;
+    if (Array.isArray(raw.billHistory)) billHistory = raw.billHistory;
+    if (Array.isArray(raw.closedSalmonTables)) closedSalmonTables = raw.closedSalmonTables;
+    if (Number.isInteger(raw.ticketCounter)) ticketCounter = raw.ticketCounter;
+
+    // คืนสถานะเมนู (เปิด/ปิด + รูป) ที่เคยตั้งไว้
+    if (raw.menu && typeof raw.menu === 'object') {
+      for (const cat of MENU) {
+        for (const item of cat.items) {
+          const saved = raw.menu[item.id];
+          if (!saved) continue;
+          if (typeof saved.available === 'boolean') item.available = saved.available;
+          if (typeof saved.image === 'string' && saved.image.startsWith('/uploads/')) item.image = saved.image;
+        }
+      }
+    }
+
+    const maxNum = tickets.reduce((m, t) => (Number.isInteger(t.num) && t.num > m ? t.num : m), 1000);
+    if (ticketCounter <= maxNum) ticketCounter = maxNum + 1;
+
+    if (tickets.length || billHistory.length) {
+      console.log(`↺ โหลดข้อมูลเดิม: ${tickets.length} ออเดอร์, ${billHistory.length} บิล`);
+    }
+  } catch (err) {
+    if (err.code !== 'ENOENT') console.error('โหลด state ไม่สำเร็จ:', err.message);
+  }
+}
+
 // Discord webhook — posts a message to a Discord channel whenever a new order comes in,
-// so staff get a phone/desktop notification (with sound) even if the KDS tab isn't open
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1541771736331321437/B75dd0Mf24hf2pvoWMF4JyRP-vh2ONytlYlfKwYli83SZ2CH3MOlSbwOUFt_QCavIN-W';
+// so staff get a phone/desktop notification (with sound) even if the KDS tab isn't open.
+// Set DISCORD_WEBHOOK_URL in the environment to override (recommended: rotate the old URL,
+// which used to be hard-coded here and is therefore public in git history).
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
+  || 'https://discord.com/api/webhooks/1541771736331321437/B75dd0Mf24hf2pvoWMF4JyRP-vh2ONytlYlfKwYli83SZ2CH3MOlSbwOUFt_QCavIN-W';
 
 function notifyDiscordNewOrder(ticket) {
   if (!DISCORD_WEBHOOK_URL) return;
@@ -184,39 +273,147 @@ function pruneRecentOrderIds() {
   }
 }
 
+// A retried order may point at a ticket that staff already deleted or a table that was
+// already cleared — in that case the cached entry is stale and must not be reported as
+// a success (otherwise the customer sees "ordered!" but the kitchen never gets it).
+function forgetRecentOrder(num) {
+  for (const [id, entry] of recentOrderIds) {
+    if (entry.ticket && entry.ticket.num === num) recentOrderIds.delete(id);
+  }
+}
+
+/* ---------------------------------------------- validation + limits */
+
+const MAX_ORDER_ITEMS = 100;
+const MAX_ITEM_QTY = 99;
+const MAX_ORDER_QTY = 500;
+const MAX_BILL_HISTORY = 5000; // keep recent bills for reports without unbounded memory growth
+const TABLE_RE = /^[\p{L}\p{N}_\- ]{1,20}$/u;
+const TICKET_STATUSES = new Set(['new', 'cooking', 'done']);
+const SALMON_NAME = 'แซลมอนซาชิมิ(8 ชิ้น)';
+
+function normalizeTable(value) {
+  const s = String(value ?? '').trim();
+  return TABLE_RE.test(s) ? s : null;
+}
+
+function toIntInRange(value, min, max) {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= min && n <= max ? n : null;
+}
+
+function cleanText(value, maxLen) {
+  return String(value ?? '').trim().slice(0, maxLen);
+}
+
+// simple fixed-window limiter (per IP for HTTP, per socket for WS)
+function createLimiter(limit, windowMs) {
+  const hits = new Map();
+  return function allow(key, now = Date.now()) {
+    const entry = hits.get(key);
+    if (!entry || now >= entry.reset) {
+      hits.set(key, { count: 1, reset: now + windowMs });
+      if (hits.size > 5000) {
+        for (const [k, v] of hits) if (now >= v.reset) hits.delete(k);
+      }
+      return true;
+    }
+    if (entry.count >= limit) return false;
+    entry.count += 1;
+    return true;
+  };
+}
+
+const orderLimiter = createLimiter(30, 60 * 1000);
+const wsOrderLimiter = createLimiter(25, 60 * 1000);
+
+function clientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded) return forwarded.split(',')[0].trim();
+  return req.socket.remoteAddress || 'unknown';
+}
+
 // Shared order-creation logic — used by both the WebSocket 'new_order' message
-// and the HTTP POST /api/order fallback (for customers on weak/unstable connections)
+// and the HTTP POST /api/order fallback (for customers on weak/unstable connections).
+// Returns { ticket } on success or { error, status } when the request is rejected.
 function createOrder(payload) {
-  const clientOrderId = payload.clientOrderId;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { error: 'ข้อมูลออเดอร์ไม่ถูกต้อง', status: 400 };
+  }
+
+  const table = normalizeTable(payload.table);
+  if (!table) return { error: 'หมายเลขโต๊ะไม่ถูกต้อง', status: 400 };
+
+  if (!Array.isArray(payload.items) || !payload.items.length) {
+    return { error: 'ไม่มีรายการอาหาร', status: 400 };
+  }
+  if (payload.items.length > MAX_ORDER_ITEMS) {
+    return { error: 'รายการอาหารมากเกินไป', status: 400 };
+  }
+
+  const clientOrderId = typeof payload.clientOrderId === 'string'
+    ? payload.clientOrderId.trim().slice(0, 100)
+    : '';
   if (clientOrderId) {
     pruneRecentOrderIds();
     const existing = recentOrderIds.get(clientOrderId);
-    if (existing) return existing.ticket; // same order retried — don't create a duplicate
+    if (existing) {
+      const live = tickets.find(t => t.num === existing.ticket.num && !t.tableCleared && t.table === table);
+      if (live) return { ticket: live };
+      recentOrderIds.delete(clientOrderId);
+    }
   }
 
-  const validItems = (payload.items || []).filter(i => {
-    const menuItem = findMenuItem(parseInt(i.id));
-    return !menuItem || menuItem.available !== false;
-  });
-  if (!validItems.length) return null;
+  // ทุกอย่างที่ลูกค้าส่งมาเป็นแค่ "id + จำนวน" — ชื่อและราคาใช้จาก MENU ฝั่งเซิร์ฟเวอร์เท่านั้น
+  const merged = new Map();
+  for (const raw of payload.items) {
+    if (!raw || typeof raw !== 'object') continue;
+    const id = Number(raw.id);
+    if (!Number.isInteger(id)) continue;
+    const menuItem = findMenuItem(id);
+    if (!menuItem || menuItem.available === false) continue;
+
+    const qty = toIntInRange(raw.qty ?? raw.quantity, 1, MAX_ITEM_QTY);
+    if (qty === null) continue;
+
+    const prev = merged.get(id);
+    if (prev) {
+      prev.qty = Math.min(MAX_ITEM_QTY, prev.qty + qty);
+    } else {
+      merged.set(id, { id, name: menuItem.name, qty });
+    }
+  }
+
+  const items = [...merged.values()];
+  if (!items.length) return { error: 'ไม่มีรายการที่สั่งได้ (เมนูอาจถูกปิดไปแล้ว)', status: 400 };
+
+  // buffet salmon quota: staff may close salmon ordering for a table; the customer page
+  // hides it, but the server must enforce it too so a crafted request can't bypass it
+  if (closedSalmonTables.includes(table) && items.some(i => i.name === SALMON_NAME)) {
+    return { error: 'โต๊ะนี้ปิดรับแซลมอนแล้ว', status: 409 };
+  }
+
+  const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
+  if (totalQty > MAX_ORDER_QTY) return { error: 'จำนวนอาหารมากเกินไป', status: 400 };
 
   const ticket = {
     num: ticketCounter++,
-    table: payload.table,
-    items: validItems.map(i => ({ ...i, done: false, madeQty: 0, servedQty: 0 })),
-    note: payload.note || '',
+    table,
+    items: items.map(i => ({ ...i, done: false, madeQty: 0, servedQty: 0 })),
+    note: cleanText(payload.note, 200),
     time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' }),
     status: 'new',
-    source: payload.source || 'staff',
-    staffName: payload.staffName || '',
+    source: payload.source === 'customer' ? 'customer' : 'staff',
+    staffName: cleanText(payload.staffName, 60),
     tableCleared: false,
   };
   tickets.push(ticket);
   if (clientOrderId) recentOrderIds.set(clientOrderId, { ticket, at: Date.now() });
   broadcast({ type: 'ticket_added', ticket });
-  broadcast({ type: 'table_updated', table: payload.table, orders: tickets.filter(t => t.table === payload.table && !t.tableCleared) });
+  broadcast({ type: 'table_updated', table, orders: tickets.filter(t => t.table === table && !t.tableCleared) });
   notifyDiscordNewOrder(ticket);
-  return ticket;
+  scheduleSave();
+  return { ticket };
 }
 
 // API: get full menu (with image info) — used by menu image manager page
@@ -231,15 +428,21 @@ app.post('/api/menu/:id/availability', express.json(), (req, res) => {
   if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
 
   item.available = req.body.available !== undefined ? !!req.body.available : !item.available;
+  scheduleSave();
   broadcast({ type: 'menu_updated', menu: MENU });
   res.json({ ok: true, available: item.available });
 });
 
 // API: upload image for a menu item
-app.post('/api/menu/:id/image', upload.single('image'), (req, res) => {
-  const id = parseInt(req.params.id);
-  const item = findMenuItem(id);
+function requireMenuItem(req, res, next) {
+  const item = findMenuItem(parseInt(req.params.id, 10));
   if (!item) return res.status(404).json({ error: 'ไม่พบเมนูนี้' });
+  req.menuItem = item;
+  next();
+}
+
+app.post('/api/menu/:id/image', requireMenuItem, upload.single('image'), (req, res) => {
+  const item = req.menuItem;
   if (!req.file) return res.status(400).json({ error: 'ไม่พบไฟล์ที่อัปโหลด' });
 
   // remove old image file if exists
@@ -249,6 +452,7 @@ app.post('/api/menu/:id/image', upload.single('image'), (req, res) => {
   }
 
   item.image = `/uploads/${req.file.filename}`;
+  scheduleSave();
   broadcast({ type: 'menu_updated', menu: MENU });
   res.json({ ok: true, image: item.image });
 });
@@ -263,6 +467,7 @@ app.delete('/api/menu/:id/image', (req, res) => {
     const filePath = path.join(__dirname, 'public', item.image);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     item.image = null;
+    scheduleSave();
   }
 
   broadcast({ type: 'menu_updated', menu: MENU });
@@ -286,157 +491,207 @@ app.get('/api/table/:id/orders', (req, res) => {
 // message for customers on weak/unstable internet, where a WebSocket send can silently
 // fail to reach the server. A normal HTTP request gets a real success/failure response
 // that the client can retry on, unlike a fire-and-forget ws.send().
-app.post('/api/order', express.json(), (req, res) => {
-  const ticket = createOrder(req.body || {});
-  if (!ticket) return res.status(400).json({ error: 'ไม่มีรายการที่สั่งได้ (เมนูอาจถูกปิดไปแล้ว)' });
-  res.json({ ok: true, ticket });
+app.post('/api/order', express.json({ limit: '64kb' }), (req, res) => {
+  if (!orderLimiter(clientIp(req))) {
+    return res.status(429).json({ error: 'ส่งออเดอร์ถี่เกินไป กรุณารอสักครู่' });
+  }
+  const result = createOrder(req.body || {});
+  if (result.error) return res.status(result.status || 400).json({ error: result.error });
+  res.json({ ok: true, ticket: result.ticket });
 });
 
 wss.on('connection', (ws) => {
+  ws._id = ++wsSeq;
   ws.send(JSON.stringify({ type: 'init', tickets, menu: MENU, closedSalmonTables }));
+
+  // a client can send a frame larger than maxPayload (or otherwise corrupt data);
+  // without this handler the emitted error would be uncaught and crash the whole server
+  ws.on('error', (err) => {
+    console.error('WS error:', err.message);
+    try { ws.terminate(); } catch {}
+  });
 
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
+    if (!msg || typeof msg !== 'object' || typeof msg.type !== 'string') return;
 
     if (msg.type === 'join_table') {
-      ws.tableNum = msg.table;
+      const table = normalizeTable(msg.table);
+      if (table) ws.tableNum = table;
+      return;
     }
 
     if (msg.type === 'new_order') {
-      createOrder(msg);
+      if (!wsOrderLimiter(ws._id)) {
+        ws.send(JSON.stringify({ type: 'order_error', error: 'ส่งออเดอร์ถี่เกินไป กรุณารอสักครู่' }));
+        return;
+      }
+      const result = createOrder(msg);
+      if (result.error) ws.send(JSON.stringify({ type: 'order_error', error: result.error }));
+      return;
     }
+
+    const num = toIntInRange(msg.num, 1, Number.MAX_SAFE_INTEGER);
+    const t = num === null ? null : tickets.find(x => x.num === num);
 
     // kitchen presses +1 / -1 for how many of this item have actually been cooked so far —
     // no need to wait until the whole qty is ready before it can be sent out to serve
     if (msg.type === 'increment_made' || msg.type === 'decrement_made') {
-      const t = tickets.find(x => x.num === msg.num);
-      if (t) {
-        const item = t.items[msg.itemIndex];
-        if (item) {
-          const delta = msg.type === 'increment_made' ? 1 : -1;
-          item.madeQty = Math.max(0, Math.min(item.qty, (item.madeQty || 0) + delta));
-          item.done = item.madeQty >= item.qty;
+      if (!t || !Array.isArray(t.items)) return;
+      const itemIndex = toIntInRange(msg.itemIndex, 0, t.items.length - 1);
+      if (itemIndex === null) return;
+      const item = t.items[itemIndex];
+      if (!item) return;
 
-          const anyStarted = t.items.some(i => (i.madeQty || 0) > 0);
-          const allDone = t.items.every(i => i.done);
-          if (allDone) t.status = 'done';
-          else if (anyStarted) t.status = 'cooking';
-          else t.status = 'new';
+      const delta = msg.type === 'increment_made' ? 1 : -1;
+      item.madeQty = Math.max(0, Math.min(item.qty, (item.madeQty || 0) + delta));
+      item.done = item.madeQty >= item.qty;
 
-          broadcast({ type: 'ticket_updated', ticket: t });
-        }
-      }
+      const anyStarted = t.items.some(i => (i.madeQty || 0) > 0);
+      const allDone = t.items.every(i => i.done);
+      if (allDone) t.status = 'done';
+      else if (anyStarted) t.status = 'cooking';
+      else t.status = 'new';
+
+      broadcast({ type: 'ticket_updated', ticket: t });
+      scheduleSave();
+      return;
     }
 
     // mark an item as served (removes it from the "ready to serve" list)
     if (msg.type === 'serve_item') {
-      const t = tickets.find(x => x.num === msg.num);
-      if (t) {
-        const item = t.items[msg.itemIndex];
-        if (item) {
-          item.servedQty = (item.servedQty || 0) + 1;
-          if (item.servedQty >= item.qty) {
-            item.servedQty = item.qty;
-            item.served = true;
-          }
-          broadcast({ type: 'ticket_updated', ticket: t });
-        }
+      if (!t || !Array.isArray(t.items)) return;
+      const itemIndex = toIntInRange(msg.itemIndex, 0, t.items.length - 1);
+      if (itemIndex === null) return;
+      const item = t.items[itemIndex];
+      if (!item) return;
+
+      item.servedQty = (item.servedQty || 0) + 1;
+      if (item.servedQty >= item.qty) {
+        item.servedQty = item.qty;
+        item.served = true;
       }
+      broadcast({ type: 'ticket_updated', ticket: t });
+      scheduleSave();
+      return;
     }
 
     if (msg.type === 'set_status') {
-      const t = tickets.find(x => x.num === msg.num);
-      if (t) {
-        t.status = msg.status;
-        broadcast({ type: 'ticket_updated', ticket: t });
-      }
+      if (!t || !TICKET_STATUSES.has(msg.status)) return;
+      t.status = msg.status;
+      broadcast({ type: 'ticket_updated', ticket: t });
+      scheduleSave();
+      return;
     }
 
     if (msg.type === 'delete_ticket') {
-      tickets = tickets.filter(x => x.num !== msg.num);
-      broadcast({ type: 'ticket_deleted', num: msg.num });
+      if (num === null) return;
+      forgetRecentOrder(num);
+      tickets = tickets.filter(x => x.num !== num);
+      broadcast({ type: 'ticket_deleted', num });
+      scheduleSave();
+      return;
     }
 
     if (msg.type === 'delete_all_tickets') {
       tickets = [];
+      recentOrderIds.clear();
       broadcast({ type: 'all_tickets_deleted' });
+      scheduleSave();
+      return;
     }
 
     if (msg.type === 'clear_table') {
-      const tableOrders = tickets.filter(t => t.table === msg.table && !t.tableCleared);
-      const now = new Date();
-      const bangkokTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
-      const dateStr = bangkokTime.toISOString().slice(0, 10);
-      const timeStr = bangkokTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
+      const table = normalizeTable(msg.table);
+      if (!table) return;
 
-      const peopleCount = msg.peopleCount || null;
-      const pricePerPerson = msg.pricePerPerson || null;
-      const totalPrice = msg.totalPrice || null;
+      const tableOrders = tickets.filter(x => x.table === table && !x.tableCleared);
+      const dateStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+      const timeStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
+
+      const peopleCount = toIntInRange(msg.peopleCount, 0, 500);
+      const pricePerPerson = toIntInRange(msg.pricePerPerson, 0, 100000);
+      const totalPrice = toIntInRange(msg.totalPrice, 0, 10000000);
 
       // One summary row per table checkout (with price), plus item detail per ticket
       if (tableOrders.length) {
+        const itemsList = tableOrders.flatMap(x => x.items.map(i => ({ name: i.name, qty: i.qty })));
         billHistory.push({
           date: dateStr,
           time: timeStr,
-          table: msg.table,
-          ticketNum: tableOrders.map(t => t.num).join(', '),
-          items: tableOrders.flatMap(t => t.items.map(i => `${i.name} x${i.qty}`)).join(', '),
-          itemCount: tableOrders.reduce((s, t) => s + t.items.reduce((s2, i) => s2 + i.qty, 0), 0),
+          table,
+          ticketNum: tableOrders.map(x => x.num).join(', '),
+          items: itemsList.map(i => `${i.name} x${i.qty}`).join(' | '),
+          itemsList,
+          itemCount: itemsList.reduce((sum, i) => sum + i.qty, 0),
           source: tableOrders[0].source,
           staffName: tableOrders[0].staffName || '',
           peopleCount,
           pricePerPerson,
           totalPrice,
         });
+        tableOrders.forEach(x => forgetRecentOrder(x.num));
+        if (billHistory.length > MAX_BILL_HISTORY) {
+          billHistory.splice(0, billHistory.length - MAX_BILL_HISTORY);
+        }
       }
 
-      tickets.forEach(t => { if (t.table === msg.table) t.tableCleared = true; });
-      closedSalmonTables = closedSalmonTables.filter(t => t !== msg.table);
-      broadcast({ type: 'table_cleared', table: msg.table });
+      tickets.forEach(x => { if (x.table === table) x.tableCleared = true; });
+      closedSalmonTables = closedSalmonTables.filter(x => x !== table);
+      broadcast({ type: 'table_cleared', table });
       broadcast({ type: 'salmon_status_updated', closedSalmonTables });
+      scheduleSave();
+      return;
     }
 
     // staff toggles whether a table can still order the salmon sashimi (buffet quota control)
     if (msg.type === 'set_salmon_status') {
-      const table = msg.table;
+      const table = normalizeTable(msg.table);
       if (!table) return;
       if (msg.closed) {
         if (!closedSalmonTables.includes(table)) closedSalmonTables.push(table);
       } else {
-        closedSalmonTables = closedSalmonTables.filter(t => t !== table);
+        closedSalmonTables = closedSalmonTables.filter(x => x !== table);
       }
       broadcast({ type: 'salmon_status_updated', closedSalmonTables });
+      scheduleSave();
+      return;
     }
 
     // move all active (uncleared) orders from one table to another —
     // e.g. staff physically moves a party to a different table mid-meal
     if (msg.type === 'move_table') {
-      const fromTable = msg.fromTable;
-      const toTable = msg.toTable;
+      const fromTable = normalizeTable(msg.fromTable);
+      const toTable = normalizeTable(msg.toTable);
       if (!fromTable || !toTable || fromTable === toTable) return;
 
-      const moved = tickets.filter(t => t.table === fromTable && !t.tableCleared);
+      const moved = tickets.filter(x => x.table === fromTable && !x.tableCleared);
       if (!moved.length) return;
 
-      moved.forEach(t => { t.table = toTable; });
+      moved.forEach(x => { x.table = toTable; });
 
       // update every existing client's copy of each moved ticket (kitchen/serve/staff/cashier)
-      moved.forEach(t => broadcast({ type: 'ticket_updated', ticket: t }));
+      moved.forEach(x => broadcast({ type: 'ticket_updated', ticket: x }));
       // keep any customer.html tabs still open on either table number in sync
-      broadcast({ type: 'table_updated', table: fromTable, orders: tickets.filter(t => t.table === fromTable && !t.tableCleared) });
-      broadcast({ type: 'table_updated', table: toTable, orders: tickets.filter(t => t.table === toTable && !t.tableCleared) });
+      broadcast({ type: 'table_updated', table: fromTable, orders: tickets.filter(x => x.table === fromTable && !x.tableCleared) });
+      broadcast({ type: 'table_updated', table: toTable, orders: tickets.filter(x => x.table === toTable && !x.tableCleared) });
       broadcast({ type: 'table_moved', fromTable, toTable, count: moved.length });
+      scheduleSave();
     }
   });
 });
 
 // API: download today's sales report as Excel
-app.get('/api/report/excel', async (req, res) => {
-  const dateParam = req.query.date || new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-  const dayBills = billHistory.filter(b => b.date === dateParam);
+const REPORT_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-  const workbook = new ExcelJS.Workbook();
+app.get('/api/report/excel', async (req, res) => {
+  try {
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+    const dateParam = REPORT_DATE_RE.test(String(req.query.date || '')) ? req.query.date : today;
+    const dayBills = billHistory.filter(b => b.date === dateParam);
+
+    const workbook = new ExcelJS.Workbook();
 
   // Sheet 1: Summary
   const summarySheet = workbook.addWorksheet('สรุปยอด');
@@ -451,13 +706,17 @@ app.get('/api/report/excel', async (req, res) => {
 
   const menuCount = {};
   dayBills.forEach(b => {
-    b.items.split(', ').forEach(entry => {
-      const match = entry.match(/^(.+) x(\d+)$/);
-      if (match) {
-        const name = match[1];
-        const qty = parseInt(match[2]);
-        menuCount[name] = (menuCount[name] || 0) + qty;
-      }
+    // ใช้ข้อมูลแบบโครงสร้างถ้ามี (รองรับชื่อเมนูที่มี ", " อยู่ข้างใน)
+    const list = Array.isArray(b.itemsList)
+      ? b.itemsList
+      : String(b.items || '').split(' | ').map(entry => {
+          const match = entry.match(/^(.+) x(\d+)$/);
+          return match ? { name: match[1], qty: parseInt(match[2], 10) } : null;
+        }).filter(Boolean);
+
+    list.forEach(i => {
+      if (!i || !i.name) return;
+      menuCount[i.name] = (menuCount[i.name] || 0) + (Number(i.qty) || 0);
     });
   });
   const topItems = Object.entries(menuCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -505,9 +764,27 @@ app.get('/api/report/excel', async (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="sales-report-${dateParam}.xlsx"`);
   await workbook.xlsx.write(res);
   res.end();
+  } catch (err) {
+    console.error('สร้างรายงานไม่สำเร็จ:', err.message);
+    if (res.headersSent) res.end();
+    else res.status(500).json({ error: 'สร้างรายงานไม่สำเร็จ' });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
+
+loadState();
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅  Server running at http://localhost:${PORT}\n`);
 });
+
+function shutdown(signal) {
+  console.log(`\n${signal} — กำลังบันทึกข้อมูลและปิดเซิร์ฟเวอร์...`);
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  saveStateNow();
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 1500).unref();
+}
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

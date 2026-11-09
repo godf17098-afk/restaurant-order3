@@ -170,6 +170,8 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </div>
 
 <script>
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 const EMOJIS={'ข้าว / ก๋วยเตี๋ยว':'🍚','ของทอด':'🍟','ของดอง / ยำ':'🥗','อื่นๆ':'🍽','เนื้อ':'🥩','หมู':'🐷','ผัก':'🥬','ทะเล':'🦐'};
 const params=new URLSearchParams(location.search);
 // Table can now be alphanumeric like F1, B25 etc. Fallback to F1 if missing.
@@ -329,16 +331,17 @@ async function confirmOrder(){
     clientOrderId:makeClientOrderId()
   };
 
-  const ok = await sendOrderWithRetry(payload);
+  const result = await sendOrderWithRetry(payload);
 
   btn.disabled=false;
   btn.textContent='ยืนยันการสั่ง';
 
-  if(ok){
+  if(result.ok){
     closeCart();
     document.getElementById('success').classList.add('show');
   } else {
     // keep the cart intact so nothing the customer picked gets lost — just let them retry
+    errEl.textContent=result.error||'ส่งออเดอร์ไม่สำเร็จ อินเทอร์เน็ตอาจไม่เสถียร กรุณากดส่งอีกครั้ง';
     errEl.style.display='block';
   }
 }
@@ -354,6 +357,7 @@ function makeClientOrderId(){
 // weak connection, since fetch gives a real success/failure result instead of silently
 // dropping the message). A short per-attempt timeout keeps a stalled request from hanging.
 async function sendOrderWithRetry(payload, maxAttempts=3){
+  let lastError='';
   for(let attempt=1; attempt<=maxAttempts; attempt++){
     try{
       const controller=new AbortController();
@@ -365,13 +369,17 @@ async function sendOrderWithRetry(payload, maxAttempts=3){
         signal:controller.signal
       });
       clearTimeout(timeout);
-      if(res.ok) return true;
+      if(res.ok) return {ok:true};
+      let data=null;
+      try{ data=await res.json(); }catch(e){}
+      lastError=(data&&data.error)||'ส่งออเดอร์ไม่สำเร็จ';
+      if(res.status>=400 && res.status<500) return {ok:false,error:lastError};
     }catch(e){
-      // network error or timeout — fall through to retry
+      lastError='เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
     }
     if(attempt<maxAttempts) await new Promise(r=>setTimeout(r, 1000*attempt));
   }
-  return false;
+  return {ok:false,error:lastError||'อินเทอร์เน็ตอาจไม่เสถียร กรุณาลองอีกครั้ง'};
 }
 
 function resetOrder(){
@@ -413,8 +421,8 @@ function renderMyOrders(){
         <div class="og-num">ออเดอร์ #${t.num}</div>
         <span class="og-status ${stClass}">${stText}</span>
       </div>
-      ${t.items.map(i=>`<div class="og-item"><span>${i.name}</span><span class="og-qty">×${i.qty}</span></div>`).join('')}
-      ${t.note?`<div class="og-note">📝 ${t.note}</div>`:''}
+      ${t.items.map(i=>`<div class="og-item"><span>${esc(i.name)}</span><span class="og-qty">×${i.qty}</span></div>`).join('')}
+      ${t.note?`<div class="og-note">📝 ${esc(t.note)}</div>`:''}
       <div class="og-time">${t.time}</div>
     </div>`;
   }).join('');

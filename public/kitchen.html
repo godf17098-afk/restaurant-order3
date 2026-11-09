@@ -144,6 +144,8 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </div>
 
 <script>
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 const STATIONS = {
   fry: { label: '🍟 สถานีทอด', items: ['เฟรนฟราย','ปีกไก่ทอด(3 ชิ้น)','ซาลาเปาทอด(3 ชิ้น)','กุ้งทอด(3 ชิ้น)','นักเก็ต(3 ชิ้น)','ชีสบอล(3 ชิ้น)','หมึกวงทอด(3 ชิ้น)','ไก่ป็อบ(5 ชิ้น)','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง(3 ชิ้น)'] },
   fish: { label: '🐟 สถานีปลา', items: ['แซลมอนซาชิมิ(8 ชิ้น)','แซลมอนดอง','กุ้งดอง'] },
@@ -305,7 +307,7 @@ function renderTickets() {
       const doneClass = item.done ? 'done' : '';
       return `<div class="check-item ${doneClass}">
         <div class="check-box ${checkedClass}"></div>
-        <span class="check-name">${item.name}</span>
+        <span class="check-name">${esc(item.name)}</span>
         <div class="made-ctrl">
           <button class="made-btn" onclick="decItem(${t.num},${item.idx})" ${made <= 0 ? 'disabled' : ''}>−</button>
           <span class="made-count">${made}/${item.qty}</span>
@@ -316,7 +318,7 @@ function renderTickets() {
 
     return `<div class="ticket ${ticketClass}">
       <div class="t-top">
-        <div class="t-table">โต๊ะ ${t.table} <span style="font-size:12px;color:var(--muted2);font-weight:400">#${t.num}</span></div>
+        <div class="t-table">โต๊ะ ${esc(t.table)} <span style="font-size:12px;color:var(--muted2);font-weight:400">#${t.num}</span></div>
         <div class="t-right">
           <span class="t-status ${stClass}">${stText}</span>
           <span class="t-time">${t.time}</span>
@@ -324,7 +326,7 @@ function renderTickets() {
       </div>
       <hr class="t-divider">
       ${itemsHtml}
-      ${t.note ? `<div class="t-note">📝 ${t.note}</div>` : ''}
+      ${t.note ? `<div class="t-note">📝 ${esc(t.note)}</div>` : ''}
     </div>`;
   }).join('');
 }

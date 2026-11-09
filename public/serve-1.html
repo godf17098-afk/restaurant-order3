@@ -105,6 +105,8 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </div>
 
 <script>
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 // Must stay identical to the station item lists in kitchen-2.html
 const STATIONS = {
   fry: { label: '🍟 สถานีทอด', items: ['เฟรนฟราย','ปีกไก่ทอด','ซาลาเปาทอด','กุ้งทอด','นักเก็ต','ชีสบอล','หมึกวงทอด','ไก่ป็อบ','ข้าวผัดมันเนื้อ','ข้าวผัดกระเทียม','ไส้กรอกแดง'] },
@@ -242,10 +244,10 @@ function renderServe(){
   el.innerHTML = tableNums.map(n => {
     const items = byTable[n];
     return `<div class="serve-card">
-      <div class="serve-head">โต๊ะ ${n}</div>
+      <div class="serve-head">โต๊ะ ${esc(n)}</div>
       ${items.map(i => `
         <div class="serve-item">
-          <span class="serve-name">${i.name}</span>
+          <span class="serve-name">${esc(i.name)}</span>
           <span class="serve-qty">×${i.qty}</span>
           <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟ 1 จาน</button>
         </div>

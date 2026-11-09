@@ -76,6 +76,8 @@ input:checked + .slider::before{transform:translateX(20px)}
 <div class="toast" id="toast"></div>
 
 <script>
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 let ws;
 let tickets = [];
 let closedSalmonTables = [];
@@ -142,7 +144,7 @@ function renderList(){
     return `
     <div class="table-row ${closed ? 'closed' : ''}">
       <div>
-        <div class="tr-name">โต๊ะ ${n}</div>
+        <div class="tr-name">โต๊ะ ${esc(n)}</div>
         <div class="tr-status ${closed ? 'closed' : 'open'}">${closed ? '🔒 ปิดรับแซลมอนแล้ว' : '🟢 สั่งแซลมอนได้ปกติ'}</div>
       </div>
       <label class="switch">

@@ -156,6 +156,8 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </div>
 
 <script>
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 let tickets = [];
 let ws;
 
@@ -236,13 +238,13 @@ function renderTables(){
           <span class="ob-status" style="${stColor}">${stText}</span>
         </div>
         ${t.items.map(i=>`<div class="ob-item"><span>${i.name}</span><span class="ob-qty">×${i.qty}</span></div>`).join('')}
-        ${t.note?`<div class="ob-note">📝 ${t.note}</div>`:''}
+        ${t.note?`<div class="ob-note">📝 ${esc(t.note)}</div>`:''}
       </div>`;
     }).join('');
 
     return `<div class="table-card">
       <div class="tc-head">
-        <div class="tc-name">โต๊ะ ${n}</div>
+        <div class="tc-name">โต๊ะ ${esc(n)}</div>
         <span class="tc-badge ${badgeClass}">${badgeText}</span>
       </div>
       <div class="tc-orders">${ordersHtml}</div>
@@ -284,10 +286,10 @@ function renderServe(){
   el.innerHTML = tableNums.map(n => {
     const items = byTable[n];
     return `<div class="serve-card">
-      <div class="serve-head">โต๊ะ ${n}</div>
+      <div class="serve-head">โต๊ะ ${esc(n)}</div>
       ${items.map(i => `
         <div class="serve-item">
-          <span class="serve-name">${i.name}</span>
+          <span class="serve-name">${esc(i.name)}</span>
           <span class="serve-qty">×${i.qty}</span>
           <button class="serve-btn" onclick="serveItem(${i.ticketNum},${i.itemIndex})">✓ เสิร์ฟแล้ว</button>
         </div>
@@ -298,7 +300,7 @@ function renderServe(){
 
 const BUFFET_PRICE_NORMAL = 399;
 const BUFFET_PRICE_SALMON = 448;
-const SALMON_NAME = 'ปลาแซลมอน';
+const SALMON_NAME = 'แซลมอนซาชิมิ(8 ชิ้น)';
 
 let checkoutTable = null;
 

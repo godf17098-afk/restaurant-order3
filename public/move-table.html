@@ -82,6 +82,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;fon
 </div>
 
 <script>
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let ws;
 let tickets = [];
 let selectedTable = null;
@@ -142,10 +143,10 @@ function renderList(){
     return;
   }
   el.innerHTML = `<div class="section-label">โต๊ะที่เปิดอยู่ (${open.length})</div>` + open.map(t => `
-    <div class="table-card ${t.table === selectedTable ? 'selected' : ''}" onclick="selectTable('${t.table}')">
+    <div class="table-card ${t.table === selectedTable ? 'selected' : ''}" data-table="${esc(t.table)}" onclick="selectTable(this.dataset.table)">
       <div class="tc-row">
         <div>
-          <div class="tc-name">โต๊ะ ${t.table}</div>
+          <div class="tc-name">โต๊ะ ${esc(t.table)}</div>
           <div class="tc-meta">${t.orders} ออเดอร์ · ${t.items} รายการ</div>
         </div>
         <div class="tc-check"></div>
