@@ -64,6 +64,7 @@
 - รูปเก่าที่ค้างใน `public/uploads/` ถูก **migrate อัตโนมัติ**ตอนบูต (URL `/uploads/<ชื่อไฟล์>` เดิมใช้ได้)
 - เสิร์ฟรูปผ่าน route `/uploads/<file>` พร้อม cache 7 วัน (ชื่อไฟล์มี random hex อยู่แล้ว)
 - กำหนดที่เก็บเองได้ด้วย env `DATA_DIR` และบน Railway ให้ mount volume ที่ `/app/data`
+  (แอปอ่าน `RAILWAY_VOLUME_MOUNT_PATH` อัตโนมัติ) ถ้ายังไม่มี volume จะมี warning ตอนบูต
 - ตอนโหลด state จะตรวจว่าไฟล์รูปมีอยู่จริง ถ้าหายจะตั้ง `image = null` กันรูปแตก
 
 ## 🧪 วิธีตรวจสอบ

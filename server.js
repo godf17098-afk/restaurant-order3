@@ -14,14 +14,25 @@ const wss = new WebSocket.Server({ server, maxPayload: 64 * 1024 });
 wss.on('error', (err) => console.error('WS server error:', err.message));
 let wsSeq = 0;
 
-// Persistent data directory. On Railway, mount a volume at /app/data (or set DATA_DIR)
-// so orders AND uploaded menu images survive restarts and redeploys.
+// Persistent data directory. Priority:
+//   1. DATA_DIR (explicit override)
+//   2. RAILWAY_VOLUME_MOUNT_PATH (set automatically by Railway when a volume is attached)
+//   3. ./data next to the app
+// On Railway, attach a volume with mount path /app/data so orders AND images survive
+// restarts and redeploys.
 const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
-  : path.join(__dirname, 'data');
+  : (process.env.RAILWAY_VOLUME_MOUNT_PATH
+      ? path.resolve(process.env.RAILWAY_VOLUME_MOUNT_PATH)
+      : path.join(__dirname, 'data'));
 const STATE_FILE = path.join(DATA_DIR, 'state.json');
 const uploadsDir = path.join(DATA_DIR, 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
+
+if (process.env.RAILWAY_ENVIRONMENT && !process.env.DATA_DIR && !process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+  console.warn('\n⚠️  Railway: ยังไม่ได้ mount Volume — ข้อมูลออเดอร์และรูปเมนูจะหายเมื่อ deploy ใหม่');
+  console.warn('   แก้ที่ Railway → service → Volumes → Add Volume → Mount path: /app/data\n');
+}
 
 // Older versions stored images in the ephemeral public/uploads folder. Move any files
 // found there into the persistent uploads dir once, keeping the same /uploads/<name> URL.
